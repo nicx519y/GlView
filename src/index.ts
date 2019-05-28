@@ -25,36 +25,35 @@ import { Mesh, MeshFactroy } from './mesh';
 
 
 	function init(uvs) {
-		// const rectMesh: Mesh = MeshFactroy.createRectMesh();
-		// const g1: Generator = new Generator(engine, rectMesh);
-		// const g2: Generator = new Generator(engine, rectMesh);
-		// const g3: Generator = new Generator(engine, rectMesh);
-
-		// const count = 30;
-		// const w = 800/count;
-		// const gs = [g1,g2,g3];
-		// for(let i = 0; i < count; i ++) {
-		// 	for(let j = 0; j < count; j ++) {
-		// 		let idx = Math.round(Math.random() * 2);
-		// 		let g = gs[idx];
-		// 		let obj = g.instance();
-		// 		obj.show();
-		// 		obj.setOffset(i*w-400+w/2, j*w-400+w/2);
-		// 		obj.setBgColor(getRandomColor());
-		// 		obj.setTexture(uvs[idx]);
-		// 		obj.setBorderColor(getRandomColor());
-		// 		obj.setBorderWidth(1);
-		// 		obj.setVertexRatio(w);
-		// 		obj.setZOrder(0);
-		// 	}
-		// }
-		drawArrows();
-		
-			// .setBorderWidth(1);
-
+		drawRects(uvs);
 		engine.render();
 	}
 
+	function drawRects(uvs) {
+		const rectMesh: Mesh = MeshFactroy.createRectMesh();
+		const g1: Generator = new Generator(engine, rectMesh);
+		const g2: Generator = new Generator(engine, rectMesh);
+		const g3: Generator = new Generator(engine, rectMesh);
+
+		const count = 30;
+		const w = 800/count;
+		const gs = [g1,g2,g3];
+		for(let i = 0; i < count; i ++) {
+			for(let j = 0; j < count; j ++) {
+				let idx = Math.round(Math.random() * 2);
+				let g = gs[idx];
+				let obj = g.instance();
+				obj.show();
+				obj.setOffset(i*w-400+w/2, j*w-400+w/2);
+				obj.setBgColor(getRandomColor());
+				obj.setTexture(uvs[idx]);
+				obj.setBorderColor(getRandomColor());
+				obj.setBorderWidth(1);
+				obj.setVertexRatio(w);
+				obj.setZOrder(0);
+			}
+		}
+	} 	
 	function drawArrows() {
 		const count = 50000;
 		const arrowMesh: Mesh = MeshFactroy.createArrowMesh();

@@ -1,6 +1,6 @@
 import { Engine, RenderUnit, RenderAttribute } from './engine';
 import { ImageTexture } from './texture';
-import { Mesh, MeshFactroy } from './mesh';
+import { Mesh } from './mesh';
 
 export class Generator {
 	private engine: Engine;
@@ -22,7 +22,7 @@ export class Shape {
 	private uvRect: number[] = [0,0,0,0];
 	private borderColor: number[] = [0,0,0,0];
 	private borderWidth: number = 0;
-	private vertexMultiple: number = 1;
+	private transformValue: number = 1;
 	private zOrder: number = 0;
 	constructor(uint: RenderUnit) {
 		this.uint = uint;
@@ -61,30 +61,10 @@ export class Shape {
 		}
 		return this;
 	}
-	public setBorderColor(color: number[]): Shape {
-		this.borderColor = color;
+	public setTransformValue(n: number): Shape {
+		this.transformValue = n;
 		if(this.id != undefined) {
-			this.uint.setAttribute(this.id, RenderAttribute.BORDER_COLOR, this.borderColor);
-		}
-		return this;
-	}
-	public getBorderColor() {
-		return this.borderColor;
-	}
-	public setBorderWidth(width: number): Shape {
-		this.borderWidth = width;
-		if(this.id != undefined) {
-			this.uint.setAttribute(this.id, RenderAttribute.BORDER_WIDTH, [width]);
-		}
-		return this;
-	}
-	public getBorderWidth(): number {
-		return this.borderWidth;
-	}
-	public setVertexRatio(n: number): Shape {
-		this.vertexMultiple = n;
-		if(this.id != undefined) {
-			this.uint.setAttribute(this.id, RenderAttribute.VERTEX_RATIO, [n]);
+			this.uint.setAttribute(this.id, RenderAttribute.TRANSFORM_VALUE, [n]);
 		}
 		return this;
 	}

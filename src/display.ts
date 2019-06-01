@@ -68,13 +68,13 @@ export class Shape {
 		}
 		return this;
 	}
-	public setZOrder(n: number): Shape {
-		this.zOrder = n;
-		if(this.id != undefined) {
-			this.uint.setAttribute(this.id, RenderAttribute.Z_ORDER, [this.zOrder]);
-		}
-		return this;
-	}
+	// public setZOrder(n: number): Shape {
+	// 	this.zOrder = n;
+	// 	if(this.id != undefined) {
+	// 		this.uint.setAttribute(this.id, RenderAttribute.Z_ORDER, [this.zOrder]);
+	// 	}
+	// 	return this;
+	// }
 	public getZOrder(): number {
 		return this.zOrder;
 	}

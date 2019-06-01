@@ -16,9 +16,9 @@ import { Mesh, RectMesh } from './mesh';
 	vp.setBackgroundColor(getRandomColor());
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
-	// canvas.addEventListener('mousedown', dragStart);
-	// canvas.addEventListener('mousemove', drag);
-	// canvas.addEventListener('mouseup', dragEnd);
+	canvas.addEventListener('mousedown', dragStart);
+	canvas.addEventListener('mousemove', drag);
+	canvas.addEventListener('mouseup', dragEnd);
 	window.addEventListener('resize', windowResize);
 	windowResize();
 	
@@ -53,7 +53,7 @@ import { Mesh, RectMesh } from './mesh';
 					.setOffset(i*w-400+w/2, j*w-400+w/2)
 					.setBgColor(getRandomColor())
 					.setTexture(uvs[idx])
-					.setZOrder(0);
+					// .setZOrder(0);
 			}
 		}
 	} 	
@@ -71,7 +71,7 @@ import { Mesh, RectMesh } from './mesh';
 			.show()
 			.setOffset(300, 150)
 			.setBgColor(getRandomColor())
-			.setTransformValue(50);
+			.setTransformValue(100);
 	}
 
 	// function drawArrows() {
@@ -97,16 +97,7 @@ import { Mesh, RectMesh } from './mesh';
 		const mx = evt.pageX;
 		const my = evt.pageY;
 		let d = - evt.wheelDeltaY / 1000;
-		let s = vp.scale;
-		s += d;
-		// console.log(s)
-		if (s < 0.2) {
-			s = 0.2;
-		} else if(s > 1) {
-			s = 1;
-		}
-
-		vp.setScaleByPoint(s, mx, my);
+		vp.setScaleOrigin(d+vp.scale, mx, my);
 	}
 
 	function dragStart(evt) {
@@ -118,10 +109,8 @@ import { Mesh, RectMesh } from './mesh';
 		if(!isDragging) return;
 		const dx = evt.x - dragLastPoint[0];
 		const dy = evt.y - dragLastPoint[1];
-		const nx = vp.offsetX;
-		const ny = vp.offsetY;
 
-		vp.setOffset(nx + dx, ny - dy);
+		vp.translate(dx, -dy);
 
 		dragLastPoint = [evt.x, evt.y];
 	}

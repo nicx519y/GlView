@@ -48,10 +48,10 @@ export class Mesh {
 export class RectMesh extends Mesh {
 	constructor() {
 		const vertexes = [
-			0, 0,
-			0, 0,
-			0, 0,
-			0, 0,
+			0,0,
+			0,0,
+			0,0,
+			0,0,
 		];
 		const tranforms = [
 			-0.5, 0.5,

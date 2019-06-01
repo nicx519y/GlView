@@ -1,5 +1,8 @@
 import { Engine } from "./engine";
 
+const mat4 = glMatrix.mat4;
+const vec3 = glMatrix.vec3;
+
 export class Viewport {
 	private _engine: Engine;
 	private _scale: number = 1;
@@ -9,6 +12,10 @@ export class Viewport {
 	private _offsetY: number = 0;
 	constructor(engine: Engine) {
 		this._engine = engine;
+		const canvas = engine.gl.canvas;
+		const width = canvas.width;
+		const height = canvas.height;
+		this.translate(-width/2, -height/2);
 	}
 
 	/**
@@ -27,15 +34,15 @@ export class Viewport {
 	setViewportSize(width: number, height: number) {
 		const gl = this._engine.gl;
 		const canvas = gl.canvas;
-		let cvMat4 = this._engine.cvMat4;
+		let cvVec2 = this._engine.cvVec2;
 		canvas.width = width;
 		canvas.height = height;
 		canvas.style.width = width + 'px';
 		canvas.style.height = height + 'px';
-		glMatrix.mat4.fromScaling(cvMat4, glMatrix.vec3.fromValues(1/width*2,1/height*2,1));
+		cvVec2.set([1/width*2, 1/height*2], 0);
 
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		this._engine.cvMatIsModify = true;
+		this._engine.cvMatIsModified = true;
 	}
 	/**
 	 * 按照中心点缩放
@@ -43,45 +50,29 @@ export class Viewport {
 	 * @param px 缩放中心x
 	 * @param py 缩放中心y
 	 */
-	setScaleByPoint(scale: number, px: number, py: number) {
-		const g = glMatrix;
+	setScaleOrigin(scale: number, px: number, py: number) {
+		const vpmat = this._engine.vpMat4;
 		const canvas = this._engine.gl.canvas;
 		const width = canvas.width;
 		const height = canvas.height;
-		const vpmat = this._engine.vpMat4;
-		const s1 = this._scale;
-		const s2 = scale;
-		const s = s2/s1;
+		scale = Math.max(Math.min(1, scale), 0.1);
+		const s = scale/this._scale;
 
-		let p = g.vec3.fromValues(px, py, 0);
-		let invertMat = g.mat4.create();
-		g.mat4.invert(invertMat, vpmat);
-		g.vec3.transformMat4(p, p, invertMat);
-		g.vec3.mul(p, p, g.vec3.fromValues(1/width*2, 1/height*2,1));
-		// g.vec3.transformMat4(p, p, invertMat);
-
-		g.mat4.translate(vpmat, vpmat, g.vec3.fromValues(p[0]*(1-s), p[1]*(1-s), 0));
-		g.mat4.scale(vpmat, vpmat, g.vec3.fromValues(s,s,1));
-		// g.mat4.translate(vpmat, vpmat, g.vec3.fromValues(-p[0]*,-p[1],0));
-
-		// console.log(vpmat);
-
-		// g.mat4.translate(this._engine.vpMat4, this._engine.vpMat4, g.vec3.fromValues(-1,-1,0))
-		// console.log(this._engine.vpMat4);
-		// g.mat4.multiplyScalarAndAdd(this._engine.vpMat4, p[0]*(1-s), p[1]*(1-s), s);
-		this._engine.vpMatIsModify = true;
-		this._scale = scale;
-
-		// px = (px - width/2) / width * 2;
-		// py = - (py - height/2) / height * 2;
-
-		// matrix.translate(px, py, 0);
-
-		// matrix.scale(s, s, 1);
-		// // matrix.translate(px*(1-s), py*(1-s), 0);
-		// matrix.translate(-px, -py, 0);
-		// this._engine.vpMatIsModify = true;
-		// this._scale = scale;
+		//y轴反转
+		let p = vec3.fromValues(px - width/2, height/2 - py, 0);
+		//当前视口矩阵逆矩阵	
+		let invertMat = mat4.create();
+		mat4.invert(invertMat, vpmat);
+		//归一化坐标系
+		vec3.mul(p, p, vec3.fromValues(1/width*2, 1/height*2,1));
+		//乘逆矩阵 求世界坐标
+		vec3.transformMat4(p, p, invertMat);
+		//偏移
+		mat4.translate(vpmat, vpmat, vec3.fromValues(p[0]*(1-s), p[1]*(1-s), 0));
+		//缩放
+		mat4.scale(vpmat, vpmat, vec3.fromValues(s,s,1));
+		this._engine.vpMatIsModified = true;
+		this._scale *= s;
 	}
 	/**
 	 * 获取缩放比例
@@ -90,17 +81,26 @@ export class Viewport {
 		return this._scale;
 	}
 
-	setOffset(x: number, y: number) {
+	/**
+	 * 设置视口平移
+	 * @param x 
+	 * @param y 
+	 */
+	translate(x: number, y: number) {
 		const canvas = this._engine.gl.canvas;
 		const width = canvas.width;
 		const height = canvas.height;
-		const matrix = this._engine.vpMat4;
-
-		// matrix.translate();
-
-		this._offsetX = x;
-		this._offsetY = y;
-		// this.updateViewportMatrix();
+		const vpmat = this._engine.vpMat4;
+		//Y 轴反转
+		const p = vec3.fromValues(x, y, 0);
+		// 转化为归一化坐标
+		vec3.mul(p, p, vec3.fromValues(1/width*2, 1/height*2,1));
+		// 按照坐标系比例缩放
+		vec3.scale(p, p, 1/this._scale);
+		mat4.translate(vpmat, vpmat, p);
+		this._engine.vpMatIsModified = true;
+		this._offsetX += x;
+		this._offsetY += y;
 	}
 
 	get offsetX(): number {

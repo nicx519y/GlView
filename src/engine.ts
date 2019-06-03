@@ -7,17 +7,16 @@ const vsSource = `
 	attribute vec4 aUVRect;				//UVRect
 	attribute vec4 aBgColor;			//背景色
 	attribute vec2 aOffset;				//偏移
-	// attribute float aZOrder;			//z
+	attribute float aZOrder;			//z
 	attribute float aTransformValue;	//变形值
 	varying vec2 vTexCoord;				//UV
 	varying vec4 vBgColor;
 	uniform mat4 uViewportMatrix;		//视口矩阵
-	uniform vec2 uConversionMatrix;			//坐标转换矩阵
+	uniform vec2 uConversionVec2;			//坐标转换矩阵
 	
 	void main(void) {
-		vec2 pos = uConversionMatrix * vec2(aVertexPosition + aTransformRatio * aTransformValue + aOffset);
-		// vec2 pos = uConversionMatrix * vec2(aVertexPosition);
-		gl_Position = uViewportMatrix * vec4(pos, 0, 1) + vec4(0,0,0,0);
+		vec2 pos = uConversionVec2 * vec2(aVertexPosition + aTransformRatio * aTransformValue + aOffset);
+		gl_Position = uViewportMatrix * vec4(pos, 0, 1) + vec4(0,0,aZOrder,0);
 
 		vTexCoord = vec2(aTextCoord.x * aUVRect.p + aUVRect.s, aTextCoord.y * aUVRect.q + aUVRect.t);
 		vBgColor = aBgColor;
@@ -169,7 +168,7 @@ export class Engine {
 	private updateConversionVec() {
 		if(this._conversionIsModified) {
 			const gl = this.gl;
-			const cvLocal = gl.getUniformLocation(this.prg, 'uConversionMatrix');
+			const cvLocal = gl.getUniformLocation(this.prg, 'uConversionVec2');
 			gl.uniform2fv(cvLocal, this._cvec2);
 			this._conversionIsModified = false;
 		}
@@ -193,7 +192,7 @@ export const enum RenderAttribute {
 	BACKGROUND_COLOR = 'bgColor',
 	UV_RECT = 'uvRect',
 	OFFSET = 'offset',
-	// Z_ORDER = 'zOrder',
+	Z_ORDER = 'zOrder',
 	TRANSFORM_VALUE = 'transformValue',
 }
 
@@ -327,15 +326,15 @@ export class RenderUnit {
 			this.updateBufferToGL('aTransformValue', this.transformValueBuffer, this.transformValueBufferData, 1, 0);
 		}
 
-		// if(this.zOrderIsModified) {
-		// 	!this.zOrderBuffer && (this.zOrderBuffer = gl.createBuffer());
-		// 	this.updateBufferToGL('aZOrder', this.zOrderBuffer, this.zOrderBufferData, 1, 0);
-		// }
+		if(this.zOrderIsModified) {
+			!this.zOrderBuffer && (this.zOrderBuffer = gl.createBuffer());
+			this.updateBufferToGL('aZOrder', this.zOrderBuffer, this.zOrderBufferData, 1, 0);
+		}
 
 		this.uvIsModified = false;
 		this.offsetIsModified = false;
 		this.bgColorIsModified = false;
-		// this.zOrderIsModified = false;
+		this.zOrderIsModified = false;
 		this.transformValueIsModified = false;
 	}
 
@@ -359,11 +358,11 @@ export class RenderUnit {
 				stride = 2;
 				this.offsetIsModified = true;
 				break;
-			// case RenderAttribute.Z_ORDER:
-			// 	bufferData = this.zOrderBufferData;
-			// 	stride = 1;
-			// 	this.zOrderIsModified = true;
-			// 	break;
+			case RenderAttribute.Z_ORDER:
+				bufferData = this.zOrderBufferData;
+				stride = 1;
+				this.zOrderIsModified = true;
+				break;
 			case RenderAttribute.TRANSFORM_VALUE:
 				bufferData = this.transformValueBufferData;
 				stride = 1;
@@ -393,10 +392,10 @@ export class RenderUnit {
 				bufferData = this.offsetBufferData;
 				stride = 2;
 				break;
-			// case RenderAttribute.Z_ORDER:
-			// 	bufferData = this.zOrderBufferData;
-			// 	stride = 1;
-			// 	break;
+			case RenderAttribute.Z_ORDER:
+				bufferData = this.zOrderBufferData;
+				stride = 1;
+				break;
 			case RenderAttribute.TRANSFORM_VALUE:
 				bufferData = this.transformValueBufferData;
 				stride = 1;
@@ -443,7 +442,7 @@ export class RenderUnit {
 		this.bgColorIsModified = true;
 		this.uvIsModified = true;
 		this.transformValueIsModified = true;
-		// this.zOrderIsModified = true;
+		this.zOrderIsModified = true;
 
 		this.instanceCount --;
 	}
@@ -496,10 +495,10 @@ export class RenderUnit {
 				bufferData = this.offsetBufferData;
 				stride = 2;
 				break;
-			// case RenderAttribute.Z_ORDER:
-			// 	bufferData = this.zOrderBufferData;
-			// 	stride = 1;
-			// 	break;
+			case RenderAttribute.Z_ORDER:
+				bufferData = this.zOrderBufferData;
+				stride = 1;
+				break;
 			case RenderAttribute.TRANSFORM_VALUE:
 				bufferData = this.transformValueBufferData;
 				stride = 1;

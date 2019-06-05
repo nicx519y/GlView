@@ -111,4 +111,23 @@ export class Viewport {
 		return this._offsetY;
 	}
 
+	/**
+	 * 从屏幕坐标转换程世界坐标
+	 * @param x 
+	 * @param y 
+	 * @param z 
+	 */
+	changeCoordinateFromScreen(x: number, y: number, z: number = 0) {
+		const vpmat = this._engine.vpMat4;
+		const width = this._engine.gl.canvas.width;
+		const height = this._engine.gl.canvas.height;
+		let invertMat = mat4.create();
+		mat4.invert(invertMat, vpmat);
+		let v = vec3.fromValues(x - width/2, - y + height/2, z);
+		vec3.mul(v, v, vec3.fromValues(1/width*2, 1/height*2,1));
+		vec3.transformMat4(v, v, invertMat);
+		vec3.mul(v, v, vec3.fromValues(width/2, height/2, 1));
+		return v;
+	}
+
 }

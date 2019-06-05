@@ -1,4 +1,5 @@
 import { Mesh, PrimitiveMode } from "./mesh";
+import { Searcher } from './searcher';
 
 const vsSource = `
 	attribute vec2 aVertexPosition;		//顶点坐标
@@ -58,6 +59,7 @@ glMatrix.glMatrix.setMatrixArrayType(Float32Array);
 export class Engine {
 	private _gl;
 	private _prg;
+	private _searcher;
 	private _vpmat4: Float32Array;
 	private _vpmatIsModified: boolean = true;
 	private _cvec2: Float32Array;
@@ -69,11 +71,10 @@ export class Engine {
 		const height = canvas.height;
 		this._gl = canvas.getContext('webgl2');
 		this._vpmat4 = mat4.create();
-		
 		this._cvec2 = glMatrix.vec2.fromValues(1/width*2, 1/height*2, 1);
 		this._bgColor = [0,0,0,1];
 		this._unitList = [];
-
+		this._searcher = RTree(200);
 		this.initPrg();
 	}
 
@@ -82,6 +83,9 @@ export class Engine {
 	}
 	public get prg() {
 		return this._prg;
+	}
+	public get searcher() {
+		return this._searcher;
 	}
 
 	// 视口矩阵
@@ -200,7 +204,7 @@ export class RenderUnit {
 
 	private _engine: Engine;
 	private idlist: Map<string, number>;
-	private mesh: Mesh;
+	private _mesh: Mesh;
 	private primitiveMode;
 	private vao;
 	private instanceCount: number = 0;
@@ -234,7 +238,7 @@ export class RenderUnit {
 	private transformValueIsModified: boolean = false;
 
 	constructor(engine: Engine, mesh: Mesh) {
-		this.mesh = mesh;
+		this._mesh = mesh;
 		this._engine = engine;
 
 		const gl = engine.gl;
@@ -244,8 +248,8 @@ export class RenderUnit {
 		this.pointCount = vertexes.length / 3 / 2;
 
 		this.vertexBufferData = new Float32Array(vertexes);
-		this.transformBufferData = new Float32Array(this.mesh.transfroms);
-		this.uvBufferData = new Float32Array(this.mesh.uv);
+		this.transformBufferData = new Float32Array(this._mesh.transfroms);
+		this.uvBufferData = new Float32Array(this._mesh.uv);
 		this.indecesBufferData = new Uint32Array(mesh.indeces);
 		this.uvRectBufferData = new Float32Array(MAX_INSTANCE*4);
 		this.bgColorBufferData = new Float32Array(MAX_INSTANCE*4);
@@ -415,7 +419,7 @@ export class RenderUnit {
 		this.setAttribute(id, RenderAttribute.BACKGROUND_COLOR, [0,0,0,1]);
 		this.setAttribute(id, RenderAttribute.UV_RECT, [0,0,0,0]);
 		this.setAttribute(id, RenderAttribute.TRANSFORM_VALUE, [1]);
-		// this.setAttribute(id, RenderAttribute.Z_ORDER, [0]);
+		this.setAttribute(id, RenderAttribute.Z_ORDER, [0]);
 		
 		this.instanceCount ++;
 		return id;
@@ -433,7 +437,7 @@ export class RenderUnit {
 			RenderAttribute.BACKGROUND_COLOR, 
 			RenderAttribute.UV_RECT, 
 			RenderAttribute.TRANSFORM_VALUE,
-			// RenderAttribute.Z_ORDER,
+			RenderAttribute.Z_ORDER,
 		];
 
 		attribs.forEach((attrib: RenderAttribute) => this.removeAttributeBufferData(id, attrib));
@@ -508,5 +512,9 @@ export class RenderUnit {
 		arr.fill(0);
 		bufferData.set(bufferData.slice((n-1)*stride, n*stride), idx*stride);
 		bufferData.set(arr, (n-1)*stride);
+	}
+
+	public get mesh(): Mesh {
+		return this._mesh;
 	}
 }

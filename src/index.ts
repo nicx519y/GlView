@@ -3,6 +3,7 @@ import { Generator, Shape } from './display';
 import { TextureFactroy, ImageTexture } from './texture'
 import { Viewport } from './viewport';
 import { Mesh, RectMesh } from './mesh';
+import { Searcher } from './searcher';
 
 (function main() {
 	const canvas = document.getElementById('glcanvas');
@@ -10,15 +11,18 @@ import { Mesh, RectMesh } from './mesh';
 	let engine = new Engine(canvas);
 	let tf = new TextureFactroy(engine);
 	let vp = new Viewport(engine);
+	let scr = new Searcher(engine);
 	let isDragging = false;
 	let dragLastPoint = [];
-
+	let activeShape: Shape;
+	let uvlist = [];
 	vp.setBackgroundColor(getRandomColor());
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
 	canvas.addEventListener('mousemove', drag);
 	canvas.addEventListener('mouseup', dragEnd);
+	canvas.addEventListener('mousemove', hoverHandler);
 	window.addEventListener('resize', windowResize);
 	windowResize();
 	
@@ -28,32 +32,30 @@ import { Mesh, RectMesh } from './mesh';
 
 	Promise.all([p1,p2,p3]).then(init);
 
+	var obj;
+
 
 	function init(uvs) {
-		// drawRects(uvs);
-		drawARect(uvs);
+		uvlist = uvs;
+		drawRects(uvs[0]);
 		engine.render();
+		
 	}
 
-	function drawRects(uvs) {
+	function drawRects(uv) {
 		const rectMesh: RectMesh = new RectMesh();
-		const g1: Generator = new Generator(engine, rectMesh);
-		const g2: Generator = new Generator(engine, rectMesh);
-		const g3: Generator = new Generator(engine, rectMesh);
-
+		const g: Generator = new Generator(engine, rectMesh);
 		const count = 30;
 		const w = 800/count;
-		const gs = [g1,g2,g3];
 		for(let i = 0; i < count; i ++) {
 			for(let j = 0; j < count; j ++) {
 				let idx = Math.round(Math.random() * 2);
-				let g = gs[idx];
 				let obj = g.instance();
 				obj.show()
-					.setOffset(i*w-400+w/2, j*w-400+w/2)
+					.setOffset(i*w+w/2, j*w+w/2)
 					.setBgColor(getRandomColor())
-					.setTexture(uvs[idx])
-					// .setZOrder(0);
+					.setTexture(uv)
+					.setTransformValue(w);
 			}
 		}
 	} 	
@@ -67,27 +69,16 @@ import { Mesh, RectMesh } from './mesh';
 		const count = 30;
 		const w = 800/count;
 		const gs = [g1,g2,g3];
-		g1.instance()
+		obj = g1.instance()
 			.show()
-			.setOffset(300, 150)
+			.setOffset(250, 100)
 			.setBgColor(getRandomColor())
 			.setTransformValue(100);
+
+		let result = scr.search(250, 100);
+		let s = result[0];
+		s.setOffset(0, 0);
 	}
-
-	// function drawArrows() {
-	// 	const count = 50000;
-	// 	const arrowMesh: Mesh = MeshFactroy.createArrowMesh();
-	// 	const g: Generator = new Generator(engine, arrowMesh);
-
-	// 	for(let i = 0; i < count; i ++) {
-	// 		const s: Shape = g.instance()
-	// 			.show()
-	// 			.setBgColor(getRandomColor())
-	// 			.setBorderColor(getRandomColor())
-	// 			.setVertexRatio(Math.random()*50)
-	// 			.setOffset(Math.random()*1000 - 500, Math.random()*800 - 400);
-	// 	}
-	// }
 
 	function wheelHandler(evt) {
 		if(evt.preventDefault) {
@@ -126,6 +117,19 @@ import { Mesh, RectMesh } from './mesh';
 
 	function getRandomColor() {
 		return [Math.random()*255,Math.random()*255,Math.random()*255,255];
+	}
+
+	function hoverHandler(evt) {
+		//调用viewport的方法转换坐标系
+		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		const shape: Shape = scr.search(cs[0], cs[1])[0];
+		if(shape) {
+			shape.setTexture(uvlist[1]);
+			if(activeShape != undefined && activeShape != shape) {
+				activeShape.setTexture(uvlist[0]);
+			}
+			activeShape = shape;
+		}
 	}
 
 })();

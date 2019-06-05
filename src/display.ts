@@ -1,6 +1,7 @@
 import { Engine, RenderUnit, RenderAttribute } from './engine';
 import { ImageTexture } from './texture';
 import { Mesh } from './mesh';
+import { Rectangle } from './utils';
 
 export class Generator {
 	private engine: Engine;
@@ -16,6 +17,7 @@ export class Generator {
 
 export class Shape {
 	private uint: RenderUnit;
+	private searcher;
 	private id: string;
 	private offset: number[] = [0,0];
 	private bgColor: number[] = [0,0,0,0];
@@ -24,8 +26,12 @@ export class Shape {
 	private borderWidth: number = 0;
 	private transformValue: number = 1;
 	private zOrder: number = 0;
+	private _bounds: Rectangle = new Rectangle(0,0,0,0);
+	private _isShown: boolean = false;
 	constructor(uint: RenderUnit) {
 		this.uint = uint;
+		this.searcher = uint.engine.searcher;
+		this.updateBounds();
 	}
 	public setOffset(x: number, y: number): Shape {
 		this.offset = [x, y];
@@ -33,8 +39,11 @@ export class Shape {
 			this.uint.setAttribute(
 				this.id, RenderAttribute.OFFSET, 
 				this.offset,
-				);
+			);
 		}
+		this._isShown && this.clearSearchIndex();
+		this.updateBounds();
+		this._isShown && this.registSearchIndex();
 		return this;
 	}
 	public getOffset(): number[] {
@@ -59,6 +68,7 @@ export class Shape {
 		if(this.id != undefined) {
 			this.uint.setAttribute(this.id, RenderAttribute.UV_RECT, this.uvRect)
 		}
+
 		return this;
 	}
 	public setTransformValue(n: number): Shape {
@@ -66,7 +76,13 @@ export class Shape {
 		if(this.id != undefined) {
 			this.uint.setAttribute(this.id, RenderAttribute.TRANSFORM_VALUE, [n]);
 		}
+		this._isShown && this.clearSearchIndex();
+		this.updateBounds();
+		this._isShown && this.registSearchIndex();
 		return this;
+	}
+	public getTransformValue(): number {
+		return this.transformValue;
 	}
 	public setZOrder(n: number): Shape {
 		this.zOrder = n;
@@ -78,8 +94,9 @@ export class Shape {
 	public getZOrder(): number {
 		return this.zOrder;
 	}
+
 	public show(): Shape {
-		if(this.id != undefined) {
+		if(this.id != undefined || this._isShown) {
 			console.error('Shape is added. can not add again.');
 			return;
 		}
@@ -87,16 +104,64 @@ export class Shape {
 		this.setOffset(this.offset[0], this.offset[1]);
 		this.setBgColor(this.bgColor);
 		this.uint.setAttribute(this.id, RenderAttribute.UV_RECT, this.uvRect);
+		this._isShown = true;
+		this.registSearchIndex();
 		return this;
 	}
 	public hide(): Shape {
-		if(this.id == undefined) {
+		if(this.id == undefined || !this._isShown) {
 			console.error('Shape wasn\'t added to Scene.');
 			return;
 		}
 		this.uint.remove(this.id);
 		this.id = undefined;
+		this._isShown = false;
+		this.clearSearchIndex();
 		return this;
 	}
-}
 
+	public getBounds(): Rectangle {
+		return this._bounds;	
+	}
+
+	/**
+	 * 获取变形后各顶点绝对位置 
+	 */
+	public getVertexesAfterTransform(): number[] {
+		const o = this.offset;
+		return this.uint.mesh.getVertexesAfterTransform(this.transformValue)
+			.map((v, k) => {
+				if(k % 2 == 0) {
+					return v + o[0];
+				} else {
+					return v + o[1];
+				}
+			});
+	}
+
+	private updateBounds() {
+		const o = this.offset;
+		const vs = this.uint.mesh.getVertexesAfterTransform(this.transformValue);
+		const xs = vs.filter((v, k) => k % 2 != 0);
+		const ys = vs.filter((v, k) => k % 2 == 0);
+		let x1, y1, x2, y2;
+		x1 = Math.min.apply(null, xs);
+		y1 = Math.min.apply(null, ys);
+		x2 = Math.max.apply(null, xs);
+		y2 = Math.max.apply(null, ys);
+		Object.assign(this._bounds, {
+			x: x1 + o[0],
+			y: y1 + o[1],
+			w: x2 - x1,
+			h: y2 - y1,
+		});
+	}
+
+	private registSearchIndex() {
+		this.searcher.insert(this.getBounds(), this);
+	}
+
+	private clearSearchIndex() {
+		this.searcher.remove(this.getBounds(), this);
+	}
+}

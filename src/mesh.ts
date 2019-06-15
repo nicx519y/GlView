@@ -1,13 +1,26 @@
 const vec2 = glMatrix.vec2;
 
 export enum PrimitiveMode {
-	TRIANGLE_STRIP = 'TriangleStrip',
-	TRIANGLE_FAN = 'TriangleFan',
+	TRIANGLE_STRIP = 5,
+	TRIANGLE_FAN = 6,
+}
+
+export interface MeshConfig {
+	currVertexes: number[];
+	prevVertexes: number[];
+	nextVertexes: number[];
+	currOffsetRatios: number[];
+	prevOffsetRatios: number[];
+	nextOffsetRatios: number[];
+	edgeOffsetRatios: number[];
+	indeces: number[];
+	uvs: number[];
+	primitiveMode: PrimitiveMode;
 }
 
 export class Mesh {
 	private _vertexes: number[];
-	private _transforms: number[];
+	private _offsetRatios: number[];
 	private _uv: number[];
 	private _indeces: number[];
 	private _primitiveMode: PrimitiveMode;
@@ -17,54 +30,106 @@ export class Mesh {
 	 * @param borderVertexes 边框顶点坐标
 	 * @param uv 材质UV
 	 */
-	constructor(mode: PrimitiveMode, vertexes: number[], tranforms: number[], uv: number[], indeces: number[]) {
+	constructor(mode: PrimitiveMode, vertexes: number[], offsetRatios: number[], uv: number[], indeces: number[]) {
 		this._vertexes = vertexes;
-		this._transforms = tranforms;
+		this._offsetRatios = offsetRatios;
 		this._uv = uv;
 		this._indeces = indeces;
 		this._primitiveMode = mode;
 	}
 
-	public get vertexes(): number[] {
+	private get currVertexes(): number[] {
 		return this._vertexes;
 	}
 
-	/**
-	 * 返回形变后的顶点坐标
-	 * @param transformValue 形变值
-	 */
-	public getVertexesAfterTransform(transformValue: number): number[] {
-		return this.vertexes.map((v, k) => {
-			return v + this.transfroms[k] * transformValue;
-		});
+	private get prevVertexes(): number[] {
+		let vs = this._vertexes;
+		return vs.slice(-2).concat(vs.slice(0, vs.length - 2));
 	}
 
-	/**
-	 * 返回形变向量
-	 */
-	public get transfroms(): number[] {
-		return this._transforms;
+	private get nextVertexes(): number[] {
+		let vs = this._vertexes;
+		return vs.slice(2).concat(vs.slice(0, 2));
 	}
 
-	/**
-	 * 返回uv
-	 */
-	public get uv(): number[] {
-		return this._uv;
+	private get currOffsetRatios(): number[] {
+		return this._offsetRatios;
 	}
 
-	/**
-	 * 返回绘制索引列表
-	 */
-	public get indeces(): number[] {
-		return this._indeces;
+	private get prevOffsetRatios(): number[] {
+		let vs = this._offsetRatios;
+		return vs.slice(-2).concat(vs.slice(0, vs.length - 2));
 	}
 
-	public get primitiveMode(): PrimitiveMode {
-		return this._primitiveMode;
+	private get nextOffsetRatios(): number[] {
+		let vs = this._offsetRatios;
+		return vs.slice(2).concat(vs.slice(0, 2));
 	}
 
+	public get originMeshConfig(): MeshConfig {
+		let edgeOffsetRatios = new Array(this._vertexes.length);
+		edgeOffsetRatios.fill(0);
+		return {
+			currVertexes: this.currVertexes,
+			prevVertexes: this.prevVertexes,
+			nextVertexes: this.nextVertexes,
+			currOffsetRatios: this.currOffsetRatios,
+			prevOffsetRatios: this.prevOffsetRatios,
+			nextOffsetRatios: this.nextOffsetRatios,
+			edgeOffsetRatios: edgeOffsetRatios,
+			indeces: this._indeces,
+			uvs: this._uv,
+			primitiveMode: this._primitiveMode,
+		};
+	}
+
+	public get borderMeshConfig(): MeshConfig {
+		const len = this.currVertexes.length;
+		let cvs = this.currVertexes,
+			pvs = this.prevVertexes,
+			nvs = this.nextVertexes,
+			cvo = this.currOffsetRatios,
+			pvo = this.prevOffsetRatios,
+			nvo = this.nextOffsetRatios,
+			uvs = new Array(len*2),
+			indeces = new Array(len/2*2);
+
+		uvs.fill(0);
+		
+		let arr1 = new Array(len);
+		arr1.fill(0);
+		let arr2 = new Array(len);
+		arr2.fill(1);
+		let ero = arr1.concat(arr2);
+
+		for(let i = 0; i < len; i ++) {
+			indeces[i*2] = i;
+			indeces[i*2+1] = len + i;
+		}
+
+		// 双倍顶点
+		cvs = cvs.concat(cvs);
+		pvs = pvs.concat(pvs);
+		nvs = nvs.concat(nvs);
+		cvo = cvo.concat(cvo);
+		pvo = pvo.concat(pvo);
+		nvo = nvo.concat(nvo);
+
+		return {
+			currVertexes: cvs,
+			prevVertexes: pvs,
+			nextVertexes: nvs,
+			currOffsetRatios: cvo,
+			prevOffsetRatios: pvo,
+			nextOffsetRatios: nvo,
+			edgeOffsetRatios: ero,
+			indeces: indeces,
+			uvs: uvs,
+			primitiveMode: PrimitiveMode.TRIANGLE_STRIP,
+		}
+	}
 }
+
 
 export class RectMesh extends Mesh {
 	constructor() {
@@ -74,7 +139,7 @@ export class RectMesh extends Mesh {
 			0,0,
 			0,0,
 		];
-		const tranforms = [
+		const offsetRatio = [
 			-0.5, 0.5,
 			-0.5, -0.5,
 			0.5, -0.5,
@@ -89,7 +154,7 @@ export class RectMesh extends Mesh {
 		const indeces = [
 			0, 1, 3, 2,
 		];
-		super(PrimitiveMode.TRIANGLE_STRIP, vertexes, tranforms, uv, indeces);
+		super(PrimitiveMode.TRIANGLE_STRIP, vertexes, offsetRatio, uv, indeces);
 	}
 }
 

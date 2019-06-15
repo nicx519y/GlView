@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
     mode: 'development',
@@ -19,10 +20,12 @@ module.exports = {
         extensions: [
             '.ts', '.js', '.html',
         ]
-	},
+    },
+
 	devServer: {
 		port: '9090',
 		inline: true,
-		hot: true,
-	}
+        hot: true,
+        contentBase: './',
+    },
 };

@@ -3,15 +3,14 @@ import { Generator, Shape } from './display';
 import { TextureFactroy, ImageTexture } from './texture'
 import { Viewport } from './viewport';
 import { Mesh, RectMesh } from './mesh';
-import { Searcher } from './searcher';
-
+// import { Searcher } from './searcher';
 (function main() {
 	const canvas = document.getElementById('glcanvas');
 	
 	let engine = new Engine(canvas);
 	let tf = new TextureFactroy(engine);
 	let vp = new Viewport(engine);
-	let scr = new Searcher(engine);
+	// let scr = new Searcher(engine);
 	let isDragging = false;
 	let dragLastPoint = [];
 	let activeShape: Shape;
@@ -75,9 +74,9 @@ import { Searcher } from './searcher';
 			.setBgColor(getRandomColor())
 			.setTransformValue(100);
 
-		let result = scr.search(250, 100);
-		let s = result[0];
-		s.setOffset(0, 0);
+		// let result = scr.search(250, 100);
+		// let s = result[0];
+		// s.setOffset(0, 0);
 	}
 
 	function wheelHandler(evt) {
@@ -121,15 +120,15 @@ import { Searcher } from './searcher';
 
 	function hoverHandler(evt) {
 		//调用viewport的方法转换坐标系
-		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		const shape: Shape = scr.search(cs[0], cs[1])[0];
-		if(shape) {
-			shape.setTexture(uvlist[1]);
-			if(activeShape != undefined && activeShape != shape) {
-				activeShape.setTexture(uvlist[0]);
-			}
-			activeShape = shape;
-		}
+		// let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		// const shape: Shape = scr.search(cs[0], cs[1])[0];
+		// if(shape) {
+		// 	shape.setTexture(uvlist[1]);
+		// 	if(activeShape != undefined && activeShape != shape) {
+		// 		activeShape.setTexture(uvlist[0]);
+		// 	}
+		// 	activeShape = shape;
+		// }
 	}
 
 })();

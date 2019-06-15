@@ -54,7 +54,7 @@ import { Mesh, RectMesh } from './mesh';
 				obj.backgroundColor = getRandomColor();
 				obj.texture = uv;
 				obj.vertexOffsetValue = w;
-				obj.rotation = Math.PI / 2;
+				obj.rotation = Math.PI / (Math.random() * 4);
 			}
 		}
 	} 	

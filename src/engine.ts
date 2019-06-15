@@ -50,7 +50,7 @@ RenderAttributeStride.set(RenderAttribute.ROTATION, 1);
 RenderAttributeStride.set(RenderAttribute.Z_ORDER, 1);
 
 const RenderAttributeList = [
-	// RenderAttribute.EDGE_OFFSET_VALUE,
+	RenderAttribute.EDGE_OFFSET_VALUE,
 	RenderAttribute.BACKGROUND_COLOR,
 	RenderAttribute.UV_RECT,
 	RenderAttribute.TRANSLATION,
@@ -61,7 +61,13 @@ const RenderAttributeList = [
 
 const vsSource = `#version 300 es
 	in vec2 currVertex;				//顶点坐标
+	in vec2 prevVertex;
+	in vec2 nextVertex;
 	in vec2 currOffsetRatio; 		//变型系数
+	in vec2 prevOffsetRatio;
+	in vec2 nextOffsetRatio;
+	in float edgeOffsetRatio;		//边偏移系数
+	in float edgeOffsetValue;		//边偏移值
 	in vec2 textCoord;				//UV
 	in vec4 UVRect;					//UVRect
 	in vec4 backgroundColor;		//背景色
@@ -103,8 +109,27 @@ const vsSource = `#version 300 es
 		);
 	}
 
+	vec2 getIntersectionVertex(
+		in vec2 v1,
+		in vec2 v2, 
+		in float offset
+	) {
+		vec2 mid = normalize(normalize(v1) + normalize(v2));
+		float theta = acos(dot(v1, v2) / (length(v1) * length(v2)));
+		float l = offset / sin(theta * 0.5);
+		return mid * l;
+	}
+
 	void main(void) {
-		vec4 pos = vec4(currVertex + currOffsetRatio * vertexOffsetValue, 0, 1);
+
+		vec2 pv = prevVertex + prevOffsetRatio * vertexOffsetValue;
+		vec2 cv = currVertex + currOffsetRatio * vertexOffsetValue;
+		vec2 nv = nextVertex + nextOffsetRatio * vertexOffsetValue;
+		vec2 pe = pv - cv;
+		vec2 ne = nv - cv;
+		vec2 intersection = getIntersectionVertex(pe, ne, edgeOffsetValue * edgeOffsetRatio);
+		
+		vec4 pos = vec4(cv + intersection, 0, 1);
 		pos = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix() * pos;
 		gl_Position = uViewportMatrix * pos + vec4(0,0,zOrder,0);
 
@@ -301,7 +326,12 @@ export class RenderUnit {
 		gl.bindVertexArray(this.vao);
 
 		this.registAttribute(VertexAttribute.CURR_VERTEX, new Float32Array(this._originConfig.currVertexes));
+		this.registAttribute(VertexAttribute.PREV_VERTEX, new Float32Array(this._originConfig.prevVertexes));
+		this.registAttribute(VertexAttribute.NEXT_VERTEX, new Float32Array(this._originConfig.nextVertexes));
 		this.registAttribute(VertexAttribute.CURR_OFFSET_RATIO, new Float32Array(this._originConfig.currOffsetRatios));
+		this.registAttribute(VertexAttribute.PREV_OFFSET_RATIO, new Float32Array(this._originConfig.prevOffsetRatios));
+		this.registAttribute(VertexAttribute.NEXT_OFFSET_RATIO, new Float32Array(this._originConfig.nextOffsetRatios));
+		this.registAttribute(VertexAttribute.EDGE_OFFSET_RATIO, new Float32Array(this._originConfig.edgeOffsetRatios));
 		this.registAttribute(VertexAttribute.TEXTCOORD, new Float32Array(this._originConfig.uvs));
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
@@ -393,6 +423,7 @@ export class RenderUnit {
 		const buffer = gl.createBuffer();
 		const stride = VertexAttributeStride.get(attrib);
 		const local = gl.getAttribLocation(prg, attrib);
+		console.log(attrib, bufferData, stride);
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, bufferData, gl.STATIC_DRAW);
 		gl.vertexAttribPointer(local, stride, gl.FLOAT, false, 0, 0);
@@ -400,6 +431,7 @@ export class RenderUnit {
 	}
 
 	private updateBufferToGL(attrib: string, buffer: WebGLBuffer, bufferData: Float32Array, size: number, offset: number = 0) {
+		console.log(attrib, bufferData, size);
 		const gl = this._engine.gl;
 		const prg = this._engine.prg;
 		const FSIZE = bufferData.BYTES_PER_ELEMENT;

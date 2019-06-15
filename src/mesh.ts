@@ -84,7 +84,7 @@ export class Mesh {
 	}
 
 	public get borderMeshConfig(): MeshConfig {
-		const len = this.currVertexes.length;
+		let len = this.currVertexes.length;
 		let cvs = this.currVertexes,
 			pvs = this.prevVertexes,
 			nvs = this.nextVertexes,
@@ -92,20 +92,23 @@ export class Mesh {
 			pvo = this.prevOffsetRatios,
 			nvo = this.nextOffsetRatios,
 			uvs = new Array(len*2),
-			indeces = new Array(len/2*2);
+			indeces = new Array();
 
 		uvs.fill(0);
 		
-		let arr1 = new Array(len);
+		let arr1 = new Array(len/2);
 		arr1.fill(0);
-		let arr2 = new Array(len);
+		let arr2 = new Array(len/2);
 		arr2.fill(1);
 		let ero = arr1.concat(arr2);
+
+		len /= 2;
 
 		for(let i = 0; i < len; i ++) {
 			indeces[i*2] = i;
 			indeces[i*2+1] = len + i;
 		}
+		indeces.push(indeces[0], indeces[1]);
 
 		// 双倍顶点
 		cvs = cvs.concat(cvs);

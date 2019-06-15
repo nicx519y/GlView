@@ -127,11 +127,13 @@ const vsSource = `#version 300 es
 		vec2 nv = nextVertex + nextOffsetRatio * vertexOffsetValue;
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
+		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix();
+		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, edgeOffsetValue * edgeOffsetRatio);
 		
-		vec4 pos = vec4(cv + intersection, 0, 1);
-		pos = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix() * pos;
-		gl_Position = uViewportMatrix * pos + vec4(0,0,zOrder,0);
+		vec4 pos = vec4(cv, 0, 1);
+		pos = uViewportMatrix * transMat * pos + transMat * vec4(intersection, 0, 0);
+		gl_Position = pos + vec4(0, 0, zOrder, 0);
 
 		vTexCoord = vec2(textCoord.x * UVRect.p + UVRect.s, textCoord.y * UVRect.q + UVRect.t);
 		vBgColor = backgroundColor;
@@ -294,12 +296,17 @@ export class RenderUnit {
 	private _originConfig: MeshConfig;
 	private _borderConfig: MeshConfig;
 	private vao;
+	private borderVao;
 	private instanceCount: number = 0;
 	private num: number = 0;
 
 	private attribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
 	private attribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
 	private attribIsModifieds: Map<RenderAttribute, boolean> = new Map();
+
+	private bAttribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
+	private bAttribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
+	private bAttribIsModifieds: Map<RenderAttribute, boolean> = new Map();
 
 	constructor(engine: Engine, mesh: Mesh) {
 		this._engine = engine;
@@ -310,9 +317,14 @@ export class RenderUnit {
 
 		// 初始化
 		RenderAttributeList.forEach(attrib => {
+			// 本体属性
 			this.attribBuffers.set(attrib, gl.createBuffer());
 			this.attribBufferDatas.set(attrib, new Float32Array(MAX_INSTANCE * RenderAttributeStride.get(attrib)));
 			this.attribIsModifieds.set(attrib, true);
+			// 边框属性
+			this.bAttribBuffers.set(attrib, gl.createBuffer());
+			this.bAttribBufferDatas.set(attrib, new Float32Array(MAX_INSTANCE * RenderAttributeStride.get(attrib)));
+			this.bAttribIsModifieds.set(attrib, true);
 		});
 
 		this.idlist = new Map<string, number>();
@@ -337,6 +349,21 @@ export class RenderUnit {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this._originConfig.indeces), gl.STATIC_DRAW);
 
+		this.borderVao = gl.createVertexArray();
+		gl.bindVertexArray(this.borderVao);
+
+		this.registAttribute(VertexAttribute.CURR_VERTEX, new Float32Array(this._borderConfig.currVertexes));
+		this.registAttribute(VertexAttribute.PREV_VERTEX, new Float32Array(this._borderConfig.prevVertexes));
+		this.registAttribute(VertexAttribute.NEXT_VERTEX, new Float32Array(this._borderConfig.nextVertexes));
+		this.registAttribute(VertexAttribute.CURR_OFFSET_RATIO, new Float32Array(this._borderConfig.currOffsetRatios));
+		this.registAttribute(VertexAttribute.PREV_OFFSET_RATIO, new Float32Array(this._borderConfig.prevOffsetRatios));
+		this.registAttribute(VertexAttribute.NEXT_OFFSET_RATIO, new Float32Array(this._borderConfig.nextOffsetRatios));
+		this.registAttribute(VertexAttribute.EDGE_OFFSET_RATIO, new Float32Array(this._borderConfig.edgeOffsetRatios));
+		this.registAttribute(VertexAttribute.TEXTCOORD, new Float32Array(this._borderConfig.uvs));
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this._borderConfig.indeces), gl.STATIC_DRAW);
+
 		gl.bindVertexArray(null);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -357,20 +384,49 @@ export class RenderUnit {
 				);
 				this.attribIsModifieds.set(attrib, false);
 			});
+
+		gl.bindVertexArray(this.borderVao);
+		
+		RenderAttributeList
+			.filter(attrib => this.bAttribIsModifieds.get(attrib) === true)
+			.forEach(attrib => {
+				this.updateBufferToGL(
+					attrib,
+					this.bAttribBuffers.get(attrib),
+					this.bAttribBufferDatas.get(attrib),
+					RenderAttributeStride.get(attrib)
+				);
+				this.bAttribIsModifieds.set(attrib, false);
+			});
 	}
 
-	public setAttribute(id: string, attrib: RenderAttribute, value: number[]) {
+	public setAttribute(id: string, attrib: RenderAttribute, value: number[], isForBorder: boolean = false) {
 		const idx = this.idlist.get(id);
-		let bufferData: Float32Array = this.attribBufferDatas.get(attrib);
-		let stride: number = RenderAttributeStride.get(attrib);
-		this.attribIsModifieds.set(attrib, true);
+		const stride: number = RenderAttributeStride.get(attrib);
+		let bufferData: Float32Array;
+		if(!isForBorder) {
+			bufferData = this.attribBufferDatas.get(attrib);
+			this.attribIsModifieds.set(attrib, true);
+		} else {
+			bufferData = this.bAttribBufferDatas.get(attrib);
+			this.bAttribIsModifieds.set(attrib, true);
+		}
 		bufferData.set(value.slice(0, stride), idx*stride);
 	}
 
-	public getAttribute(id: string, attrib: RenderAttribute): number[] {
+	public getAttribute(id: string, attrib: RenderAttribute, isForBorder: boolean = false): number[] {
 		const idx = this.idlist.get(id);
-		let bufferData: Float32Array = this.attribBufferDatas.get(attrib);
-		let stride: number = RenderAttributeStride.get(attrib);
+		const stride: number = RenderAttributeStride.get(attrib);
+		let bufferData: Float32Array;
+
+		if(!isForBorder) {
+			bufferData = this.attribBufferDatas.get(attrib);
+			this.attribIsModifieds.set(attrib, true);
+		} else {
+			bufferData = this.bAttribBufferDatas.get(attrib);
+			this.bAttribIsModifieds.set(attrib, true);
+		}
+
 		return Array.from(bufferData.slice(idx*stride, (idx+1)*stride));
 	}
 
@@ -378,14 +434,6 @@ export class RenderUnit {
 		const id = this.createId();
 		const idx = this.instanceCount;
 		this.idlist.set(id, idx);
-
-		//初始化属性
-		this.setAttribute(id, RenderAttribute.TRANSLATION, [0,0]);
-		this.setAttribute(id, RenderAttribute.BACKGROUND_COLOR, [0,0,0,1]);
-		this.setAttribute(id, RenderAttribute.UV_RECT, [0,0,0,0]);
-		this.setAttribute(id, RenderAttribute.VERTEX_OFFSET_VALUE, [1]);
-		this.setAttribute(id, RenderAttribute.Z_ORDER, [0]);
-		
 		this.instanceCount ++;
 		return id;
 	}
@@ -403,7 +451,12 @@ export class RenderUnit {
 	public draw() {
 		const gl = this._engine.gl;
 		const oc = this._originConfig;
+		const bc = this._borderConfig;
 		this.updateToGL();
+
+		gl.bindVertexArray(this.borderVao);
+		gl.drawElementsInstanced(bc.primitiveMode, bc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
+
 		gl.bindVertexArray(this.vao);
 		gl.drawElementsInstanced(oc.primitiveMode, oc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
 	}
@@ -423,7 +476,6 @@ export class RenderUnit {
 		const buffer = gl.createBuffer();
 		const stride = VertexAttributeStride.get(attrib);
 		const local = gl.getAttribLocation(prg, attrib);
-		console.log(attrib, bufferData, stride);
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, bufferData, gl.STATIC_DRAW);
 		gl.vertexAttribPointer(local, stride, gl.FLOAT, false, 0, 0);
@@ -431,7 +483,6 @@ export class RenderUnit {
 	}
 
 	private updateBufferToGL(attrib: string, buffer: WebGLBuffer, bufferData: Float32Array, size: number, offset: number = 0) {
-		console.log(attrib, bufferData, size);
 		const gl = this._engine.gl;
 		const prg = this._engine.prg;
 		const FSIZE = bufferData.BYTES_PER_ELEMENT;
@@ -452,6 +503,10 @@ export class RenderUnit {
 		let n: number = Math.max(1, this.instanceCount - 1);
 		let arr = new Array(stride);
 		arr.fill(0);
+		bufferData.set(bufferData.slice((n-1)*stride, n*stride), idx*stride);
+		bufferData.set(arr, (n-1)*stride);
+
+		bufferData = this.bAttribBufferDatas.get(attrib);
 		bufferData.set(bufferData.slice((n-1)*stride, n*stride), idx*stride);
 		bufferData.set(arr, (n-1)*stride);
 	}

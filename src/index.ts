@@ -44,7 +44,7 @@ import { Mesh, RectMesh } from './mesh';
 	function drawRects(uv) {
 		const rectMesh: RectMesh = new RectMesh();
 		const g: Generator = new Generator(engine, rectMesh);
-		const count = 10;
+		const count = 2;
 		const w = 800/count;
 		for(let i = 0; i < count; i ++) {
 			for(let j = 0; j < count; j ++) {
@@ -55,6 +55,9 @@ import { Mesh, RectMesh } from './mesh';
 				obj.texture = uv;
 				obj.vertexOffsetValue = w;
 				obj.rotation = Math.PI / (Math.random() * 4);
+				obj.borderWidth = 10;
+				obj.borderColor = getRandomColor();
+				obj.zOrder = 0.1;
 			}
 		}
 	} 	
@@ -65,7 +68,7 @@ import { Mesh, RectMesh } from './mesh';
 		const g2: Generator = new Generator(engine, rectMesh);
 		const g3: Generator = new Generator(engine, rectMesh);
 
-		const count = 30;
+		const count = 2;
 		const w = 800/count;
 		const gs = [g1,g2,g3];
 		obj = g1.instance()

@@ -54,28 +54,59 @@ const RenderAttributeList = [
 	RenderAttribute.BACKGROUND_COLOR,
 	RenderAttribute.UV_RECT,
 	RenderAttribute.TRANSLATION,
-	// RenderAttribute.ROTATION,
+	RenderAttribute.ROTATION,
 	RenderAttribute.Z_ORDER,
 	RenderAttribute.VERTEX_OFFSET_VALUE,
 ];
 
 const vsSource = `#version 300 es
-	in vec2 currVertex;			//顶点坐标
-	in vec2 currOffsetRatio; 	//变型系数
-	in vec2 textCoord;			//UV
-	in vec4 UVRect;				//UVRect
-	in vec4 backgroundColor;			//背景色
+	in vec2 currVertex;				//顶点坐标
+	in vec2 currOffsetRatio; 		//变型系数
+	in vec2 textCoord;				//UV
+	in vec4 UVRect;					//UVRect
+	in vec4 backgroundColor;		//背景色
 	in vec2 translation;			//偏移
-	in float zOrder;			//z
-	in float vertexOffsetValue;	//变形值
+	in float rotation;				//旋转
+	in float zOrder;				//z
+	in float vertexOffsetValue;		//变形值
 	out vec2 vTexCoord;				//UV
 	out vec4 vBgColor;
-	uniform mat4 uViewportMatrix;		//视口矩阵
-	uniform vec2 uConversionVec2;			//坐标转换矩阵
+	uniform mat4 uViewportMatrix;	//视口矩阵
+	uniform vec2 uConversionVec2;	//坐标转换矩阵
 	
+	mat4 getConversionMatrix() {
+		return mat4(
+			uConversionVec2.x, 0.0, 0.0, 0.0,
+			0.0, uConversionVec2.y, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0
+		);
+	}
+
+	mat4 getTranslationMatrix() {
+		return mat4(
+			1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			translation.x, translation.y, 0.0, 1.0
+		);
+	}
+
+	mat4 getRotationMatrix() {
+		float cost = cos(rotation);
+		float sint = sin(rotation);
+		return mat4(
+			cost, -sint, 0.0, 0.0,
+			sint, cost, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0
+		);
+	}
+
 	void main(void) {
-		vec2 pos = uConversionVec2 * vec2(currVertex + currOffsetRatio * vertexOffsetValue + translation);
-		gl_Position = uViewportMatrix * vec4(pos, 0, 1) + vec4(0,0,zOrder,0);
+		vec4 pos = vec4(currVertex + currOffsetRatio * vertexOffsetValue, 0, 1);
+		pos = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix() * pos;
+		gl_Position = uViewportMatrix * pos + vec4(0,0,zOrder,0);
 
 		vTexCoord = vec2(textCoord.x * UVRect.p + UVRect.s, textCoord.y * UVRect.q + UVRect.t);
 		vBgColor = backgroundColor;

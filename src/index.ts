@@ -44,17 +44,17 @@ import { Mesh, RectMesh } from './mesh';
 	function drawRects(uv) {
 		const rectMesh: RectMesh = new RectMesh();
 		const g: Generator = new Generator(engine, rectMesh);
-		const count = 30;
+		const count = 10;
 		const w = 800/count;
 		for(let i = 0; i < count; i ++) {
 			for(let j = 0; j < count; j ++) {
 				let idx = Math.round(Math.random() * 2);
-				let obj = g.instance();
-				obj.show()
-					.setOffset(i*w+w/2, j*w+w/2)
-					.setBgColor(getRandomColor())
-					.setTexture(uv)
-					.setTransformValue(w);
+				let obj = g.instance().show();
+				obj.translation = [i*w+w/2, j*w+w/2];
+				obj.backgroundColor = getRandomColor();
+				obj.texture = uv;
+				obj.vertexOffsetValue = w;
+				obj.rotation = Math.PI / 2;
 			}
 		}
 	} 	
@@ -70,9 +70,9 @@ import { Mesh, RectMesh } from './mesh';
 		const gs = [g1,g2,g3];
 		obj = g1.instance()
 			.show()
-			.setOffset(250, 100)
-			.setBgColor(getRandomColor())
-			.setTransformValue(100);
+			// .setOffset(250, 100)
+			// .setBgColor(getRandomColor())
+			// .setTransformValue(100);
 
 		// let result = scr.search(250, 100);
 		// let s = result[0];

@@ -3,14 +3,15 @@ import { Generator, Shape } from './display';
 import { TextureFactroy, ImageTexture } from './texture'
 import { Viewport } from './viewport';
 import { Mesh, RectMesh } from './mesh';
+import { SearchObject } from './searcher';
 // import { Searcher } from './searcher';
 (function main() {
 	const canvas = document.getElementById('glcanvas');
 	
 	let engine = new Engine(canvas);
+	let scr = engine.searcher;
 	let tf = new TextureFactroy(engine);
 	let vp = new Viewport(engine);
-	// let scr = new Searcher(engine);
 	let isDragging = false;
 	let dragLastPoint = [];
 	let activeShape: Shape;
@@ -23,6 +24,7 @@ import { Mesh, RectMesh } from './mesh';
 	canvas.addEventListener('mouseup', dragEnd);
 	canvas.addEventListener('mousemove', hoverHandler);
 	window.addEventListener('resize', windowResize);
+
 	windowResize();
 	
 	let p1 = tf.loadImage('../assets/ps.png');
@@ -44,7 +46,7 @@ import { Mesh, RectMesh } from './mesh';
 	function drawRects(uv) {
 		const rectMesh: RectMesh = new RectMesh();
 		const g: Generator = new Generator(engine, rectMesh);
-		const count = 2;
+		const count = 10;
 		const w = 800/count;
 		for(let i = 0; i < count; i ++) {
 			for(let j = 0; j < count; j ++) {
@@ -54,8 +56,8 @@ import { Mesh, RectMesh } from './mesh';
 				obj.backgroundColor = getRandomColor();
 				obj.texture = uv;
 				obj.vertexOffsetValue = w;
-				obj.rotation = Math.PI / (Math.random() * 4);
-				obj.borderWidth = 10;
+				obj.rotation = Math.PI/4;
+				obj.borderWidth = 3;
 				obj.borderColor = getRandomColor();
 				obj.zOrder = 0.1;
 			}
@@ -73,13 +75,6 @@ import { Mesh, RectMesh } from './mesh';
 		const gs = [g1,g2,g3];
 		obj = g1.instance()
 			.show()
-			// .setOffset(250, 100)
-			// .setBgColor(getRandomColor())
-			// .setTransformValue(100);
-
-		// let result = scr.search(250, 100);
-		// let s = result[0];
-		// s.setOffset(0, 0);
 	}
 
 	function wheelHandler(evt) {
@@ -123,15 +118,11 @@ import { Mesh, RectMesh } from './mesh';
 
 	function hoverHandler(evt) {
 		//调用viewport的方法转换坐标系
-		// let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		// const shape: Shape = scr.search(cs[0], cs[1])[0];
-		// if(shape) {
-		// 	shape.setTexture(uvlist[1]);
-		// 	if(activeShape != undefined && activeShape != shape) {
-		// 		activeShape.setTexture(uvlist[0]);
-		// 	}
-		// 	activeShape = shape;
-		// }
+		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
+		objArr.forEach(obj => console.log('obj ' + obj.id + ' is hovered'))
 	}
+
+	
 
 })();

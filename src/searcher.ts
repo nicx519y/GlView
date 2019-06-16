@@ -1,4 +1,5 @@
 import { Shape } from "./display";
+import { Rectangle } from "./utils";
 
 /**
  * 判断点是否在多边形内
@@ -45,27 +46,52 @@ function rayCasting(p: number[], poly: number[]): boolean {
 	return flag;
 }
 
-// export class Searcher {
-// 	private _sobj;
-// 	constructor(engine) {
-// 		this._sobj = engine.searcher;
-// 	}
+export interface SearchObject {
+	id: string,
+	vertexes: number[];
+	bounds: Rectangle;
+}
 
-// 	public search(x: number, y: number, width: number = 0, height: number = 0): Shape[] {
-// 		let result = this._sobj.search({ x: x, y: y, w: width, h: height, }, true);
-// 		// 区域长宽为0，返回点交元素
-// 		if(width == 0 && height == 0) {
-// 			result = result.filter(v => {
-// 				const shape = v.leaf as Shape;
-// 				const vectexes = shape.getVertexesAfterTransform();
-// 				return rayCasting([x, y], vectexes);
-// 			});
-// 		} else {	//区域长宽不为0，返回矩形区域完全包围的元素
-// 			result = result.filter(v => v.x <= x && v.y <= y && v.x + v.w <= x + width && v.y + v.h <= y + height);
-// 		}
+export class Searcher {
+	private _sobj;
+	private _buffer: Map<string, SearchObject>;
+	constructor() {
+		this._sobj = RTree(200);
+		this._buffer = new Map();
+	}
 
-// 		return result.map(v => {
-// 			return v.leaf as Shape;
-// 		});
-// 	}
-// }
+	public insert(obj: SearchObject) {
+		const id = obj.id;
+		const bufferObj = this._buffer.get(id);
+
+		bufferObj && this.remove(id);
+
+		this._sobj.insert(obj.bounds, obj);
+		this._buffer.set(obj.id, obj);
+	}
+
+	public remove(id: string) {
+		let obj = this._buffer.get(id);
+		if(!obj) return;
+		this._sobj.remove(obj.bounds, obj);
+		this._buffer.delete(obj.id);
+	}
+
+	public search(x: number, y: number, width: number = 0, height: number = 0): SearchObject[] {
+		let result = this._sobj.search({ x: x, y: y, w: width, h: height, }, true);
+		// 区域长宽为0，返回点交元素
+		if(width == 0 && height == 0) {
+			result = result.filter(v => {
+				const obj = v.leaf as SearchObject;
+				const vectexes = obj.vertexes;
+				return rayCasting([x, y], vectexes);
+			});
+		} else {	//区域长宽不为0，返回矩形区域完全包围的元素
+			result = result.filter(v => v.x <= x && v.y <= y && v.x + v.w <= x + width && v.y + v.h <= y + height);
+		}
+
+		return result.map(v => {
+			return v.leaf as SearchObject;
+		});
+	}
+}

@@ -1,4 +1,6 @@
 import { Mesh, PrimitiveMode, MeshConfig } from "./mesh";
+import { Rectangle, getBounds } from "./utils";
+import { Searcher } from "./searcher";
 // import { Searcher } from './searcher';
 
 const MAX_INSTANCE = 100000;
@@ -131,9 +133,7 @@ const vsSource = `#version 300 es
 		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, edgeOffsetValue * edgeOffsetRatio);
 		
-		vec4 pos = vec4(cv, 0, 1);
-		pos = uViewportMatrix * transMat * pos + transMat * vec4(intersection, 0, 0);
-		gl_Position = pos + vec4(0, 0, zOrder, 0);
+		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, zOrder, 0);
 
 		vTexCoord = vec2(textCoord.x * UVRect.p + UVRect.s, textCoord.y * UVRect.q + UVRect.t);
 		vBgColor = backgroundColor;
@@ -182,7 +182,7 @@ export class Engine {
 		this._cvec2 = glMatrix.vec2.fromValues(1/width*2, 1/height*2, 1);
 		this._bgColor = [0,0,0,1];
 		this._unitList = [];
-		this._searcher = RTree(200);
+		this._searcher = new Searcher();
 		this.initPrg();
 	}
 
@@ -192,7 +192,7 @@ export class Engine {
 	public get prg() {
 		return this._prg;
 	}
-	public get searcher() {
+	public get searcher(): Searcher {
 		return this._searcher;
 	}
 
@@ -292,6 +292,7 @@ export class Engine {
 export class RenderUnit {
 
 	private _engine: Engine;
+	private _searcher;
 	private idlist: Map<string, number>;
 	private _originConfig: MeshConfig;
 	private _borderConfig: MeshConfig;
@@ -310,6 +311,7 @@ export class RenderUnit {
 
 	constructor(engine: Engine, mesh: Mesh) {
 		this._engine = engine;
+		this._searcher = engine.searcher;
 		this._originConfig = mesh.originMeshConfig;
 		this._borderConfig = mesh.borderMeshConfig;
 
@@ -412,6 +414,16 @@ export class RenderUnit {
 			this.bAttribIsModifieds.set(attrib, true);
 		}
 		bufferData.set(value.slice(0, stride), idx*stride);
+
+		if([RenderAttribute.ROTATION, RenderAttribute.TRANSLATION, RenderAttribute.VERTEX_OFFSET_VALUE].indexOf(attrib) >= 0) {
+			const vs = this.getVertexesPositionById(id);
+			// 改变这几个属性需要重新注册搜索器
+			this.engine.searcher.insert({
+				id: id,
+				bounds: getBounds(vs),
+				vertexes: vs,
+			});
+		}
 	}
 
 	public getAttribute(id: string, attrib: RenderAttribute, isForBorder: boolean = false): number[] {
@@ -435,6 +447,14 @@ export class RenderUnit {
 		const idx = this.instanceCount;
 		this.idlist.set(id, idx);
 		this.instanceCount ++;
+
+		let vs = this.getVertexesPositionById(id);
+		this.engine.searcher.insert({
+			id: id,
+			vertexes: vs,
+			bounds: getBounds(vs),
+		});
+
 		return id;
 	}
 	public remove(id: string) {
@@ -445,7 +465,17 @@ export class RenderUnit {
 			return;
 		}
 		RenderAttributeList.forEach((attrib: RenderAttribute) => this.removeAttributeBufferData(id, attrib));
+
+		for(let i in this.idlist) {
+			if(this.idlist.get(i) == this.instanceCount - 1) {
+				this.idlist.set(i, idx);
+				this.idlist.delete(id);
+				break;
+			}
+		}
 		this.instanceCount --;
+
+		this.engine.searcher.remove(id);
 	}
 
 	public draw() {
@@ -509,5 +539,39 @@ export class RenderUnit {
 		bufferData = this.bAttribBufferDatas.get(attrib);
 		bufferData.set(bufferData.slice((n-1)*stride, n*stride), idx*stride);
 		bufferData.set(arr, (n-1)*stride);
+	}
+
+	/**
+	 * 按ID获取实例的真实顶点位置
+	 * @param id 实例id
+	 */
+	public getVertexesPositionById(id: string): number[] {
+		// 顶点
+		const cv = this._originConfig.currVertexes;
+		// 形变系数
+		const co = this._originConfig.currOffsetRatios;
+		// 形变值
+		const cov = this.getAttribute(id, RenderAttribute.VERTEX_OFFSET_VALUE)[0];
+		// 偏移
+		const trans = this.getAttribute(id, RenderAttribute.TRANSLATION);
+		// 旋转
+		const rot = this.getAttribute(id, RenderAttribute.ROTATION)[0];
+		// 顶点数量
+		const len = cv.length / 2;
+
+		let mat = mat4.create();
+		mat4.fromZRotation(mat, -rot);
+
+		let result = [];
+		for(let i = 0; i < len; i ++) {
+			let v = vec3.fromValues(cv[i*2], cv[i*2+1], 0);
+			let t = vec3.fromValues(co[i*2]*cov, co[i*2+1]*cov, 0);
+			vec3.add(v, v, t);
+			vec3.transformMat4(v, v, mat);
+			vec3.add(v, v, vec3.fromValues(trans[0], trans[1], 0));
+			result.push(v[0], v[1]);
+		}
+
+		return result;
 	}
 }

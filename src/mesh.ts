@@ -161,6 +161,82 @@ export class RectMesh extends Mesh {
 	}
 }
 
+export class OneWayArrowMesh extends Mesh {
+	constructor(width: number = 20, height: number = 20) {
+		const vertexes = [
+			-0.2, 0,
+			0.2, 0,
+			0.2, 0,
+			0.5, 0,
+			0, 1,
+			-0.5, 0,
+			-0.2, 0,
+		].map((v, k) => {
+			if(k % 2 == 0) {
+				return v * width;
+			} else {
+				return v * height;
+			}
+		});
+
+		const offsetRatio = [
+			0, 0,
+			0, 0,
+			0, 1,
+			0, 1,
+			0, 1,
+			0, 1,
+			0, 1,
+		];
+		const uv = new Array<number>(vertexes.length);
+		const indeces = [
+			0, 1, 6, 2, 5, 3, 4,
+		];
+		super(PrimitiveMode.TRIANGLE_STRIP, vertexes, offsetRatio, uv, indeces);
+	}
+}
+
+export class TwoWayArrowMesh extends Mesh {
+	constructor(width: number = 20, height: number = 20) {
+		const vertexes = [
+			0, 0,
+			0.5, 1,
+			0.2, 1,
+			0.2, 1,
+			0.5, 1,
+			0, 2,
+			-0.5, 1,
+			-0.2, 1,
+			-0.2, 1,
+			-0.5, 1,
+		].map((v, k) => {
+			if(k % 2 == 0) {
+				return v * width;
+			} else {
+				return v * height;
+			}
+		});
+
+		const offsetRatio = [
+			0, 0,
+			0, 0,
+			0, 0,
+			0, 1,
+			0, 1,
+			0, 1,
+			0, 1,
+			0, 1,
+			0, 0,
+			0, 0,
+		];
+		const uv = new Array<number>(vertexes.length);
+		const indeces = [
+			0, 1, 9, 2, 8, 3, 7, 4, 6, 5,
+		];
+		super(PrimitiveMode.TRIANGLE_STRIP, vertexes, offsetRatio, uv, indeces);
+	}
+}
+
 // export class BorderMesh extends Mesh {
 // 	constructor(originMesh: Mesh) {
 // 		let btransforms = createBorderTransformVector(originMesh.vertexes);

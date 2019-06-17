@@ -116,10 +116,15 @@ const vsSource = `#version 300 es
 		in vec2 v2, 
 		in float offset
 	) {
+		vec3 vv1 = vec3(v1, 0);
+		vec3 vv2 = vec3(v2, 0);
+		// 向量夹角
 		vec2 mid = normalize(normalize(v1) + normalize(v2));
 		float theta = acos(dot(v1, v2) / (length(v1) * length(v2)));
+		// 右手法则，判断夹角正负
+		vec3 c = cross(vv1, vv2);
 		float l = offset / sin(theta * 0.5);
-		return mid * l;
+		return mid * l * (- sign(c.z));
 	}
 
 	void main(void) {

@@ -2,8 +2,12 @@ import { Engine } from './engine';
 import { Generator, Shape } from './display';
 import { TextureFactroy, ImageTexture } from './texture'
 import { Viewport } from './viewport';
-import { Mesh, RectMesh } from './mesh';
+import { Mesh, RectMesh, OneWayArrowMesh, TwoWayArrowMesh } from './mesh';
 import { SearchObject } from './searcher';
+
+const vec2 = glMatrix.vec2;
+const vec3 = glMatrix.vec3;
+
 // import { Searcher } from './searcher';
 (function main() {
 	const canvas = document.getElementById('glcanvas');
@@ -38,9 +42,10 @@ import { SearchObject } from './searcher';
 
 	function init(uvs) {
 		uvlist = uvs;
-		drawRects(uvs[0]);
+		// drawRects(uvs[0]);
+		// drawOneWayArrow();
+		drawTwoWayArrow();
 		engine.render();
-		
 	}
 
 	function drawRects(uv) {
@@ -57,7 +62,7 @@ import { SearchObject } from './searcher';
 				obj.texture = uv;
 				obj.vertexOffsetValue = w;
 				obj.rotation = Math.PI/4;
-				obj.borderWidth = 3;
+				obj.borderWidth = 10;
 				obj.borderColor = getRandomColor();
 				obj.zOrder = 0.1;
 			}
@@ -75,6 +80,30 @@ import { SearchObject } from './searcher';
 		const gs = [g1,g2,g3];
 		obj = g1.instance()
 			.show()
+	}
+
+	function drawOneWayArrow() {
+		const arrowMesh: OneWayArrowMesh = new OneWayArrowMesh(100, 100);
+		const g: Generator = new Generator(engine, arrowMesh);
+		const obj = g.instance().show();
+		obj.translation = [100, 100];
+		obj.vertexOffsetValue = 100;
+		obj.rotation = Math.PI / 4;
+		obj.backgroundColor = getRandomColor();
+		obj.borderWidth = 2;
+		obj.borderColor = getRandomColor();
+	}
+
+	function drawTwoWayArrow() {
+		const arrowMesh: TwoWayArrowMesh = new TwoWayArrowMesh(100, 100);
+		const g: Generator = new Generator(engine, arrowMesh);
+		const obj = g.instance().show();
+		obj.translation = [100, 100];
+		obj.vertexOffsetValue = 100;
+		obj.rotation = Math.PI / 4;
+		obj.backgroundColor = getRandomColor();
+		obj.borderWidth = 2;
+		obj.borderColor = getRandomColor();
 	}
 
 	function wheelHandler(evt) {
@@ -122,7 +151,5 @@ import { SearchObject } from './searcher';
 		const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
 		objArr.forEach(obj => console.log('obj ' + obj.id + ' is hovered'))
 	}
-
-	
 
 })();

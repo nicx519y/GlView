@@ -19,7 +19,7 @@ const vec3 = glMatrix.vec3;
 	let dragLastPoint = [];
 	let activeShape: Shape;
 	let uvlist = [];
-	vp.setBackgroundColor([0,0,0,1]);
+	vp.setBackgroundColor(getRandomColor());
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
@@ -63,7 +63,7 @@ const vec3 = glMatrix.vec3;
 				obj.texture = uv;
 				obj.vertexOffsetValue = [w,w];
 				obj.rotation = Math.PI/4;
-				obj.borderWidth = 0;
+				obj.borderWidth = 2;
 				obj.borderColor = getRandomColor();
 				obj.zOrder = 0.1;
 			}

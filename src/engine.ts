@@ -502,11 +502,11 @@ export class RenderUnit {
 		const bc = this._borderConfig;
 		this.updateToGL();
 
-		gl.bindVertexArray(this.borderVao);
-		gl.drawElementsInstanced(bc.primitiveMode, bc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
-
+		
 		gl.bindVertexArray(this.vao);
 		gl.drawElementsInstanced(oc.primitiveMode, oc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
+		gl.bindVertexArray(this.borderVao);
+		gl.drawElementsInstanced(bc.primitiveMode, bc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
 	}
 
 	public get engine(): Engine {

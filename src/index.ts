@@ -11,7 +11,6 @@ const vec3 = glMatrix.vec3;
 // import { Searcher } from './searcher';
 (function main() {
 	const canvas = document.getElementById('glcanvas');
-	
 	let engine = new Engine(canvas);
 	let scr = engine.searcher;
 	let tf = new TextureFactroy(engine);
@@ -20,7 +19,7 @@ const vec3 = glMatrix.vec3;
 	let dragLastPoint = [];
 	let activeShape: Shape;
 	let uvlist = [];
-	vp.setBackgroundColor(getRandomColor());
+	vp.setBackgroundColor([0,0,0,1]);
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
@@ -42,9 +41,9 @@ const vec3 = glMatrix.vec3;
 
 	function init(uvs) {
 		uvlist = uvs;
-		// drawRects(uvs[0]);
+		drawRects(uvs[1]);
 		// drawOneWayArrow();
-		drawTwoWayArrow();
+		// drawTwoWayArrow();
 		engine.render();
 	}
 
@@ -55,14 +54,16 @@ const vec3 = glMatrix.vec3;
 		const w = 800/count;
 		for(let i = 0; i < count; i ++) {
 			for(let j = 0; j < count; j ++) {
+				let c = getRandomColor();
+				c[3] = 128;
 				let idx = Math.round(Math.random() * 2);
 				let obj = g.instance().show();
 				obj.translation = [i*w+w/2, j*w+w/2];
-				obj.backgroundColor = getRandomColor();
+				obj.backgroundColor = c;
 				obj.texture = uv;
-				obj.vertexOffsetValue = w;
+				obj.vertexOffsetValue = [w,w];
 				obj.rotation = Math.PI/4;
-				obj.borderWidth = 10;
+				obj.borderWidth = 0;
 				obj.borderColor = getRandomColor();
 				obj.zOrder = 0.1;
 			}
@@ -87,7 +88,7 @@ const vec3 = glMatrix.vec3;
 		const g: Generator = new Generator(engine, arrowMesh);
 		const obj = g.instance().show();
 		obj.translation = [100, 100];
-		obj.vertexOffsetValue = 100;
+		obj.vertexOffsetValue = [0,100];
 		obj.rotation = Math.PI / 4;
 		obj.backgroundColor = getRandomColor();
 		obj.borderWidth = 2;
@@ -99,7 +100,7 @@ const vec3 = glMatrix.vec3;
 		const g: Generator = new Generator(engine, arrowMesh);
 		const obj = g.instance().show();
 		obj.translation = [100, 100];
-		obj.vertexOffsetValue = 100;
+		obj.vertexOffsetValue = [0, 100];
 		obj.rotation = Math.PI / 4;
 		obj.backgroundColor = getRandomColor();
 		obj.borderWidth = 2;

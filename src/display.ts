@@ -22,7 +22,7 @@ export class Shape {
 	private _rotation: number = 0;
 	private _backgroundColor: number[] = [0,0,0,0];
 	private _uvRect: number[] = [0,0,0,0];
-	private _vertexOffsetValue: number = 1;
+	private _vertexOffsetValue: number[] = [0,0];
 	private _borderColor: number[] = [0,0,0,0];
 	private _borderWidth: number = 0;
 	private _zOrder: number = 0;
@@ -54,7 +54,7 @@ export class Shape {
 		return this._translation;
 	}
 	public set backgroundColor(color: number[]) {
-		this._backgroundColor = color;
+		this._backgroundColor = color.map(c => c/255);
 		if(this.id != undefined) {
 			this.uint.setAttribute(
 				this.id, 
@@ -64,7 +64,7 @@ export class Shape {
 		}
 	}
 	public get backgroundColor(): number[] {
-		return this._backgroundColor;
+		return this._backgroundColor.map(c => c*255);
 	}
 	public set texture(texture: ImageTexture) {
 		const x = texture.u;
@@ -76,26 +76,26 @@ export class Shape {
 			this.uint.setAttribute(this.id, RenderAttribute.UV_RECT, this._uvRect)
 		}
 	}
-	public set vertexOffsetValue(n: number) {
+	public set vertexOffsetValue(n: number[]) {
 		this._vertexOffsetValue = n;
 		if(this.id != undefined) {
-			this.uint.setAttribute(this.id, RenderAttribute.VERTEX_OFFSET_VALUE, [n]);
-			this.uint.setAttribute(this.id, RenderAttribute.VERTEX_OFFSET_VALUE, [n], true);
+			this.uint.setAttribute(this.id, RenderAttribute.VERTEX_OFFSET_VALUE, n);
+			this.uint.setAttribute(this.id, RenderAttribute.VERTEX_OFFSET_VALUE, n, true);
 		}
 	}
-	public get vertexOffsetValue(): number {
+	public get vertexOffsetValue(): number[] {
 		return this._vertexOffsetValue;
 	}
 
 	public set borderColor(color: number[]) {
-		this._borderColor = color;
+		this._borderColor = color.map(c => c/255);
 		if(this.id != undefined) {
 			this.uint.setAttribute(this.id, RenderAttribute.BACKGROUND_COLOR, this._borderColor, true);
 		}
 	}
 
 	public get borderColor(): number[] {
-		return this._borderColor;
+		return this._borderColor.map(c => c*255);
 	}
 
 	public set borderWidth(width: number) {

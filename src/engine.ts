@@ -43,7 +43,7 @@ export const enum RenderAttribute {
 }
 
 var RenderAttributeStride: Map<RenderAttribute, number> = new Map();
-RenderAttributeStride.set(RenderAttribute.VERTEX_OFFSET_VALUE, 1);
+RenderAttributeStride.set(RenderAttribute.VERTEX_OFFSET_VALUE, 2);
 RenderAttributeStride.set(RenderAttribute.EDGE_OFFSET_VALUE, 1);
 RenderAttributeStride.set(RenderAttribute.BACKGROUND_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
@@ -70,13 +70,13 @@ const vsSource = `#version 300 es
 	in vec2 nextOffsetRatio;
 	in float edgeOffsetRatio;		//边偏移系数
 	in float edgeOffsetValue;		//边偏移值
+	in vec2 vertexOffsetValue;		//变形值
 	in vec2 textCoord;				//UV
 	in vec4 UVRect;					//UVRect
 	in vec4 backgroundColor;		//背景色
 	in vec2 translation;			//偏移
 	in float rotation;				//旋转
 	in float zOrder;				//z
-	in float vertexOffsetValue;		//变形值
 	out vec2 vTexCoord;				//UV
 	out vec4 vBgColor;
 	uniform mat4 uViewportMatrix;	//视口矩阵
@@ -127,11 +127,20 @@ const vsSource = `#version 300 es
 		return mid * l * (- sign(c.z));
 	}
 
+	vec2 getVertex(
+		in vec2 origin,
+		in vec2 offsetRatio,
+		in vec2 offsetValue
+	) {
+		vec2 offset = vec2(offsetRatio.x * offsetValue.x, offsetRatio.y * offsetValue.y);
+		return origin + offset;
+	}
+
 	void main(void) {
 
-		vec2 pv = prevVertex + prevOffsetRatio * vertexOffsetValue;
-		vec2 cv = currVertex + currOffsetRatio * vertexOffsetValue;
-		vec2 nv = nextVertex + nextOffsetRatio * vertexOffsetValue;
+		vec2 pv = getVertex(prevVertex, prevOffsetRatio, vertexOffsetValue);
+		vec2 cv = getVertex(currVertex, currOffsetRatio, vertexOffsetValue);
+		vec2 nv = getVertex(nextVertex, nextOffsetRatio, vertexOffsetValue);
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
 		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix();
@@ -157,15 +166,14 @@ const fsSource = `#version 300 es
 		float g1 = tColor.g;
 		float b1 = tColor.b;
 		float a1 = tColor.a;
-		
-		float r2 = vBgColor.r/255.0;
-		float g2 = vBgColor.g/255.0;
-		float b2 = vBgColor.b/255.0;
-		float a2 = vBgColor.a/255.0;
-		
-		float k = a1/a2;
 
-		fragColor = vec4(mix(r2,r1,k), mix(g2,g1,k), mix(b2,b1,k), a1+a2);
+		float r2 = vBgColor.r;
+		float g2 = vBgColor.g;
+		float b2 = vBgColor.b;
+		float a2 = vBgColor.a;
+		
+		fragColor = vec4(mix(vec3(r2, g2, b2), vec3(r1, g1, b1), a1), a1+(1.0-a1)*a2);
+		// fragColor = vec4(1,0,0,0.5);
 	}
 `;
 
@@ -182,7 +190,7 @@ export class Engine {
 	constructor(canvas) {
 		const width = canvas.width;
 		const height = canvas.height;
-		this._gl = canvas.getContext('webgl2');
+		this._gl = canvas.getContext('webgl2', { alpha: false }/* { alpha: false }*/);
 		this._vpmat4 = mat4.create();
 		this._cvec2 = glMatrix.vec2.fromValues(1/width*2, 1/height*2, 1);
 		this._bgColor = [0,0,0,1];
@@ -219,20 +227,21 @@ export class Engine {
 	}
 
 	public set bgColor(color: number[]) {
+		const gl = this.gl;
 		this._bgColor = color;
+		gl.clearColor.apply(gl, this._bgColor);
+	
 	}
-
+	
 	// 渲染
 	public draw() {
 		const gl = this.gl;
+		gl.depthMask(false);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		this.updateViewportMat();
 		this.updateConversionVec();
-		
-		gl.clearColor.apply(gl, this._bgColor);
-		gl.enable(gl.DEPTH_TEST);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
 		this._unitList.forEach(unit => unit.draw());
+		gl.depthMask(true);
 	}
 
 	public registVAO(mesh: Mesh): RenderUnit {
@@ -259,6 +268,10 @@ export class Engine {
 			alert("Could not initialise shaders");
 		}
 		gl.useProgram(this._prg);
+		//打开透明度混合
+		gl.enable(gl.BLEND);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		gl.enable(gl.DEPTH_TEST);
 	}
 
 	// 更新视口矩阵
@@ -556,7 +569,7 @@ export class RenderUnit {
 		// 形变系数
 		const co = this._originConfig.currOffsetRatios;
 		// 形变值
-		const cov = this.getAttribute(id, RenderAttribute.VERTEX_OFFSET_VALUE)[0];
+		const cov = this.getAttribute(id, RenderAttribute.VERTEX_OFFSET_VALUE);
 		// 偏移
 		const trans = this.getAttribute(id, RenderAttribute.TRANSLATION);
 		// 旋转
@@ -570,7 +583,7 @@ export class RenderUnit {
 		let result = [];
 		for(let i = 0; i < len; i ++) {
 			let v = vec3.fromValues(cv[i*2], cv[i*2+1], 0);
-			let t = vec3.fromValues(co[i*2]*cov, co[i*2+1]*cov, 0);
+			let t = vec3.fromValues(co[i*2]*cov[0], co[i*2+1]*cov[1], 0);
 			vec3.add(v, v, t);
 			vec3.transformMat4(v, v, mat);
 			vec3.add(v, v, vec3.fromValues(trans[0], trans[1], 0));

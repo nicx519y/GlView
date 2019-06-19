@@ -7,14 +7,17 @@
 		"removeComments": true,
 		// "preserveConstEnums": true,
 		"sourceMap": true,
-		"allowJs": true,
+		// "allowJs": true,
+		"declaration": true,
+		"declarationDir": "./dist/types",
+    "outDir": "dist/lib",
 		"typeRoots": [
 			"node_modules/@types"
 		],
 	},
 	"include": [
 		"src/**/*",
-		"lib/lib.d.ts",
+		"lib/lib.d.ts", "example/index.ts",
 	],
 	"exclude": [
 		"node_modules",

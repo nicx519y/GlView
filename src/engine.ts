@@ -1,7 +1,7 @@
 import { Mesh, PrimitiveMode, MeshConfig } from "./mesh";
 import { Rectangle, getBounds } from "./utils";
 import { Searcher } from "./searcher";
-// import { Searcher } from './searcher';
+import * as glMatrix from "../lib/gl-matrix.js"
 
 const MAX_INSTANCE = 100000;
 const mat4 = glMatrix.mat4;

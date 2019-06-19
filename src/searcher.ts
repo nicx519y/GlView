@@ -1,5 +1,7 @@
 import { Shape } from "./display";
 import { Rectangle } from "./utils";
+import * as RTree from '../lib/rtree';
+
 
 /**
  * 判断点是否在多边形内

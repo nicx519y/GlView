@@ -1,4 +1,5 @@
 import { Engine } from "./engine";
+import * as glMatrix from "../lib/gl-matrix.js"
 
 const mat4 = glMatrix.mat4;
 const vec3 = glMatrix.vec3;

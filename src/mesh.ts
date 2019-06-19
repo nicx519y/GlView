@@ -1,3 +1,4 @@
+import * as glMatrix from "../lib/gl-matrix.js"
 const vec2 = glMatrix.vec2;
 
 export enum PrimitiveMode {

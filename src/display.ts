@@ -2,6 +2,7 @@ import { Engine, RenderUnit, RenderAttribute } from './engine';
 import { ImageTexture } from './texture';
 import { Mesh } from './mesh';
 import { Rectangle } from './utils';
+import * as glMatrix from "../lib/gl-matrix.js"
 
 export class Generator {
 	private engine: Engine;

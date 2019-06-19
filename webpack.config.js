@@ -1,15 +1,19 @@
-const path = require('path');
+const path = require('path')
+const join = path.join
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+let entry = [
+    `webpack-dev-server/client?http://localhost:9090`,
+    'webpack/hot/only-dev-server',
+    `./example/index.ts`
+]
 
 module.exports = {
     mode: 'development',
-
-    entry: './src/index.ts',
-    output: {
-        filename: 'main.js',
-        path: path.resolve(__dirname, 'dist')
+    entry: {
+        index: entry
     },
-
     module: {
         rules: [{
             test: /\.ts$/,
@@ -17,15 +21,23 @@ module.exports = {
         }]
     },
     resolve: {
-        extensions: [
-            '.ts', '.js', '.html',
-        ]
+        extensions: ['.ts', '.js']
     },
-
-	devServer: {
-		port: '9090',
-		inline: true,
+    plugins: [
+        new HtmlWebpackPlugin({
+            inject: true,
+            title: 'abc',
+            filename: 'index.html',
+            template: join(__dirname, './example/index.html'),
+            hash: true,
+            chunks: ['common', 'index']
+        })
+    ],
+    devServer: {
         hot: true,
-        contentBase: './',
+        contentBase:  path.resolve(__dirname),
+        watchContentBase: true,
+        port: 9090,
+        publicPath: '/'
     },
 };

@@ -1,4 +1,3 @@
-import { Shape } from "./display";
 import { Rectangle } from "./utils";
 import * as RTree from '../lib/rtree';
 

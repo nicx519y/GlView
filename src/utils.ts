@@ -11,6 +11,10 @@ export class Rectangle {
 	}
 }
 
+export interface PaintUnitInterface {
+	draw(): void;
+}
+
 export function getBounds(vertexes: number[]): Rectangle {
 	const vs = vertexes;
 	const vsx = vs.filter((v, k) => k % 2 == 0);

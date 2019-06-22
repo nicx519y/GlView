@@ -1,6 +1,6 @@
 import * as glMatrix from '../lib/gl-matrix'
 
-import { Engine,Generator,Shape,Viewport, RectMesh, OneWayArrowMesh, TwoWayArrowMesh,SearchObject,TextureFactroy } from '../src';
+import { Engine,Generator,Viewport, RectMesh, OneWayArrowMesh, TwoWayArrowMesh,SearchObject,TextureFactroy, RenderObject } from '../src';
 
 
 console.log(glMatrix);
@@ -15,9 +15,9 @@ const vec3 = glMatrix.vec3;
 	let vp = new Viewport(engine);
 	let isDragging = false;
 	let dragLastPoint = [];
-	let activeShape: Shape;
+	let activeShape: RenderObject;
 	let uvlist = [];
-	vp.setBackgroundColor(getRandomColor());
+	vp.setBackgroundColor([255,255,255,255]);
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
@@ -53,17 +53,18 @@ const vec3 = glMatrix.vec3;
 		for(let i = 0; i < count; i ++) {
 			for(let j = 0; j < count; j ++) {
 				let c = getRandomColor();
-				c[3] = 128;
+				c[3] = 200;
 				let idx = Math.round(Math.random() * 2);
 				let obj = g.instance().show();
 				obj.translation = [i*w+w/2, j*w+w/2];
 				obj.backgroundColor = c;
 				obj.texture = uv;
 				obj.vertexOffsetValue = [w,w];
-				obj.rotation = Math.PI/4;
-				obj.borderWidth = 2;
-				obj.borderColor = getRandomColor();
-				obj.zOrder = 0.1;
+				obj.rotation = Math.PI/6;
+				if(i % 2 == 0) {
+					// obj.borderWidth = 10;
+					// obj.borderColor = getRandomColor();
+				}
 			}
 		}
 	} 	
@@ -89,8 +90,6 @@ const vec3 = glMatrix.vec3;
 		obj.vertexOffsetValue = [0,100];
 		obj.rotation = Math.PI / 4;
 		obj.backgroundColor = getRandomColor();
-		obj.borderWidth = 2;
-		obj.borderColor = getRandomColor();
 	}
 
 	function drawTwoWayArrow() {
@@ -101,8 +100,6 @@ const vec3 = glMatrix.vec3;
 		obj.vertexOffsetValue = [0, 100];
 		obj.rotation = Math.PI / 4;
 		obj.backgroundColor = getRandomColor();
-		obj.borderWidth = 2;
-		obj.borderColor = getRandomColor();
 	}
 
 	function wheelHandler(evt) {

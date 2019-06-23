@@ -34,6 +34,6 @@ export function loadImage(src: string): Promise<any> {
 	});
 }
 
-export function loadImages(srcs: string[]): Promise<any>[] {
-	return srcs.map(src => loadImage(src));
+export function loadImages(srcs: string[]): Promise<any[]> {
+	return Promise.all(srcs.map(src => loadImage(src)));
 }

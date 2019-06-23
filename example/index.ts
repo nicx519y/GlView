@@ -39,9 +39,7 @@ const vec3 = glMatrix.vec3;
 
 	windowResize();
 
-	const promises = loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']);
-
-	Promise.all(promises).then(init);
+	loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']).then(init);
 
 	var obj;
 

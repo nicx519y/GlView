@@ -1,6 +1,12 @@
 import { Engine } from './engine';
 import { Mesh, MeshConfig } from "./mesh";
-import { VertexAttribute, VertexAttributeStride, RenderAttribute, RenderAttributeStride, RenderAttributeList, RenderUnit } from './render-unit';
+import { 
+	VertexAttribute, 
+	VertexAttributeStride, 
+	RenderAttribute, 
+	RenderAttributeStride, 
+	RenderAttributeList, 
+	RenderUnit } from './render-unit';
 import { ImageTexture } from './texture';
 import { Searcher } from './searcher';
 import { getBounds } from './utils';

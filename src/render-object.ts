@@ -14,6 +14,8 @@ export class RenderObject {
 	private _isAdded: boolean;
 	private _isBorderAdded: boolean;
 	private _scr: Searcher;
+	private _texture: ImageTexture;
+	private _textureHandler: Function;
 
 	private _attribs = {
 		'translation': [0,0],
@@ -29,6 +31,7 @@ export class RenderObject {
 		this._originUnit = originUnit;
 		this._borderUnit = borderUnit;
 		this._scr = this._originUnit.engine.searcher;
+		this._textureHandler = t => this.changeUV(t);
 	}
 
 	public show() {
@@ -148,9 +151,12 @@ export class RenderObject {
 	}
 
 	public set texture(texture: ImageTexture) {
-		const uv = [texture.u, texture.v, texture.width, texture.height];
-		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.UV_RECT, uv);
-		this._attribs['uv'] = uv;
+		if(this._texture && this._texture instanceof ImageTexture) {
+			this._texture.unbind(this._textureHandler);
+		}
+		this._texture = texture;
+		this.changeUV(this._texture);
+		this._texture.bind(this._textureHandler);
 	}
 
 	public set borderWidth(width: number) {
@@ -190,6 +196,12 @@ export class RenderObject {
 
 	public get vertexOffsetValue(): number[] {
 		return this._attribs['vertexOffsetValue'];
+	}
+
+	private changeUV(texture: ImageTexture) {
+		const uv = [texture.u, texture.v, texture.width, texture.height];
+		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.UV_RECT, uv);
+		this._attribs['uv'] = uv;
 	}
 
 }

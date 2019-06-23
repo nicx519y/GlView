@@ -25,3 +25,15 @@ export function getBounds(vertexes: number[]): Rectangle {
 	const maxy = Math.max.apply(null, vsy);
 	return new Rectangle(minx, miny, maxx - minx, maxy - miny);
 }
+
+export function loadImage(src: string): Promise<any> {
+	return new Promise((resolve, reject) => {
+		const image = new Image();
+		image.onload = () => resolve(image);
+		image.src = src;
+	});
+}
+
+export function loadImages(srcs: string[]): Promise<any>[] {
+	return srcs.map(src => loadImage(src));
+}

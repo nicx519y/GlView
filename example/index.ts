@@ -1,6 +1,18 @@
 import * as glMatrix from '../lib/gl-matrix'
 
-import { Engine,Generator,Viewport, RectMesh, OneWayArrowMesh, TwoWayArrowMesh,SearchObject,TextureFactroy, RenderObject } from '../src';
+import { 
+	Engine,
+	Generator,
+	Viewport, 
+	RectMesh, 
+	OneWayArrowMesh, 
+	TwoWayArrowMesh,
+	SearchObject,
+	TextureFactroy, 
+	RenderObject, 
+	loadImages, 
+	ImageTexture 
+} from '../src';
 
 
 const vec2 = glMatrix.vec2;
@@ -26,25 +38,25 @@ const vec3 = glMatrix.vec3;
 	window.addEventListener('resize', windowResize);
 
 	windowResize();
-	
-	let p1 = tf.loadImage('../assets/ps.png');
-	let p2 = tf.loadImage('../assets/superman.png');
-	let p3 = tf.loadImage('../assets/dvd.png');
 
-	Promise.all([p1,p2,p3]).then(init);
+	const promises = loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']);
+
+	Promise.all(promises).then(init);
 
 	var obj;
 
 
-	function init(uvs) {
-		uvlist = uvs;
-		drawRects(uvs[1]);
+	function init(images) {
+
+		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
+		tf.updateToGL();
+		drawRects(textures[2]);
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 		engine.render();
 	}
 
-	function drawRects(uv) {
+	function drawRects(texture: ImageTexture) {
 		const rectMesh: RectMesh = new RectMesh();
 		const g: Generator = new Generator(engine, rectMesh);
 		const count = 10;
@@ -57,7 +69,7 @@ const vec3 = glMatrix.vec3;
 				let obj = g.instance().show();
 				obj.translation = [i*w+w/2, j*w+w/2];
 				obj.backgroundColor = c;
-				obj.texture = uv;
+				obj.texture = texture;
 				obj.vertexOffsetValue = [w,w];
 				obj.rotation = Math.PI/6;
 				if(i % 3 == 0) {

@@ -38,10 +38,16 @@ export class RenderObject {
 			this._isAdded = true;
 
 			const vs = this._originUnit.getVertexesPositionById(this._originId);
+			const bounds = getBounds(vs);
 			this._scr.insert({
 				id: this._id,
 				vertexes: vs,
-				bounds: getBounds(vs),
+				bounds: {
+					minX: bounds.x,
+					minY: bounds.y,
+					maxX: bounds.x + bounds.w,
+					maxY: bounds.y + bounds.h,
+				},
 			});
 		}
 
@@ -87,10 +93,16 @@ export class RenderObject {
 
 		if(this._isAdded) {
 			const vs = this._originUnit.getVertexesPositionById(this._originId);
+			const bounds = getBounds(vs);
 			this._scr.insert({
 				id: this._id,
 				vertexes: vs,
-				bounds: getBounds(vs),
+				bounds: {
+					minX: bounds.x,
+					minY: bounds.y,
+					maxX: bounds.x + bounds.w,
+					maxY: bounds.y + bounds.h, 
+				},
 			});
 		}
 	}
@@ -107,10 +119,16 @@ export class RenderObject {
 
 		if(this._isAdded) {
 			const vs = this._originUnit.getVertexesPositionById(this._originId);
+			const bounds = getBounds(vs);
 			this._scr.insert({
 				id: this._id,
 				vertexes: vs,
-				bounds: getBounds(vs),
+				bounds: {
+					minX: bounds.x,
+					minY: bounds.y,
+					maxX: bounds.x + bounds.w,
+					maxY: bounds.y + bounds.h, 
+				},
 			});
 		}
 	}

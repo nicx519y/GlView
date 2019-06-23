@@ -1,6 +1,6 @@
 import { Rectangle } from "./utils";
-import * as RTree from '../lib/rtree';
-
+// import * as RTree from '../lib/rtree';
+import * as RBush from 'rbush';
 
 /**
  * 判断点是否在多边形内
@@ -49,15 +49,21 @@ function rayCasting(p: number[], poly: number[]): boolean {
 
 export interface SearchObject {
 	id: string,
+	bounds: {
+		minX: number,
+		minY: number,
+		maxX: number,
+		maxY: number,
+	};
 	vertexes: number[];
-	bounds: Rectangle;
 }
 
 export class Searcher {
 	private _sobj;
 	private _buffer: Map<string, SearchObject>;
 	constructor() {
-		this._sobj = RTree(200);
+		// this._sobj = RTree(200);
+		this._sobj = new RBush(200);
 		this._buffer = new Map();
 	}
 
@@ -66,33 +72,35 @@ export class Searcher {
 		const bufferObj = this._buffer.get(id);
 
 		bufferObj && this.remove(id);
-
-		this._sobj.insert(obj.bounds, obj);
+		
+		this._sobj.insert(this.objToItem(obj));
 		this._buffer.set(obj.id, obj);
 	}
 
 	public remove(id: string) {
 		let obj = this._buffer.get(id);
 		if(!obj) return;
-		this._sobj.remove(obj.bounds, obj);
+		this._sobj.remove(this.objToItem(obj));
 		this._buffer.delete(obj.id);
 	}
 
 	public search(x: number, y: number, width: number = 0, height: number = 0): SearchObject[] {
-		let result = this._sobj.search({ x: x, y: y, w: width, h: height, }, true);
-		// 区域长宽为0，返回点交元素
+		let result = this._sobj.search({ minX: x, minY: y, maxX: width + x, maxY: height + y })
+			.map(v => this._buffer.get(v.id));
 		if(width == 0 && height == 0) {
 			result = result.filter(v => {
-				const obj = v.leaf as SearchObject;
-				const vectexes = obj.vertexes;
-				return rayCasting([x, y], vectexes);
+				return rayCasting([x, y], v.vertexes);
 			});
-		} else {	//区域长宽不为0，返回矩形区域完全包围的元素
-			result = result.filter(v => v.x <= x && v.y <= y && v.x + v.w <= x + width && v.y + v.h <= y + height);
 		}
 
-		return result.map(v => {
-			return v.leaf as SearchObject;
+		return result;
+
+	}
+
+	private objToItem(obj) {
+		const bound = obj.bounds;
+		return Object.assign(obj.bounds, {
+			id: obj.id,
 		});
 	}
 }

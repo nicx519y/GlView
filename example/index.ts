@@ -3,7 +3,6 @@ import * as glMatrix from '../lib/gl-matrix'
 import { Engine,Generator,Viewport, RectMesh, OneWayArrowMesh, TwoWayArrowMesh,SearchObject,TextureFactroy, RenderObject } from '../src';
 
 
-console.log(glMatrix);
 const vec2 = glMatrix.vec2;
 const vec3 = glMatrix.vec3;
 
@@ -17,7 +16,7 @@ const vec3 = glMatrix.vec3;
 	let dragLastPoint = [];
 	let activeShape: RenderObject;
 	let uvlist = [];
-	vp.setBackgroundColor([255,255,255,255]);
+	vp.setBackgroundColor(getRandomColor());
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
@@ -61,9 +60,9 @@ const vec3 = glMatrix.vec3;
 				obj.texture = uv;
 				obj.vertexOffsetValue = [w,w];
 				obj.rotation = Math.PI/6;
-				if(i % 2 == 0) {
-					// obj.borderWidth = 10;
-					// obj.borderColor = getRandomColor();
+				if(i % 3 == 0) {
+					obj.borderWidth = 3;
+					obj.borderColor = getRandomColor();
 				}
 			}
 		}

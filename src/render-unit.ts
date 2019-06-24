@@ -141,16 +141,6 @@ export class RenderUnit implements PaintUnitInterface {
 		bufferData = this.attribBufferDatas.get(attrib);
 		this.attribIsModifieds.set(attrib, true);
 		bufferData.set(value.slice(0, stride), idx*stride);
-
-		// if([RenderAttribute.ROTATION, RenderAttribute.TRANSLATION, RenderAttribute.VERTEX_OFFSET_VALUE].indexOf(attrib) >= 0) {
-		// 	const vs = this.getVertexesPositionById(id);
-		// 	// 改变这几个属性需要重新注册搜索器
-		// 	this.engine.searcher.insert({
-		// 		id: id,
-		// 		bounds: getBounds(vs),
-		// 		vertexes: vs,
-		// 	});
-		// }
 	}
 
 	public getAttribute(id: string, attrib: RenderAttribute): number[] {
@@ -171,11 +161,6 @@ export class RenderUnit implements PaintUnitInterface {
 		this.instanceCount ++;
 
 		let vs = this.getVertexesPositionById(id);
-		// this.engine.searcher.insert({
-		// 	id: id,
-		// 	vertexes: vs,
-		// 	bounds: getBounds(vs),
-		// });
 
 		return id;
 	}
@@ -197,7 +182,6 @@ export class RenderUnit implements PaintUnitInterface {
 		}
 		this.instanceCount --;
 
-		// this.engine.searcher.remove(id);
 	}
 
 	public draw() {

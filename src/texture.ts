@@ -47,9 +47,10 @@ export class TextureFactroy {
 			return 1;
 		});
 		this.packer.fit(this.blocks);
-		this.blocks.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x, b.fit.y, b.w, b.h, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
-		gl.generateMipmap(gl.TEXTURE_2D);
-		this.blocks.forEach(block => block.data.texture.update(block.fit.x, block.fit.y, block.w, block.h));
+		const bs = this.blocks;
+		bs.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x, b.fit.y, b.w, b.h, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
+		// gl.generateMipmap(gl.TEXTURE_2D);
+		bs.forEach(b => b.data.texture.update(b.fit.x, b.fit.y, b.w, b.h));
 	}
 }
 

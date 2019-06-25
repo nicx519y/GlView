@@ -56,11 +56,11 @@ const vec3 = glMatrix.vec3;
 	function init(images) {
 
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
-		const fontTexture: FontTexture = tf.embedFont('来吃饭', {
-			fontSize: 40,
-			fontFamily: '黑体',
-			fontWeight: 'normal',
-		});
+		// const fontTexture: FontTexture = tf.embedFont('来吃饭', {
+		// 	fontSize: 40,
+		// 	fontFamily: '黑体',
+		// 	fontWeight: 'normal',
+		// });
 		// console.log(fontTexture);
 		tf.updateToGL();
 		engine.render();
@@ -197,11 +197,11 @@ const vec3 = glMatrix.vec3;
 
 	function testAdd(g: Generator): RenderObject {
 		const obj = g.instance().show();
-		obj.translation = [Math.random() * 500, Math.random() * 500];
-		obj.vertexOffsetValue = [Math.random() * 100, Math.random() * 100];
-		// obj.backgroundColor = getRandomColor();
-		// obj.borderColor = getRandomColor();
-		// obj.borderWidth = 2;
+		obj.translation = [Math.random() * 1500, Math.random() * 1500];
+		obj.vertexOffsetValue = [Math.random() * 100 + 50, Math.random() * 100 + 50];
+		obj.backgroundColor = getRandomColor();
+		obj.borderColor = getRandomColor();
+		obj.borderWidth = 2;
 		obj.rotation = Math.random() * Math.PI;
 		return obj;
 	}

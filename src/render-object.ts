@@ -69,10 +69,10 @@ export class RenderObject {
 		this._isAdded = false;
 		this._isBorderAdded = false;
 
-		const vs = this._originUnit.getVertexesPositionById(this._originId);
-		const bounds = getBounds(vs);
+		// const vs = this._originUnit.getVertexesPositionById(this._originId);
+		// const bounds = getBounds(vs);
 		this._scr.remove(this._id);
-		this._id = '';
+		// this._id = '';
 
 		return this;
 	}
@@ -176,7 +176,10 @@ export class RenderObject {
 		}
 
 		const data = [width];
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.EDGE_OFFSET_VALUE, data);
+		if(this._isBorderAdded) {
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.EDGE_OFFSET_VALUE, data);
+			this.borderColor = this.borderColor;
+		}
 		this._attribs['borderWidth'] = data;
 	}
 

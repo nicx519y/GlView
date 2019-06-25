@@ -62,12 +62,12 @@ export const RenderAttributeList = [
 export class RenderUnit implements PaintUnitInterface {
 
 	private _engine: Engine;
-	private idlist: Map<string, number>;
+	private idmap: Map<string, number>;
+	private idlist: string[];
 	private _meshConfig: MeshConfig;
 	private vao;
 	private borderVao;
 	private instanceCount: number = 0;
-	private preInstanceCount: number = 0;
 
 	private attribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
 	private attribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
@@ -89,7 +89,8 @@ export class RenderUnit implements PaintUnitInterface {
 			this.attribIsModifieds.set(attrib, true);
 		});
 
-		this.idlist = new Map<string, number>();
+		this.idmap = new Map<string, number>();
+		this.idlist = [];
 	}
 
 	public regist(): RenderUnit {
@@ -121,8 +122,6 @@ export class RenderUnit implements PaintUnitInterface {
 		const gl = this._engine.gl;
 		gl.bindVertexArray(this.vao);
 
-		this.instanceCount = this.preInstanceCount;
-
 		RenderAttributeList
 			.forEach(attrib => {
 				if(this.attribIsModifieds.get(attrib) === true) {
@@ -138,7 +137,7 @@ export class RenderUnit implements PaintUnitInterface {
 	}
 
 	public setAttribute(id: string, attrib: RenderAttribute, value: number[]) {
-		const idx = this.idlist.get(id);
+		const idx = this.idmap.get(id);
 		const stride: number = RenderAttributeStride.get(attrib);
 		let bufferData: Float32Array;
 		bufferData = this.attribBufferDatas.get(attrib);
@@ -147,7 +146,7 @@ export class RenderUnit implements PaintUnitInterface {
 	}
 
 	public getAttribute(id: string, attrib: RenderAttribute): number[] {
-		const idx = this.idlist.get(id);
+		const idx = this.idmap.get(id);
 		const stride: number = RenderAttributeStride.get(attrib);
 		let bufferData: Float32Array;
 
@@ -159,16 +158,17 @@ export class RenderUnit implements PaintUnitInterface {
 
 	public add(): string {
 		const id = this.createId();
-		const idx = this.preInstanceCount;
-		this.idlist.set(id, idx);
-		this.preInstanceCount ++;
+		const idx = this.instanceCount;
+		this.idmap.set(id, idx);
+		this.idlist[idx] = id;
+		this.instanceCount ++;
 
-		let vs = this.getVertexesPositionById(id);
+		RenderAttributeList.forEach(attrib => this.attribIsModifieds.set(attrib, true));
 
 		return id;
 	}
 	public remove(id: string) {
-		const idx = this.idlist.get(id);
+		const idx = this.idmap.get(id);	
 		const t = this.instanceCount;
 		
 		if(t < 1 || idx < 0 || idx >= t) {
@@ -176,14 +176,14 @@ export class RenderUnit implements PaintUnitInterface {
 		}
 		RenderAttributeList.forEach((attrib: RenderAttribute) => this.removeAttributeBufferData(id, attrib));
 
-		for(let i in this.idlist) {
-			if(this.idlist.get(i) == this.preInstanceCount - 1) {
-				this.idlist.set(i, idx);
-				this.idlist.delete(id);
-				break;
-			}
-		}
-		this.preInstanceCount --;
+		const lastId = this.idlist[this.instanceCount - 1];
+		this.idmap.set(lastId, idx);
+		this.idlist[idx] = lastId;
+
+		this.idmap.delete(id);
+		this.idlist.pop();
+
+		this.instanceCount --;
 
 	}
 
@@ -192,7 +192,6 @@ export class RenderUnit implements PaintUnitInterface {
 		const oc = this._meshConfig;
 		this.updateToGL();
 		
-		// console.log('count: ', this.instanceCount);
 		gl.bindVertexArray(this.vao);
 		gl.drawElementsInstanced(oc.primitiveMode, oc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
 	}
@@ -223,17 +222,19 @@ export class RenderUnit implements PaintUnitInterface {
 		const FSIZE = bufferData.BYTES_PER_ELEMENT;
 		const local = gl.getAttribLocation(prg, attrib);
 		const t = this.instanceCount;
-		console.log(t, attrib, local, bufferData.subarray(0, t*size));
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-		gl.bufferData(gl.ARRAY_BUFFER, bufferData.subarray(0, t*size), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, bufferData, gl.DYNAMIC_DRAW, 0, t*size);
+		
 		gl.enableVertexAttribArray(local);
 		gl.vertexAttribPointer(local, size, gl.FLOAT, false, size*FSIZE, offset*FSIZE);
 		gl.vertexAttribDivisor(local, 1);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	}
+
 	
 	private removeAttributeBufferData(id: string, attrib: RenderAttribute) {
-		const idx = this.idlist.get(id);
+		const idx = this.idmap.get(id);
 		let bufferData: Float32Array = this.attribBufferDatas.get(attrib);
 		let stride: number = RenderAttributeStride.get(attrib);
 		let n: number = Math.max(1, this.instanceCount - 1);

@@ -1,7 +1,9 @@
 import { Engine } from './engine';
-import { Mesh } from './mesh';
+import { Mesh, RectMesh } from './mesh';
 import { RenderUnit } from './render-unit';
 import { RenderObject } from './render-object';
+import { TextField } from './textfield';
+import { FontTexture } from './texture';
 
 export class Generator {
 	private engine: Engine;
@@ -16,5 +18,18 @@ export class Generator {
 	}
 	public instance(): RenderObject {
 		return new RenderObject(this.originUnit, this.borderUnit);
+	}
+}
+
+export class TextFieldGenerator {
+	private engine: Engine;
+	private texture: FontTexture;
+	constructor(engine: Engine, texture: FontTexture) {
+		this.engine = engine;
+		this.texture = texture;
+	}
+
+	public instance(): TextField {
+		return new TextField(new Generator(this.engine, new RectMesh(-0.5, -0.5)), this.texture);
 	}
 }

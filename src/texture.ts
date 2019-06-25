@@ -1,4 +1,5 @@
 import { GrowingPacker, PNode } from './packer';
+import * as TinySDF from 'tiny-sdf';
 
 const TextureConfig = {
 	MAX_WIDTH : Math.pow(2, 12),
@@ -12,6 +13,7 @@ export class TextureFactroy {
 	private currx=0;
 	private curry=0;
 	private engine;
+	private ctx2D: CanvasRenderingContext2D;
 	private blocks: PNode[] = [];
 	// 初始化材质
 	constructor(engine) {
@@ -20,10 +22,12 @@ export class TextureFactroy {
 		const mw = TextureConfig.MAX_WIDTH;
 		const mh = TextureConfig.MAX_HEIGHT;
 		this.packer = new GrowingPacker(mw, mh);
+		this.ctx2D = document.createElement('canvas').getContext('2d');
 		//创建不可变材质空间
 		gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);	//y轴反转
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
 		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, mw, mh);
 	}
 
@@ -40,6 +44,30 @@ export class TextureFactroy {
 		return t;
 	}
 
+	public embedFont(chars: string, options: { fontSize: number, fontFamily: string, fontWeight: string}): FontTexture {
+		const map = new Map();
+		const sdf = new TinySDF(options.fontSize, options.fontSize/8, options.fontSize/3, null, null, options.fontWeight);
+		const size = sdf.size;
+		
+		for(let i = 0; i < chars.length; i ++) {
+			let char = chars[i];
+			let s = sdf.draw(char, size);
+			let source = this.makeRGBAImageData(s);
+			let t = new ImageTexture();
+			this.blocks.push({
+				w: size,
+				h: size,
+				data: {
+					source: source,
+					texture: t,
+				}
+			});
+			map.set(char, t);
+		}
+
+		return new FontTexture(size, map);
+	}
+
 	public updateToGL() {
 		const gl = this.engine.gl;
 		this.blocks = this.blocks.sort((a, b) => { 
@@ -49,9 +77,24 @@ export class TextureFactroy {
 		this.packer.fit(this.blocks);
 		const bs = this.blocks;
 		bs.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x, b.fit.y, b.w, b.h, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
-		// gl.generateMipmap(gl.TEXTURE_2D);
+		gl.generateMipmap(gl.TEXTURE_2D);
 		bs.forEach(b => b.data.texture.update(b.fit.x, b.fit.y, b.w, b.h));
 	}
+
+	private makeRGBAImageData(alphaChannel): ImageData {
+		const imageData = this.ctx2D.createImageData(alphaChannel.width, alphaChannel.height);
+		const len = alphaChannel.data.length;
+		const alphaChannelData = alphaChannel.data;
+		var data = imageData.data;
+		for (var i = 0; i < len; i++) {
+			data[4 * i + 0] = alphaChannelData[i];
+			data[4 * i + 1] = alphaChannelData[i];
+			data[4 * i + 2] = alphaChannelData[i];
+			data[4 * i + 3] = 255;
+		}
+		return imageData;
+	}
+
 }
 
 export class ImageTexture {
@@ -81,5 +124,14 @@ export class ImageTexture {
 				this.handlers.splice(i, 1);
 			}
 		});
+	}
+}
+
+export class FontTexture {
+	size: number;
+	map: Map<string, ImageTexture>;
+	constructor(size: number, map: Map<string, ImageTexture>) {
+		this.size = size;
+		this.map = map;
 	}
 }

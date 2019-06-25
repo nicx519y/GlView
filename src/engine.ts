@@ -9,21 +9,20 @@ const vec2 = glMatrix.vec2;
 glMatrix.glMatrix.setMatrixArrayType(Float32Array);
 
 const vsSource = `#version 300 es
-	in vec2 currVertex;				//顶点坐标
-	in vec2 prevVertex;
-	in vec2 nextVertex;
-	in vec2 currOffsetRatio; 		//变型系数
-	in vec2 prevOffsetRatio; 
-	in vec2 nextOffsetRatio;
-	in float edgeOffsetRatio;		//边偏移系数
-	in float edgeOffsetValue;		//边偏移值
-	in vec2 vertexOffsetValue;		//变形值
-	in vec2 textCoord;				//UV
-	in vec4 UVRect;					//UVRect
-	in vec4 backgroundColor;		//背景色
-	in vec2 translation;			//偏移
-	in float rotation;				//旋转
-	in float zOrder;				//z
+	layout(location=1) in vec2 currVertex;				//顶点坐标
+	layout(location=2) in vec2 prevVertex;
+	layout(location=3) in vec2 nextVertex;
+	layout(location=4) in vec2 currOffsetRatio; 		//变型系数
+	layout(location=5) in vec2 prevOffsetRatio; 
+	layout(location=6) in vec2 nextOffsetRatio;
+	layout(location=7) in float edgeOffsetRatio;		//边偏移系数
+	layout(location=8) in float edgeOffsetValue;		//边偏移值
+	layout(location=9) in vec2 vertexOffsetValue;		//变形值
+	layout(location=10) in vec2 textCoord;				//UV
+	layout(location=11) in vec4 UVRect;					//UVRect
+	layout(location=12) in vec4 backgroundColor;		//背景色
+	layout(location=13) in vec2 translation;			//偏移
+	layout(location=14) in float rotation;				//旋转
 	out vec2 vTexCoord;				//UV
 	out vec4 vBgColor;
 
@@ -95,7 +94,7 @@ const vsSource = `#version 300 es
 		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, edgeOffsetValue * edgeOffsetRatio);
 		
-		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, zOrder, 0);
+		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
 
 		vTexCoord = vec2(textCoord.x * UVRect.p + UVRect.s, textCoord.y * UVRect.q + UVRect.t);
 		vBgColor = backgroundColor;
@@ -110,17 +109,10 @@ const fsSource = `#version 300 es
 	out vec4 fragColor;
 	void main(void) {
 		vec4 tColor = texture(uSampler, vTexCoord);
-		float r1 = tColor.r;
-		float g1 = tColor.g;
-		float b1 = tColor.b;
 		float a1 = tColor.a;
-
-		float r2 = vBgColor.r;
-		float g2 = vBgColor.g;
-		float b2 = vBgColor.b;
 		float a2 = vBgColor.a;
 		
-		fragColor = vec4(mix(vec3(r2, g2, b2), vec3(r1, g1, b1), a1), a1+(1.0-a1)*a2);
+		fragColor = vec4(mix(vec3(vBgColor.rgb), vec3(tColor.rgb), a1), a1+(1.0-a1)*a2);
 
 	}
 `;

@@ -39,7 +39,6 @@ export const enum RenderAttribute {
 	UV_RECT = 'UVRect',
 	TRANSLATION = 'translation',
 	ROTATION = 'rotation',
-	Z_ORDER = 'zOrder',
 }
 
 export var RenderAttributeStride: Map<RenderAttribute, number> = new Map();
@@ -49,7 +48,6 @@ RenderAttributeStride.set(RenderAttribute.BACKGROUND_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
 RenderAttributeStride.set(RenderAttribute.TRANSLATION, 2);
 RenderAttributeStride.set(RenderAttribute.ROTATION, 1);
-RenderAttributeStride.set(RenderAttribute.Z_ORDER, 1);
 
 export const RenderAttributeList = [
 	RenderAttribute.EDGE_OFFSET_VALUE,
@@ -57,7 +55,6 @@ export const RenderAttributeList = [
 	RenderAttribute.UV_RECT,
 	RenderAttribute.TRANSLATION,
 	RenderAttribute.ROTATION,
-	RenderAttribute.Z_ORDER,
 	RenderAttribute.VERTEX_OFFSET_VALUE,
 ];
 
@@ -70,6 +67,7 @@ export class RenderUnit implements PaintUnitInterface {
 	private vao;
 	private borderVao;
 	private instanceCount: number = 0;
+	private preInstanceCount: number = 0;
 
 	private attribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
 	private attribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
@@ -84,8 +82,10 @@ export class RenderUnit implements PaintUnitInterface {
 		// 初始化
 		RenderAttributeList.forEach(attrib => {
 			// 本体属性
+			const data = new Float32Array(MAX_INSTANCE * RenderAttributeStride.get(attrib));
+			data.fill(0.0);
 			this.attribBuffers.set(attrib, gl.createBuffer());
-			this.attribBufferDatas.set(attrib, new Float32Array(MAX_INSTANCE * RenderAttributeStride.get(attrib)));
+			this.attribBufferDatas.set(attrib, data);
 			this.attribIsModifieds.set(attrib, true);
 		});
 
@@ -117,21 +117,24 @@ export class RenderUnit implements PaintUnitInterface {
 		return this;
 	}
 	public updateToGL() {
+
 		const gl = this._engine.gl;
 		gl.bindVertexArray(this.vao);
 
-		RenderAttributeList
-			.filter(attrib => this.attribIsModifieds.get(attrib) === true)
-			.forEach(attrib => {
-				this.updateBufferToGL(
-					attrib, 
-					this.attribBuffers.get(attrib), 
-					this.attribBufferDatas.get(attrib), 
-					RenderAttributeStride.get(attrib)
-				);
-				this.attribIsModifieds.set(attrib, false);
-			});
+		this.instanceCount = this.preInstanceCount;
 
+		RenderAttributeList
+			.forEach(attrib => {
+				if(this.attribIsModifieds.get(attrib) === true) {
+					this.updateBufferToGL(
+						attrib, 
+						this.attribBuffers.get(attrib), 
+						this.attribBufferDatas.get(attrib), 
+						RenderAttributeStride.get(attrib)
+					);
+					this.attribIsModifieds.set(attrib, false);
+				}
+			});
 	}
 
 	public setAttribute(id: string, attrib: RenderAttribute, value: number[]) {
@@ -156,9 +159,9 @@ export class RenderUnit implements PaintUnitInterface {
 
 	public add(): string {
 		const id = this.createId();
-		const idx = this.instanceCount;
+		const idx = this.preInstanceCount;
 		this.idlist.set(id, idx);
-		this.instanceCount ++;
+		this.preInstanceCount ++;
 
 		let vs = this.getVertexesPositionById(id);
 
@@ -174,13 +177,13 @@ export class RenderUnit implements PaintUnitInterface {
 		RenderAttributeList.forEach((attrib: RenderAttribute) => this.removeAttributeBufferData(id, attrib));
 
 		for(let i in this.idlist) {
-			if(this.idlist.get(i) == this.instanceCount - 1) {
+			if(this.idlist.get(i) == this.preInstanceCount - 1) {
 				this.idlist.set(i, idx);
 				this.idlist.delete(id);
 				break;
 			}
 		}
-		this.instanceCount --;
+		this.preInstanceCount --;
 
 	}
 
@@ -189,6 +192,7 @@ export class RenderUnit implements PaintUnitInterface {
 		const oc = this._meshConfig;
 		this.updateToGL();
 		
+		// console.log('count: ', this.instanceCount);
 		gl.bindVertexArray(this.vao);
 		gl.drawElementsInstanced(oc.primitiveMode, oc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
 	}
@@ -219,6 +223,7 @@ export class RenderUnit implements PaintUnitInterface {
 		const FSIZE = bufferData.BYTES_PER_ELEMENT;
 		const local = gl.getAttribLocation(prg, attrib);
 		const t = this.instanceCount;
+		console.log(t, attrib, local, bufferData.subarray(0, t*size));
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, bufferData.subarray(0, t*size), gl.STATIC_DRAW);
 		gl.enableVertexAttribArray(local);

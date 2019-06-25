@@ -136,14 +136,14 @@ export class Mesh {
 
 
 export class RectMesh extends Mesh {
-	constructor() {
+	constructor(originX: number = 0, originY: number = 0) {
 		const vertexes = [
 			0,0,
 			0,0,
 			0,0,
 			0,0,
 		];
-		const offsetRatio = [
+		let offsetRatio = [
 			-0.5, 0.5,
 			-0.5, -0.5,
 			0.5, -0.5,
@@ -158,6 +158,15 @@ export class RectMesh extends Mesh {
 		const indeces = [
 			0, 1, 3, 2,
 		];
+
+		offsetRatio = offsetRatio.map((v, k) => {
+			if(k % 2 == 0) {
+				return v - originX;
+			} else {
+				return v - originY;
+			}
+		});
+
 		super(PrimitiveMode.TRIANGLE_STRIP, vertexes, offsetRatio, uv, indeces);
 	}
 }

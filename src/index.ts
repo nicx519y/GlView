@@ -6,3 +6,4 @@ export * from "./texture"
 export * from "./utils"
 export * from "./viewport"
 export * from './render-object'
+export * from './textfield'

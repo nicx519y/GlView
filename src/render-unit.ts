@@ -1,7 +1,7 @@
 
 import { Mesh, MeshConfig } from './mesh';
 import { Engine } from './engine';
-import { getBounds, PaintUnitInterface } from './utils';
+import { getBounds, PaintUnitInterface, IdCreator } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 
 const MAX_INSTANCE = 100000;
@@ -204,7 +204,7 @@ export class RenderUnit implements PaintUnitInterface {
 	}
 
 	private createId(): string {
-		return this.engine.createId();
+		return IdCreator.createId();
 	}
 
 	private registAttribute(attrib: VertexAttribute, bufferData: Float32Array) {

@@ -74,7 +74,7 @@ const vec3 = glMatrix.vec3;
 	}
 
 	function testArrow() {
-		const g = new ArrowGenerator(engine, 26, 30);
+		const g = new ArrowGenerator(engine, 26, 30, 10);
 		let active: Arrow;
 		let status = 0;
 
@@ -84,7 +84,7 @@ const vec3 = glMatrix.vec3;
 			active = g.instance().show();
 			active.type = type;
 			active.backgroundColor = getRandomColor();
-			active.borderWidth = 1;
+			active.borderWidth = 0;
 			active.borderColor = getRandomColor();
 			active.fromTo = [x, y, x, y];
 			status = 1;

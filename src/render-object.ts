@@ -9,7 +9,7 @@ import {
 	RenderUnit } from './render-unit';
 import { ImageTexture } from './texture';
 import { Searcher } from './searcher';
-import { getBounds } from './utils';
+import { getBounds, IdCreator } from './utils';
 
 export class RenderObject {
 	private _id: string;
@@ -37,6 +37,7 @@ export class RenderObject {
 		this._originUnit = originUnit;
 		this._borderUnit = borderUnit;
 		this._scr = this._originUnit.engine.searcher;
+		this._id = IdCreator.createId();
 		this._textureHandler = t => this.changeUV(t);
 	}
 
@@ -47,7 +48,6 @@ export class RenderObject {
 	public show() {
 		if(!this._isAdded) {
 			this._originId = this._originUnit.add();
-			this._id = this._originId;
 			this._isAdded = true;
 
 			const vs = this._originUnit.getVertexesPositionById(this._originId);

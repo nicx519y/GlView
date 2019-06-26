@@ -37,3 +37,11 @@ export function loadImage(src: string): Promise<any> {
 export function loadImages(srcs: string[]): Promise<any[]> {
 	return Promise.all(srcs.map(src => loadImage(src)));
 }
+
+export class IdCreator {
+	private static num: number = 0;
+	public static createId(): string {
+		this.num ++;
+		return this.num.toString();
+	}
+}

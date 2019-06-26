@@ -198,11 +198,6 @@ export class Engine {
 		window.requestAnimationFrame(() => this.render());
 	}
 
-	public createId(): string {
-		this._num ++;
-		return this._num.toString();
-	}
-
 	private initPrg() {
 		let gl = this.gl;
 		const vxShader = this.loadShader(gl, gl.VERTEX_SHADER, vsSource);

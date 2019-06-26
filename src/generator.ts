@@ -40,15 +40,17 @@ export class ArrowGenerator {
 	private og: Generator;
 	private tg: Generator;
 	private _height: number;
-	constructor(engine: Engine, width: number, height: number) {
+	private _indent: number;
+	constructor(engine: Engine, width: number, height: number, indent: number = 0) {
 		this.engine = engine;
 		this.og = new Generator(engine, new OneWayArrowMesh(width, height));
 		this.tg = new Generator(engine, new TwoWayArrowMesh(width, height));
 		this._height = height;
+		this._indent = indent;
 	}
 
 	public instance(): Arrow {
-		return new Arrow(this.og.instance(), this.tg.instance(), this._height);
+		return new Arrow(this.og.instance(), this.tg.instance(), this._height, this._indent);
 	}
 
 }

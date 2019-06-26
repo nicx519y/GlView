@@ -1,7 +1,7 @@
 import { Mesh, PrimitiveMode, MeshConfig } from "./mesh";
 import { Rectangle, getBounds, PaintUnitInterface } from "./utils";
 import { Searcher } from "./searcher";
-import * as glMatrix from "../lib/gl-matrix.js"
+import * as glMatrix from "../lib/gl-matrix.js";
 
 const mat4 = glMatrix.mat4;
 const vec3 = glMatrix.vec3;

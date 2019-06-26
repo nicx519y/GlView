@@ -15,6 +15,8 @@ import {
 	TextFieldGenerator,
 	TextField,
 	FontTexture,
+	ArrowGenerator,
+	Arrow, ArrowType,
 } from '../src';
 
 
@@ -37,9 +39,10 @@ const vec3 = glMatrix.vec3;
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
 	canvas.addEventListener('mousemove', drag);
-	canvas.addEventListener('click', clickHandler);
+	// canvas.addEventListener('click', clickHandler);
 	canvas.addEventListener('mouseup', dragEnd);
-	canvas.addEventListener('mousemove', hoverHandler);
+	// canvas.addEventListener('mousemove', hoverHandler);
+	canvas.addEventListener('mousemove', showCoord);
 	window.addEventListener('resize', windowResize);
 
 	windowResize();
@@ -58,15 +61,80 @@ const vec3 = glMatrix.vec3;
 	function init(images) {
 
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
-		// const fontTexture: FontTexture = tf.embedFont('来吃饭', {
-		// 	fontSize: 40,
-		// 	fontFamily: '黑体',
-		// 	fontWeight: 'normal',
-		// });
-		// console.log(fontTexture);
+		let status = 0;
 		tf.updateToGL();
 		engine.render();
+		testArrow();
+		// drawRects(textures[2]);
+		// drawText(fontTexture);
+		// drawOneWayArrow();
+		// drawTwoWayArrow();
 
+
+	}
+
+	function testArrow() {
+		const g = new ArrowGenerator(engine, 26, 30);
+		let active: Arrow;
+		let status = 0;
+
+		function add(x, y) {
+			if(status != 0) return;
+			const type = getType();
+			active = g.instance().show();
+			active.type = type;
+			active.backgroundColor = getRandomColor();
+			active.borderWidth = 1;
+			active.borderColor = getRandomColor();
+			active.fromTo = [x, y, x, y];
+			status = 1;
+		}
+
+		function end(x, y) {
+			if(status != 1) return;
+			const ft = active.fromTo;
+			active.fromTo = [ft[0], ft[1], x, y];
+			status = 0;
+		}
+
+		function move(x, y) {
+			if(status != 1) return;
+			const ft = active.fromTo;
+			active.fromTo = [ft[0], ft[1], x, y];
+		}
+
+		function clickHandler(evt) {
+			const pos = vp.changeCoordinateFromScreen(evt.offsetX, evt.offsetY);
+			if(status == 0) {
+				add(pos[0], pos[1]);
+			} else if(status == 1) {
+				end(pos[0], pos[1]);
+			}
+		}
+
+		function moveHandler(evt) {
+			const pos = vp.changeCoordinateFromScreen(evt.offsetX, evt.offsetY);
+			if(status == 1) {
+				move(pos[0], pos[1]);
+			}
+		}
+
+		function getType(): ArrowType {
+			const r1 = document.getElementById('one') as HTMLInputElement;
+			const r2 = document.getElementById('two') as HTMLInputElement;
+			if(r1.checked) {
+				return ArrowType.ONE_WAY;
+			} else {
+				return ArrowType.TWO_WAY;
+			}
+			return ArrowType.ONE_WAY;
+		}
+
+		canvas.addEventListener('click', clickHandler);
+		canvas.addEventListener('mousemove', moveHandler);
+	}
+
+	function testAddAndRemove() {
 		const g = new Generator(engine, new RectMesh());
 		document.getElementById('add').addEventListener('click', evt => {
 			let obj = testAdd(g);
@@ -75,13 +143,6 @@ const vec3 = glMatrix.vec3;
 		document.getElementById('remove').addEventListener('click', evt => {
 			testRemove(objlist);
 		});
-
-		// drawRects(textures[2]);
-		// drawText(fontTexture);
-		// drawOneWayArrow();
-		// drawTwoWayArrow();
-
-
 	}
 
 	function drawText(fontTexture: FontTexture) {
@@ -219,6 +280,13 @@ const vec3 = glMatrix.vec3;
 	function testRemove(objlist: RenderObject[]) {
 		const obj = objlist.pop();
 		obj && obj.hide();
+	}
+
+	function showCoord(evt) {
+		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		if(!cs || cs.length <= 0 || typeof cs[0] != 'number') return;
+		document.getElementById('cx').innerHTML = 'x: ' + Math.round(cs[0]) + 'px';
+		document.getElementById('cy').innerHTML = 'y: ' + Math.round(cs[1]) + 'px';
 	}
 	
 

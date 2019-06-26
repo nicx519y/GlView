@@ -40,6 +40,10 @@ export class RenderObject {
 		this._textureHandler = t => this.changeUV(t);
 	}
 
+	public get id(): string {
+		return this._id;
+	}
+
 	public show() {
 		if(!this._isAdded) {
 			this._originId = this._originUnit.add();
@@ -69,10 +73,7 @@ export class RenderObject {
 		this._isAdded = false;
 		this._isBorderAdded = false;
 
-		// const vs = this._originUnit.getVertexesPositionById(this._originId);
-		// const bounds = getBounds(vs);
 		this._scr.remove(this._id);
-		// this._id = '';
 
 		return this;
 	}

@@ -31,11 +31,13 @@ const vec3 = glMatrix.vec3;
 	let dragLastPoint = [];
 	let activeShape: RenderObject;
 	let uvlist = [];
+	let objlist = [];
 	vp.setBackgroundColor(getRandomColor());
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
 	canvas.addEventListener('mousemove', drag);
+	canvas.addEventListener('click', clickHandler);
 	canvas.addEventListener('mouseup', dragEnd);
 	canvas.addEventListener('mousemove', hoverHandler);
 	window.addEventListener('resize', windowResize);
@@ -66,13 +68,12 @@ const vec3 = glMatrix.vec3;
 		engine.render();
 
 		const g = new Generator(engine, new RectMesh());
-		const list: RenderObject[] = [];
 		document.getElementById('add').addEventListener('click', evt => {
 			let obj = testAdd(g);
-			list.push(obj);
+			objlist.push(obj);
 		});
 		document.getElementById('remove').addEventListener('click', evt => {
-			testRemove(list);
+			testRemove(objlist);
 		});
 
 		// drawRects(textures[2]);
@@ -195,9 +196,18 @@ const vec3 = glMatrix.vec3;
 		// objArr.forEach(obj => console.log('obj ' + obj.id + ' is hovered'))
 	}
 
+	function clickHandler(evt) {
+		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
+		if(!objArr || objArr.length <= 0) return;
+		const id = objArr[0].id;
+		const r = objlist.find(obj => obj.id == id) as RenderObject;
+		r.hide();
+	}
+
 	function testAdd(g: Generator): RenderObject {
 		const obj = g.instance().show();
-		obj.translation = [Math.random() * 1500, Math.random() * 1500];
+		obj.translation = [Math.random() * 800, Math.random() * 800];
 		obj.vertexOffsetValue = [Math.random() * 100 + 50, Math.random() * 100 + 50];
 		obj.backgroundColor = getRandomColor();
 		obj.borderColor = getRandomColor();

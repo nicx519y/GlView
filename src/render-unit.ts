@@ -174,7 +174,10 @@ export class RenderUnit implements PaintUnitInterface {
 		if(t < 1 || idx < 0 || idx >= t) {
 			return;
 		}
-		RenderAttributeList.forEach((attrib: RenderAttribute) => this.removeAttributeBufferData(id, attrib));
+		RenderAttributeList.forEach((attrib: RenderAttribute) => {
+			this.removeAttributeBufferData(id, attrib);
+			this.attribIsModifieds.set(attrib, true);
+		});
 
 		const lastId = this.idlist[this.instanceCount - 1];
 		this.idmap.set(lastId, idx);
@@ -238,10 +241,10 @@ export class RenderUnit implements PaintUnitInterface {
 		let bufferData: Float32Array = this.attribBufferDatas.get(attrib);
 		let stride: number = RenderAttributeStride.get(attrib);
 		let n: number = Math.max(1, this.instanceCount - 1);
-		let arr = new Array(stride);
+		let arr = new Array<number>(stride);
 		arr.fill(0);
-		bufferData.set(bufferData.slice((n-1)*stride, n*stride), idx*stride);
-		bufferData.set(arr, (n-1)*stride);
+		bufferData.set(bufferData.slice(n*stride, (n+1)*stride), idx*stride);
+		bufferData.set(arr, n*stride);
 	}
 
 	/**

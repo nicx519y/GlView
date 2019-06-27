@@ -52,7 +52,8 @@ export class TextureFactroy {
 		for(let i = 0; i < chars.length; i ++) {
 			let char = chars[i];
 			let s = sdf.draw(char, size);
-			let source = this.makeRGBAImageData(s);
+			// let source = this.makeRGBAImageData(s);
+			let source = s;
 			let t = new ImageTexture();
 			this.blocks.push({
 				w: size,
@@ -79,6 +80,22 @@ export class TextureFactroy {
 		bs.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x, b.fit.y, b.w, b.h, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
 		gl.generateMipmap(gl.TEXTURE_2D);
 		bs.forEach(b => b.data.texture.update(b.fit.x, b.fit.y, b.w, b.h));
+
+		this.consoleTexture()
+	}
+
+	private consoleTexture() {
+		const canvas = document.getElementById('test-canvas') as HTMLCanvasElement;
+		const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+		const bs = this.blocks;
+		bs.forEach(b => {
+			let s = b.data.source;
+			if(s instanceof Image) {
+				ctx.drawImage(s, b.fit.x, b.fit.y);
+			} else if(s instanceof ImageData) {
+				ctx.putImageData(s, b.fit.x, b.fit.y)
+			}
+		});
 	}
 
 	private makeRGBAImageData(alphaChannel): ImageData {

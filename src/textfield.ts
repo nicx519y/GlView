@@ -1,8 +1,10 @@
 import { ImageTexture, FontTexture } from "./texture";
 import { RenderObject } from "./render-object";
 import { Generator } from './generator';
+import { IdCreator } from "./utils";
 
 export class TextField {
+	private _id: string;
 	private _textureMap: Map<string, ImageTexture>;
 	private _text: string = '';
 	private _baseObject: RenderObject;
@@ -12,6 +14,7 @@ export class TextField {
 	private _g: Generator;
 
 	constructor(generator: Generator, texture: FontTexture) {
+		this._id = IdCreator.createId();
 		this._g = generator;
 		this._textureMap = texture.map;
 		this._size = texture.size;

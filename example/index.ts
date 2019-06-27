@@ -47,13 +47,15 @@ const vec3 = glMatrix.vec3;
 
 	windowResize();
 
-	loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']).then(init);
-
-	tf.embedFont('你是谁啊', {
+	const fontTexture = tf.embedFont('打游戏', {
 		fontSize: 24,
-		fontFamily: '黑体',
+		fontFamily: 'arial',
 		fontWeight: 'normal',
 	});
+
+	loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']).then(init);
+
+	
 
 	var obj;
 
@@ -64,7 +66,9 @@ const vec3 = glMatrix.vec3;
 		let status = 0;
 		tf.updateToGL();
 		engine.render();
-		testArrow();
+
+		drawText(fontTexture);
+		// testArrow();
 		// drawRects(textures[2]);
 		// drawText(fontTexture);
 		// drawOneWayArrow();
@@ -150,7 +154,7 @@ const vec3 = glMatrix.vec3;
 		const g: TextFieldGenerator = new TextFieldGenerator(engine, fontTexture);
 		const t: TextField = g.instance();
 		t.show();
-		t.text = '来吃饭';
+		t.text = '打游戏';
 		t.translation = [100, 100];
 	}
 
@@ -285,8 +289,7 @@ const vec3 = glMatrix.vec3;
 	function showCoord(evt) {
 		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
 		if(!cs || cs.length <= 0 || typeof cs[0] != 'number') return;
-		document.getElementById('cx').innerHTML = 'x: ' + Math.round(cs[0]) + 'px';
-		document.getElementById('cy').innerHTML = 'y: ' + Math.round(cs[1]) + 'px';
+		document.getElementById('coor').innerHTML = 'x: ' + Math.round(cs[0]) + 'px; ' + 'y: ' + Math.round(cs[1]) + 'px';
 	}
 	
 

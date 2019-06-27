@@ -9,6 +9,7 @@
         .coor-text { padding: 1px 10px; right: 10px; height: 20px; line-height: 20px; font-size: 10px; color: #fff; font-family: arial; background-color: rgba(0,0,0,0.5); border-radius: 5px;}
         .panel { position: absolute; top: 10px; right: 10px; text-align: right; font-size:10px;  }
         ul, li{ padding: 5px 10px; margin: 0; list-style: none; }
+        
     </style>
 </head>
 
@@ -18,17 +19,18 @@
         <!-- <button id="add" >add</button> -->
         <ul>
             <li>
-                <div id="cx" class="coor-text" ></div>
+                <div id="coor" class="coor-text" ></div>
             </li>
-            <li>
-                <div id="cy" class="coor-text" ></div>
-            </li>
+
             <!-- <button id="remove" >remove</button> -->
             <li>
                 <form name="ways" id="ways" >
                     <input type="radio" name="arrow-type" id="one" value="1" checked /> 单向
                     <input type="radio" name="arrow-type" id="two" value="2" /> 双向
                 </form>
+            </li>
+            <li>
+                <canvas id="test-canvas" width=500 height=500 ></canvas>
             </li>
         </ul>
     </div>

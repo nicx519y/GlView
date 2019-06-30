@@ -11,51 +11,37 @@ const vec3 = glMatrix.vec3;
 
 // 模型属性
 export const enum VertexAttribute {
-	CURR_VERTEX = 'currVertex',
-	NEXT_VERTEX = 'nextVertex',
-	PREV_VERTEX = 'prevVertex',
-	CURR_OFFSET_RATIO = 'currOffsetRatio',
-	PREV_OFFSET_RATIO = 'prevOffsetRatio',
-	NEXT_OFFSET_RATIO = 'nextOffsetRatio',
-	EDGE_OFFSET_RATIO = 'edgeOffsetRatio',
-	TEXTCOORD = 'textCoord',
+	CURR_VERTEX_AND_RATIO = 'currVertexAndRatio',
+	NEXT_VERTEX_AND_RATIO = 'nextVertexAndRatio',
+	PREV_VERTEX_AND_RATIO = 'prevVertexAndRatio',
+	UV_AND_EDGE_OFFSET_RATIO = 'uvAndEdgeOffsetRatio',
 }
 
 export var VertexAttributeStride: Map<VertexAttribute, number> = new Map();
-VertexAttributeStride.set(VertexAttribute.CURR_VERTEX, 2);
-VertexAttributeStride.set(VertexAttribute.NEXT_VERTEX, 2);
-VertexAttributeStride.set(VertexAttribute.PREV_VERTEX, 2);
-VertexAttributeStride.set(VertexAttribute.CURR_OFFSET_RATIO, 2);
-VertexAttributeStride.set(VertexAttribute.PREV_OFFSET_RATIO, 2);
-VertexAttributeStride.set(VertexAttribute.NEXT_OFFSET_RATIO, 2);
-VertexAttributeStride.set(VertexAttribute.EDGE_OFFSET_RATIO, 1);
-VertexAttributeStride.set(VertexAttribute.TEXTCOORD, 2);
+VertexAttributeStride.set(VertexAttribute.CURR_VERTEX_AND_RATIO, 4);
+VertexAttributeStride.set(VertexAttribute.NEXT_VERTEX_AND_RATIO, 4);
+VertexAttributeStride.set(VertexAttribute.PREV_VERTEX_AND_RATIO, 4);
+VertexAttributeStride.set(VertexAttribute.UV_AND_EDGE_OFFSET_RATIO, 4);
 
 // 实例属性
 export const enum RenderAttribute {
-	VERTEX_OFFSET_VALUE = 'vertexOffsetValue',
-	EDGE_OFFSET_VALUE = 'edgeOffsetValue',
+	VERTEX_AND_EDGE_OFFSET_VALUE = 'vertexAndEdgeOffsetValue',
 	BACKGROUND_COLOR = 'backgroundColor',
 	UV_RECT = 'UVRect',
-	TRANSLATION = 'translation',
-	ROTATION = 'rotation',
+	TRANSLATION_AND_ROTATION = 'translationAndRotation',
 }
 
 export var RenderAttributeStride: Map<RenderAttribute, number> = new Map();
-RenderAttributeStride.set(RenderAttribute.VERTEX_OFFSET_VALUE, 2);
-RenderAttributeStride.set(RenderAttribute.EDGE_OFFSET_VALUE, 1);
+RenderAttributeStride.set(RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 4);
 RenderAttributeStride.set(RenderAttribute.BACKGROUND_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
-RenderAttributeStride.set(RenderAttribute.TRANSLATION, 2);
-RenderAttributeStride.set(RenderAttribute.ROTATION, 1);
+RenderAttributeStride.set(RenderAttribute.TRANSLATION_AND_ROTATION, 4);
 
 export const RenderAttributeList = [
-	RenderAttribute.EDGE_OFFSET_VALUE,
+	RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE,
 	RenderAttribute.BACKGROUND_COLOR,
 	RenderAttribute.UV_RECT,
-	RenderAttribute.TRANSLATION,
-	RenderAttribute.ROTATION,
-	RenderAttribute.VERTEX_OFFSET_VALUE,
+	RenderAttribute.TRANSLATION_AND_ROTATION,
 ];
 
 
@@ -72,6 +58,7 @@ export class RenderUnit implements PaintUnitInterface {
 	private attribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
 	private attribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
 	private attribIsModifieds: Map<RenderAttribute, boolean> = new Map();
+	private attribLocals: Map<RenderAttribute, any> = new Map();
 
 	constructor(engine: Engine, meshConfig: MeshConfig) {
 		this._engine = engine;
@@ -96,18 +83,42 @@ export class RenderUnit implements PaintUnitInterface {
 	public regist(): RenderUnit {
 		const gl = this._engine.gl;
 		const prg = this._engine.prg;
+		const config = this._meshConfig;
+
+		const currVs = config.currVertexes;
+		const prevVs = config.prevVertexes;
+		const nextVs = config.nextVertexes;
+		const currRt = config.currOffsetRatios;
+		const prevRt = config.prevOffsetRatios;
+		const nextRt = config.nextOffsetRatios;
+		const vlen = currVs.length / 2;
+
+		const v1 = [];
+		const v2 = [];
+		const v3 = [];
+		const v4 = [];
+
+		const uvc = config.uvs;
+		const eor = config.edgeOffsetRatios;
+
+		for(let i = 0; i < vlen; i ++) {
+			v1.push(currVs[i*2], currVs[i*2+1], currRt[i*2], currRt[i*2+1]);
+			v2.push(prevVs[i*2], prevVs[i*2+1], prevRt[i*2], prevRt[i*2+1]);
+			v3.push(nextVs[i*2], nextVs[i*2+1], nextRt[i*2], nextRt[i*2+1]);
+			v4.push(uvc[i*2], uvc[i*2+1], eor[i], 0);
+		}
+
+		RenderAttributeList.forEach(v => {
+			this.attribLocals.set(v, gl.getAttribLocation(prg, v));
+		});
 
 		this.vao = gl.createVertexArray();
 		gl.bindVertexArray(this.vao);
 
-		this.registAttribute(VertexAttribute.CURR_VERTEX, new Float32Array(this._meshConfig.currVertexes));
-		this.registAttribute(VertexAttribute.PREV_VERTEX, new Float32Array(this._meshConfig.prevVertexes));
-		this.registAttribute(VertexAttribute.NEXT_VERTEX, new Float32Array(this._meshConfig.nextVertexes));
-		this.registAttribute(VertexAttribute.CURR_OFFSET_RATIO, new Float32Array(this._meshConfig.currOffsetRatios));
-		this.registAttribute(VertexAttribute.PREV_OFFSET_RATIO, new Float32Array(this._meshConfig.prevOffsetRatios));
-		this.registAttribute(VertexAttribute.NEXT_OFFSET_RATIO, new Float32Array(this._meshConfig.nextOffsetRatios));
-		this.registAttribute(VertexAttribute.EDGE_OFFSET_RATIO, new Float32Array(this._meshConfig.edgeOffsetRatios));
-		this.registAttribute(VertexAttribute.TEXTCOORD, new Float32Array(this._meshConfig.uvs));
+		this.registAttribute(VertexAttribute.CURR_VERTEX_AND_RATIO, new Float32Array(v1));
+		this.registAttribute(VertexAttribute.PREV_VERTEX_AND_RATIO, new Float32Array(v2));
+		this.registAttribute(VertexAttribute.NEXT_VERTEX_AND_RATIO, new Float32Array(v3));
+		this.registAttribute(VertexAttribute.UV_AND_EDGE_OFFSET_RATIO, new Float32Array(v4));
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this._meshConfig.indeces), gl.STATIC_DRAW);
@@ -136,16 +147,16 @@ export class RenderUnit implements PaintUnitInterface {
 			});
 	}
 
-	public setAttribute(id: string, attrib: RenderAttribute, value: number[]) {
+	public setAttribute(id: string, attrib: RenderAttribute, value: number[], offset: number = 0) {
 		const idx = this.idmap.get(id);
 		const stride: number = RenderAttributeStride.get(attrib);
 		let bufferData: Float32Array;
 		bufferData = this.attribBufferDatas.get(attrib);
 		this.attribIsModifieds.set(attrib, true);
-		bufferData.set(value.slice(0, stride), idx*stride);
+		bufferData.set(value.slice(0, stride - offset), idx*stride + offset);
 	}
 
-	public getAttribute(id: string, attrib: RenderAttribute): number[] {
+	public getAttribute(id: string, attrib: RenderAttribute, offset: number = 0, lenght: number = 0): number[] {
 		const idx = this.idmap.get(id);
 		const stride: number = RenderAttributeStride.get(attrib);
 		let bufferData: Float32Array;
@@ -153,7 +164,14 @@ export class RenderUnit implements PaintUnitInterface {
 		bufferData = this.attribBufferDatas.get(attrib);
 		this.attribIsModifieds.set(attrib, true);
 
-		return Array.from(bufferData.slice(idx*stride, (idx+1)*stride));
+		const start = idx*stride+offset;
+		let end;
+		if(lenght > 0) {
+			end = Math.min(start + lenght, (idx+1)*stride);
+		} else {
+			end = (idx+1)*stride;
+		}
+		return Array.from(bufferData.subarray(start, end));
 	}
 
 	public add(): string {
@@ -257,11 +275,11 @@ export class RenderUnit implements PaintUnitInterface {
 		// 形变系数
 		const co = this._meshConfig.currOffsetRatios;
 		// 形变值
-		const cov = this.getAttribute(id, RenderAttribute.VERTEX_OFFSET_VALUE);
+		const cov = this.getAttribute(id, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 0, 2);
 		// 偏移
-		const trans = this.getAttribute(id, RenderAttribute.TRANSLATION);
+		const trans = this.getAttribute(id, RenderAttribute.TRANSLATION_AND_ROTATION, 0, 2);
 		// 旋转
-		const rot = this.getAttribute(id, RenderAttribute.ROTATION)[0];
+		const rot = this.getAttribute(id, RenderAttribute.TRANSLATION_AND_ROTATION, 2, 1)[0];
 		// 顶点数量
 		const len = cv.length / 2;
 

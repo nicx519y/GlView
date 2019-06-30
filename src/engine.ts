@@ -9,25 +9,21 @@ const vec2 = glMatrix.vec2;
 glMatrix.glMatrix.setMatrixArrayType(Float32Array);
 
 const vsSource = `#version 300 es
-	layout(location=1) in vec2 currVertex;				//顶点坐标
-	layout(location=2) in vec2 prevVertex;
-	layout(location=3) in vec2 nextVertex;
-	layout(location=4) in vec2 currOffsetRatio; 		//变型系数
-	layout(location=5) in vec2 prevOffsetRatio; 
-	layout(location=6) in vec2 nextOffsetRatio;
-	layout(location=7) in float edgeOffsetRatio;		//边偏移系数
-	layout(location=8) in float edgeOffsetValue;		//边偏移值
-	layout(location=9) in vec2 vertexOffsetValue;		//变形值
-	layout(location=10) in vec2 textCoord;				//UV
-	layout(location=11) in vec4 UVRect;					//UVRect
-	layout(location=12) in vec4 backgroundColor;		//背景色
-	layout(location=13) in vec2 translation;			//偏移
-	layout(location=14) in float rotation;				//旋转
+	layout(location=1) in vec4 currVertexAndRatio;			//顶点坐标和变形系数
+	layout(location=2) in vec4 prevVertexAndRatio;
+	layout(location=3) in vec4 nextVertexAndRatio;
+	layout(location=4) in vec4 uvAndEdgeOffsetRatio;		//UV
+	
+	layout(location=5) in vec4 vertexAndEdgeOffsetValue;	//变形值
+	layout(location=6) in vec4 UVRect;						//UVRect
+	layout(location=7) in vec4 backgroundColor;				//背景色
+	layout(location=8) in vec4 translationAndRotation;		//形变
+
 	out vec2 vTexCoord;				//UV
 	out vec4 vBgColor;
 
 	uniform mat4 uViewportMatrix;	//视口矩阵
-	uniform vec2 uConversionVec2;	//坐标转换矩阵
+	uniform vec2 uConversionVec2;	//坐标转换
 	
 	mat4 getConversionMatrix() {
 		return mat4(
@@ -43,13 +39,13 @@ const vsSource = `#version 300 es
 			1.0, 0.0, 0.0, 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
-			translation.x, translation.y, 0.0, 1.0
+			translationAndRotation.x, translationAndRotation.y, 0.0, 1.0
 		);
 	}
 
 	mat4 getRotationMatrix() {
-		float cost = cos(rotation);
-		float sint = sin(rotation);
+		float cost = cos(translationAndRotation.z);
+		float sint = sin(translationAndRotation.z);
 		return mat4(
 			cost, -sint, 0.0, 0.0,
 			sint, cost, 0.0, 0.0,
@@ -85,14 +81,14 @@ const vsSource = `#version 300 es
 
 	void main(void) {
 
-		vec2 pv = getVertex(prevVertex, prevOffsetRatio, vertexOffsetValue);
-		vec2 cv = getVertex(currVertex, currOffsetRatio, vertexOffsetValue);
-		vec2 nv = getVertex(nextVertex, nextOffsetRatio, vertexOffsetValue);
+		vec2 pv = getVertex(prevVertexAndRatio.xy, prevVertexAndRatio.zw, vertexAndEdgeOffsetValue.xy);
+		vec2 cv = getVertex(currVertexAndRatio.xy, currVertexAndRatio.zw, vertexAndEdgeOffsetValue.xy);
+		vec2 nv = getVertex(nextVertexAndRatio.xy, nextVertexAndRatio.zw, vertexAndEdgeOffsetValue.xy);
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
 		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix();
 		// 求相邻两边交点向量
-		vec2 intersection = getIntersectionVertex(pe, ne, edgeOffsetValue * edgeOffsetRatio);
+		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValue.z * edgeOffsetRatio);
 		
 		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
 

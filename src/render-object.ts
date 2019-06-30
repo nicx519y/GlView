@@ -1,11 +1,7 @@
 import { Engine } from './engine';
 import { Mesh, MeshConfig } from "./mesh";
 import { 
-	VertexAttribute, 
-	VertexAttributeStride, 
 	RenderAttribute, 
-	RenderAttributeStride, 
-	RenderAttributeList, 
 	RenderUnit } from './render-unit';
 import { ImageTexture } from './texture';
 import { Searcher } from './searcher';
@@ -83,9 +79,9 @@ export class RenderObject {
 			this._borderId = this._borderUnit.add();
 			this._isBorderAdded = true;
 
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION, this.translation);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.ROTATION, [this.rotation]);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_OFFSET_VALUE, this.vertexOffsetValue);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, this.translation, 0);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
 		}
 	}
 
@@ -97,24 +93,24 @@ export class RenderObject {
 	}
 
 	public set translation(offset: number[]) {
-		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION, offset);
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION, offset);
+		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
+		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
 		this._attribs['translation'] = offset;
 
-		if(this._isAdded) {
-			const vs = this._originUnit.getVertexesPositionById(this._originId);
-			const bounds = getBounds(vs);
-			this._scr.insert({
-				id: this._id,
-				vertexes: vs,
-				bounds: {
-					minX: bounds.x,
-					minY: bounds.y,
-					maxX: bounds.x + bounds.w,
-					maxY: bounds.y + bounds.h, 
-				},
-			});
-		}
+		// if(this._isAdded) {
+		// 	const vs = this._originUnit.getVertexesPositionById(this._originId);
+		// 	const bounds = getBounds(vs);
+		// 	this._scr.insert({
+		// 		id: this._id,
+		// 		vertexes: vs,
+		// 		bounds: {
+		// 			minX: bounds.x,
+		// 			minY: bounds.y,
+		// 			maxX: bounds.x + bounds.w,
+		// 			maxY: bounds.y + bounds.h, 
+		// 		},
+		// 	});
+		// }
 	}
 
 	public get translation(): number[] {
@@ -123,24 +119,24 @@ export class RenderObject {
 
 	public set rotation(radian: number) {
 		const data = [radian];
-		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.ROTATION, data);
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.ROTATION, data);
+		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
+		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
 		this._attribs['rotation'] = data;
 
-		if(this._isAdded) {
-			const vs = this._originUnit.getVertexesPositionById(this._originId);
-			const bounds = getBounds(vs);
-			this._scr.insert({
-				id: this._id,
-				vertexes: vs,
-				bounds: {
-					minX: bounds.x,
-					minY: bounds.y,
-					maxX: bounds.x + bounds.w,
-					maxY: bounds.y + bounds.h, 
-				},
-			});
-		}
+		// if(this._isAdded) {
+		// 	const vs = this._originUnit.getVertexesPositionById(this._originId);
+		// 	const bounds = getBounds(vs);
+		// 	this._scr.insert({
+		// 		id: this._id,
+		// 		vertexes: vs,
+		// 		bounds: {
+		// 			minX: bounds.x,
+		// 			minY: bounds.y,
+		// 			maxX: bounds.x + bounds.w,
+		// 			maxY: bounds.y + bounds.h, 
+		// 		},
+		// 	});
+		// }
 	}
 
 	public get rotation(): number {
@@ -178,7 +174,7 @@ export class RenderObject {
 
 		const data = [width];
 		if(this._isBorderAdded) {
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.EDGE_OFFSET_VALUE, data);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, data, 2);
 			this.borderColor = this.borderColor;
 		}
 		this._attribs['borderWidth'] = data;
@@ -199,8 +195,8 @@ export class RenderObject {
 	}
 
 	public set vertexOffsetValue(value: number[]) {
-		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_OFFSET_VALUE, value);
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_OFFSET_VALUE, value);
+		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
+		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
 		this._attribs['vertexOffsetValue'] = value;
 	}
 

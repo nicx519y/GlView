@@ -6,6 +6,11 @@ const TextureConfig = {
 	MAX_HEIGHT : Math.pow(2, 12),
 }
 
+const FontConfig = {
+	fontSize: Math.pow(2, 6), 		//生成文字材质尺寸，2的幂，越大质量越好
+	fontFamily: '微软雅黑', 
+	fontWeight: 'normal',
+}
 
 export class TextureFactroy {
 	private packer: GrowingPacker;
@@ -15,6 +20,7 @@ export class TextureFactroy {
 	private engine;
 	private ctx2D: CanvasRenderingContext2D;
 	private blocks: PNode[] = [];
+	private fontMaps: Map<string, ImageTexture> = new Map();
 	// 初始化材质
 	constructor(engine) {
 		this.engine = engine;
@@ -44,29 +50,33 @@ export class TextureFactroy {
 		return t;
 	}
 
-	public embedFont(chars: string, options: { fontSize: number, fontFamily: string, fontWeight: string}): FontTexture {
-		const map = new Map();
-		const sdf = new TinySDF(options.fontSize, options.fontSize/8, options.fontSize/3, null, null, options.fontWeight);
+	public getFontTextures(): Map<string, ImageTexture> {
+		return this.fontMaps;
+	}
+
+	public embedFont(chars: string) {
+		const sdf = new TinySDF(FontConfig.fontSize, FontConfig.fontSize/8, FontConfig.fontSize/3, null, null, FontConfig.fontWeight);
 		const size = sdf.size;
 		
 		for(let i = 0; i < chars.length; i ++) {
 			let char = chars[i];
-			let s = sdf.draw(char, size);
-			// let source = this.makeRGBAImageData(s);
-			let source = s;
+			const txt = this.fontMaps.get(char);
+			// 步允许重复导入
+			if(txt && txt instanceof ImageTexture) {
+				continue;
+			}
+			const s = sdf.draw(char, size);
 			let t = new ImageTexture();
 			this.blocks.push({
 				w: size,
 				h: size,
 				data: {
-					source: source,
+					source: s,
 					texture: t,
 				}
 			});
-			map.set(char, t);
+			this.fontMaps.set(char, t);
 		}
-
-		return new FontTexture(size, map);
 	}
 
 	public updateToGL() {
@@ -80,8 +90,6 @@ export class TextureFactroy {
 		bs.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x, b.fit.y, b.w, b.h, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
 		gl.generateMipmap(gl.TEXTURE_2D);
 		bs.forEach(b => b.data.texture.update(b.fit.x, b.fit.y, b.w, b.h));
-
-		this.consoleTexture()
 	}
 
 	private consoleTexture() {
@@ -141,14 +149,5 @@ export class ImageTexture {
 				this.handlers.splice(i, 1);
 			}
 		});
-	}
-}
-
-export class FontTexture {
-	size: number;
-	map: Map<string, ImageTexture>;
-	constructor(size: number, map: Map<string, ImageTexture>) {
-		this.size = size;
-		this.map = map;
 	}
 }

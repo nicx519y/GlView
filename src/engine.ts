@@ -18,9 +18,14 @@ const vsSource = `#version 300 es
 	layout(location=6) in vec4 UVRect;						//UVRect
 	layout(location=7) in vec4 backgroundColor;				//背景色
 	layout(location=8) in vec4 translationAndRotation;		//形变
+	layout(location=9) in vec2 isTextAndBorderWidth;		//是否渲染文字 以及 文字边框粗细
+	layout(location=10) in vec4 textBorderColor;			//文字边框颜色
 
 	out vec2 vTexCoord;				//UV
 	out vec4 vBgColor;
+	out float vIsText;
+	out float vTextBorderWidth;
+	out vec4 vTextBorderColor;
 
 	uniform mat4 uViewportMatrix;	//视口矩阵
 	uniform vec2 uConversionVec2;	//坐标转换
@@ -88,12 +93,15 @@ const vsSource = `#version 300 es
 		vec2 ne = nv - cv;
 		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix();
 		// 求相邻两边交点向量
-		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValue.z * edgeOffsetRatio);
+		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValue.z * uvAndEdgeOffsetRatio.z);
 		
 		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
 
-		vTexCoord = vec2(textCoord.x * UVRect.p + UVRect.s, textCoord.y * UVRect.q + UVRect.t);
+		vTexCoord = vec2(uvAndEdgeOffsetRatio.x * UVRect.p + UVRect.s, uvAndEdgeOffsetRatio.y * UVRect.q + UVRect.t);
 		vBgColor = backgroundColor;
+		vIsText = isTextAndBorderWidth.x;
+		vTextBorderWidth = isTextAndBorderWidth.y;
+		vTextBorderColor = textBorderColor;
 	}
 `;
 
@@ -102,14 +110,25 @@ const fsSource = `#version 300 es
 	uniform sampler2D uSampler;
 	in vec2 vTexCoord;
 	in vec4 vBgColor;
+	in float vIsText;
+	in float vTextBorderWidth;
+	in vec4 vTextBorderColor;
 	out vec4 fragColor;
 	void main(void) {
 		vec4 tColor = texture(uSampler, vTexCoord);
 		float a1 = tColor.a;
 		float a2 = vBgColor.a;
-		
-		fragColor = vec4(mix(vec3(vBgColor.rgb), vec3(tColor.rgb), a1), a1+(1.0-a1)*a2);
-
+		if(vIsText == 0.0) {
+			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);
+		} else if(0.0 < vTextBorderWidth) {
+			float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
+			float r1 = smoothstep(min, min + 0.2, tColor.r);
+			float r2 = smoothstep(0.6, 0.8, tColor.r);
+			fragColor = vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
+		} else {
+			float r2 = smoothstep(0.6, 0.8, tColor.r);
+			fragColor = vec4(vBgColor.rgb, r2);
+		}
 	}
 `;
 

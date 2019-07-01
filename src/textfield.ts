@@ -1,109 +1,155 @@
-import { ImageTexture, FontTexture } from "./texture";
+import { ImageTexture } from "./texture";
 import { RenderObject } from "./render-object";
 import { Generator } from './generator';
-import { IdCreator } from "./utils";
+import { IdCreator, arrayEqual } from "./utils";
 
 export class TextField {
 	private _id: string;
-	private _textureMap: Map<string, ImageTexture>;
-	private _text: string = '';
-	private _baseObject: RenderObject;
-	private _fontObjects: RenderObject[];
 	private _isShown: boolean = false;
-	private _size: number;
+	private _text: string = '';
+	private _fontSize: number = 12;
+	private _translation: number[] = [0, 0];
+	private _color: number[] = [255,255,255,255];
+	private _wordSpace: number = 10;
+	private _borderWidth: number = 0;
+	private _borderColor: number[] = [0,0,0,0];
+	
+	private _textureMap: Map<string, ImageTexture>;
+	private _fontObjects: RenderObject[];
 	private _g: Generator;
 
-	constructor(generator: Generator, texture: FontTexture) {
+	constructor(generator: Generator, textureMap: Map<string, ImageTexture>) {
 		this._id = IdCreator.createId();
 		this._g = generator;
-		this._textureMap = texture.map;
-		this._size = texture.size;
-		this._baseObject = this._g.instance();
+		this._textureMap = textureMap;
 		this._fontObjects = [];
-		this.setBaseSize();
-		this.setFontObjsTranslation();
 	}
 
 	show(): TextField {
-		this._baseObject.show();
+		if(this._isShown) return this;
 		this._isShown = true;
-		this._fontObjects.forEach(obj => obj.show());
+		this.resetFonts();
 		return this;
 	}
 
 	hide(): TextField {
-		this._baseObject.hide();
+		if(!this._isShown) return this;
 		this._isShown = false;
-		this._fontObjects.forEach(obj => obj.hide());
+		this.resetFonts();
 		return this;
 	}
 
 	set text(str: string) {
 		this._text = str;
-		this.setBaseSize();
-		this.createFontObjs();
-		this.setFontObjsTranslation();
-		this._isShown && this._fontObjects.forEach(obj => obj.show());
+		this.resetFonts();
+		this.setFontsTranslation();
 	}
 
 	set translation(offset: number[]) {
-		this._baseObject.translation = offset;
-		this.setFontObjsTranslation();
+		this._translation = offset;
+		this.setFontsTranslation();
 	}
 
 	get translation(): number[] {
-		return this._baseObject.translation;
+		return this._translation;
 	}
 
-	set backgroundColor(color: number[]) {
-		this._baseObject.backgroundColor = color;
+	set fontSize(size: number) {
+		this._fontSize = size;
+		this.setFontsTranslation();
 	}
 
-	get backgroundColor(): number[] {
-		return this._baseObject.backgroundColor;
+	get fontSize(): number {
+		return this._fontSize;
 	}
 
-	set borderWidth(width: number) {
-		this._baseObject.borderWidth = width;
+	set color(color: number[]) {
+		this._color = color;
+		this.resetFonts();	
+	}
+
+	get color(): number[] {
+		return this._color;
+	}
+
+	set wordSpace(n: number) {
+		if(this._wordSpace == n) return;
+		this._wordSpace = n;
+		this.setFontsTranslation();
+	}
+
+	get wordSpace(): number {
+		return this._wordSpace;
+	}
+
+	set borderWidth(n: number) {
+		if(this._borderWidth == n) return;
+		this._borderWidth = n;
+		this.resetFonts();
 	}
 
 	get borderWidth(): number {
-		return this._baseObject.borderWidth;
+		return this._borderWidth;
 	}
 
 	set borderColor(color: number[]) {
-		this._baseObject.borderColor = color;
+		if(arrayEqual(this._borderColor, color)) return;
+		this._borderColor = color;
+		this.resetFonts();
 	}
 
-	get borderColor(): number[] {
-		return this._baseObject.borderColor;
-	}
-
-	private createFontObjs() {
-		this._fontObjects.forEach(obj => obj.hide());
-		this._fontObjects = [];
+	private resetFonts() {
 		const len = this._text.length;
-		const s = this._size;
-		for(let i = 0; i < len; i ++) {
-			let obj = this._g.instance();
-			obj.show();
-			let texture = this._textureMap.get(this._text[i]);
-			obj.backgroundColor = [255,255,0,128];
-			obj.texture = texture;
-			obj.vertexOffsetValue = [s, s];
-			this._fontObjects.push(obj);
+		const nowLen = this._fontObjects.length;
+		const map = this._textureMap;
+		const g = this._g;
+
+		if(len > nowLen) {
+			let l = len - nowLen;
+			while(l > 0) {
+				this._fontObjects.push(g.instance());
+				l --;
+			}
+		} else if(len < nowLen) {
+			let l = nowLen - len;
+			while(l > 0) {
+				this._fontObjects.pop().hide();
+				l --;
+			}
 		}
+
+		this._fontObjects.forEach((v,k) => {
+			let text = this._text[k];
+
+			if(this._isShown) {
+				v.show();
+			} else {
+				v.hide();
+			}
+
+			v.isText = true;
+			v.backgroundColor = this._color;
+			v.textBorderWidth = this._borderWidth;
+			v.textBorderColor = this._borderColor;
+
+			let texture = map.get(text);
+			if(!texture || !(texture instanceof ImageTexture)) {
+				console.error('Can not found ImageTexture of text: "'+text+'".');
+				return;
+			} else {
+				v.texture = map.get(text);
+			}
+			
+		});
 	}
 
-	private setBaseSize() {
-		const len = this._text.length;
-		const s = this._size;
-		this._baseObject.vertexOffsetValue = [s*len, s];
-	}
-
-	private setFontObjsTranslation() {
-		const o = this._baseObject.translation;
-		const s = this._size;
-		this._fontObjects.forEach((obj, k) => obj.translation = [k * s + o[0], o[1]]);
+	private setFontsTranslation() {
+		const s = this._fontSize;
+		const offset = this._translation;
+		const space = (this._wordSpace - 25) / 100 * s;
+		this._fontObjects.forEach((obj, k) => {
+			obj.translation = [k*(s+space) + offset[0] + 0.5*s, offset[1]];
+			obj.size = [s, s];
+		});
 	}
 }

@@ -14,7 +14,6 @@ import {
 	ImageTexture, 
 	TextFieldGenerator,
 	TextField,
-	FontTexture,
 	ArrowGenerator,
 	Arrow, ArrowType,
 } from '../src';
@@ -47,15 +46,13 @@ const vec3 = glMatrix.vec3;
 
 	windowResize();
 
-	const fontTexture = tf.embedFont('打游戏', {
-		fontSize: 24,
-		fontFamily: 'arial',
-		fontWeight: 'normal',
-	});
+	tf.embedFont('打游戏1234567890');
+	
+	const fontTextureMap = tf.getFontTextures();
 
 	loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']).then(init);
 
-	
+	tf.updateToGL();
 
 	var obj;
 
@@ -64,10 +61,9 @@ const vec3 = glMatrix.vec3;
 
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
 		let status = 0;
-		tf.updateToGL();
 		engine.render();
 
-		drawText(fontTexture);
+		drawText();
 		// testArrow();
 		// drawRects(textures[2]);
 		// drawText(fontTexture);
@@ -149,13 +145,26 @@ const vec3 = glMatrix.vec3;
 		});
 	}
 
-	function drawText(fontTexture: FontTexture) {
+	function drawText() {
 		
-		const g: TextFieldGenerator = new TextFieldGenerator(engine, fontTexture);
+		const g: TextFieldGenerator = new TextFieldGenerator(engine, fontTextureMap);
 		const t: TextField = g.instance();
 		t.show();
-		t.text = '打游戏';
-		t.translation = [100, 100];
+		t.text = '94732打游戏';
+		t.fontSize = 40;
+		t.color = [255,255,0,255];
+		t.translation = [200, 400];
+		t.wordSpace = 8;
+		t.borderWidth = 2;
+		t.borderColor = [255,0,0,255];
+
+		const tt: TextField = g.instance();
+		tt.show();
+		tt.text = "982";
+		tt.fontSize = 30;
+		tt.color = [255,0,0,255];
+		tt.translation = [0, 500];
+		tt.wordSpace = 0;
 	}
 
 	function drawRects(texture: ImageTexture) {

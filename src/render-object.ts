@@ -5,7 +5,8 @@ import {
 	RenderUnit } from './render-unit';
 import { ImageTexture } from './texture';
 import { Searcher } from './searcher';
-import { getBounds, IdCreator } from './utils';
+import { getBounds, IdCreator, arrayEqual } from './utils';
+import { equal } from 'assert';
 
 export class RenderObject {
 	private _id: string;
@@ -27,6 +28,9 @@ export class RenderObject {
 		'borderWidth': [0],
 		'borderColor': [0,0,0,1],
 		'vertexOffsetValue': [0,0],
+		'isText': [0],
+		'textBorderWidth': [0],
+		'textBorderColor': [0,0,0,0],
 	};
 
 	constructor(originUnit: RenderUnit, borderUnit: RenderUnit) {
@@ -93,6 +97,7 @@ export class RenderObject {
 	}
 
 	public set translation(offset: number[]) {
+		if(arrayEqual(offset, this._attribs['translation'])) return;
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
 		this._attribs['translation'] = offset;
@@ -119,6 +124,7 @@ export class RenderObject {
 
 	public set rotation(radian: number) {
 		const data = [radian];
+		if(arrayEqual(this._attribs['rotation'], data)) return;
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
 		this._attribs['rotation'] = data;
@@ -145,6 +151,7 @@ export class RenderObject {
 
 	public set backgroundColor(color: number[]) {
 		const data = color.map(c => c/255);
+		if(arrayEqual(data, this._attribs['backgroundColor'])) return;
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.BACKGROUND_COLOR, data);
 		this._attribs['backgroundColor'] = data;
 	}
@@ -154,6 +161,7 @@ export class RenderObject {
 	}
 
 	public set texture(texture: ImageTexture) {
+		if(this._texture == texture) return;
 		if(this._texture && this._texture instanceof ImageTexture) {
 			this._texture.unbind(this._textureHandler);
 		}
@@ -163,16 +171,17 @@ export class RenderObject {
 	}
 
 	public set borderWidth(width: number) {
+		const data = [width];
+
+		if(arrayEqual(data, this._attribs['borderWidth'])) return;
+
 		if(width <= 0) {
 			this.removeBorder();
 			return;
-		} else {
-			if(this.borderWidth <= 0) {
-				this.addBorder();
-			}
+		} else if(this.borderWidth <= 0) {
+			this.addBorder();
 		}
 
-		const data = [width];
 		if(this._isBorderAdded) {
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, data, 2);
 			this.borderColor = this.borderColor;
@@ -186,6 +195,7 @@ export class RenderObject {
 
 	public set borderColor(color: number[]) {
 		const data = color.map(c => c/255);
+		if(arrayEqual(data, this._attribs['borderColor'])) return;
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, data);
 		this._attribs['borderColor'] = data;
 	}
@@ -195,6 +205,7 @@ export class RenderObject {
 	}
 
 	public set vertexOffsetValue(value: number[]) {
+		if(arrayEqual(value, this._attribs['vertexOffsetValue'])) return;
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
 		this._attribs['vertexOffsetValue'] = value;
@@ -202,6 +213,47 @@ export class RenderObject {
 
 	public get vertexOffsetValue(): number[] {
 		return this._attribs['vertexOffsetValue'];
+	}
+
+	public set size(value: number[]) {
+		this.vertexOffsetValue = value;
+	}
+
+	public get size(): number[] {
+		return this.vertexOffsetValue;
+	}
+
+	public set isText(ist: boolean) {
+		let r = ist? 1: 0;
+		const data = [r];
+		if(arrayEqual(data, this._attribs['isText'])) return;
+		this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH, data, 0);
+		this._attribs['isText'] = data;
+	}
+
+	public get isText(): boolean {
+		return this._attribs['isText'][0] == 0? false: true;
+	}
+
+	public set textBorderWidth(n: number) {
+		const data = [n];
+		if(arrayEqual(data, this._attribs['textBorderWidth'])) return;
+		this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH, data, 1);
+		this._attribs['textBorderWidth'] = data;
+	}
+
+	public get textBorderWidth(): number {
+		return this._attribs['textBorderWidth'][0];
+	}
+
+	public set textBorderColor(color: number[]) {
+		if(arrayEqual(color, this._attribs['textBorderColor'])) return;
+		this._originUnit.setAttribute(this._originId, RenderAttribute.TEXT_BORDER_COLOR, color.map(c=>c/255));
+		this._attribs['textBorderColor'] = color;
+	}
+
+	public get textBorderColor(): number[] {
+		return this._attribs['textBorderColor'];
 	}
 
 	private changeUV(texture: ImageTexture) {

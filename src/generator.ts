@@ -3,8 +3,8 @@ import { Mesh, RectMesh, OneWayArrowMesh, TwoWayArrowMesh } from './mesh';
 import { RenderUnit } from './render-unit';
 import { RenderObject } from './render-object';
 import { TextField } from './textfield';
-import { FontTexture } from './texture';
 import { Arrow } from './arrow';
+import { ImageTexture } from './texture';
 
 export class Generator {
 	private engine: Engine;
@@ -24,14 +24,16 @@ export class Generator {
 
 export class TextFieldGenerator {
 	private engine: Engine;
-	private texture: FontTexture;
-	constructor(engine: Engine, texture: FontTexture) {
+	private g: Generator;
+	private txtMap: Map<string, ImageTexture>;
+	constructor(engine: Engine, txtMap: Map<string, ImageTexture>) {
 		this.engine = engine;
-		this.texture = texture;
+		this.txtMap = txtMap;
+		this.g = new Generator(engine, new RectMesh());
 	}
 
 	public instance(): TextField {
-		return new TextField(new Generator(this.engine, new RectMesh(-0.5, -0.5)), this.texture);
+		return new TextField(this.g, this.txtMap);
 	}
 }
 

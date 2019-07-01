@@ -1,7 +1,7 @@
 
 import { Mesh, MeshConfig } from './mesh';
 import { Engine } from './engine';
-import { getBounds, PaintUnitInterface, IdCreator } from './utils';
+import { getBounds, PaintUnitInterface, IdCreator, getVertexPosition, getVertexAfterExpand } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 
 const MAX_INSTANCE = 100000;
@@ -29,6 +29,8 @@ export const enum RenderAttribute {
 	BACKGROUND_COLOR = 'backgroundColor',
 	UV_RECT = 'UVRect',
 	TRANSLATION_AND_ROTATION = 'translationAndRotation',
+	IS_TEXT_AND_BORDER_WIDTH = 'isTextAndBorderWidth',
+	TEXT_BORDER_COLOR = 'textBorderColor',
 }
 
 export var RenderAttributeStride: Map<RenderAttribute, number> = new Map();
@@ -36,12 +38,16 @@ RenderAttributeStride.set(RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 4);
 RenderAttributeStride.set(RenderAttribute.BACKGROUND_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
 RenderAttributeStride.set(RenderAttribute.TRANSLATION_AND_ROTATION, 4);
+RenderAttributeStride.set(RenderAttribute.IS_TEXT_AND_BORDER_WIDTH, 2);
+RenderAttributeStride.set(RenderAttribute.TEXT_BORDER_COLOR, 4);
 
 export const RenderAttributeList = [
 	RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE,
 	RenderAttribute.BACKGROUND_COLOR,
 	RenderAttribute.UV_RECT,
 	RenderAttribute.TRANSLATION_AND_ROTATION,
+	RenderAttribute.IS_TEXT_AND_BORDER_WIDTH,
+	RenderAttribute.TEXT_BORDER_COLOR,
 ];
 
 
@@ -221,6 +227,60 @@ export class RenderUnit implements PaintUnitInterface {
 		return this._engine;
 	}
 
+	/**
+	 * 按ID获取实例的膨胀后真实顶点位置
+	 * @param id 实例id
+	 * @param expand 膨胀
+	 */
+	public getVertexesPositionById(id: string, expand: number = 0): number[] {
+		// 顶点
+		let cv = this._meshConfig.currVertexes;
+		// 形变系数
+		const co = this._meshConfig.currOffsetRatios;
+		// 形变值
+		const cov = this.getAttribute(id, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 0, 2);
+		// 偏移
+		const trans = this.getAttribute(id, RenderAttribute.TRANSLATION_AND_ROTATION, 0, 2);
+		// 旋转
+		const rot = this.getAttribute(id, RenderAttribute.TRANSLATION_AND_ROTATION, 2, 1)[0];
+		// 顶点数量
+		const len = cv.length / 2;
+
+		let mat = mat4.create();
+		mat4.fromZRotation(mat, -rot);
+
+		let vertexes = [];
+		for(let i = 0; i < len; i ++) {
+			const vs = vec3.fromValues(cv[i*2], cv[i*2+1], 0);
+			const ratio = vec3.fromValues(co[i*2], co[i*2+1], 0);
+			// 顶点形变后的坐标
+			let vertex = getVertexPosition(vs, ratio, vec3.fromValues(cov[0], cov[1], 0));
+			vertexes.push(vertex);
+		}
+
+		const result = [];
+
+		for (let j = 0; j < len; j ++) {
+			let pidx = j == 0 ? len - 1 : j - 1;
+			let nidx = j == len - 1 ? 0 : j + 1;
+			const pv = vertexes[pidx];
+			const cv = vertexes[j];
+			const nv = vertexes[nidx];
+			// 前后边向量
+			const pc = pv.map((v,k)=>v-cv[k]);
+			const nc = nv.map((v,k)=>v-cv[k]);
+			// 膨胀后的坐标
+			let rv = getVertexAfterExpand(pc, nc, cv, expand);
+			// 旋转
+			vec3.transformMat4(rv, rv, mat);
+			// 偏移
+			vec3.add(rv, rv, vec3.fromValues(trans[0], trans[1], 0));
+			result.push(rv[0], rv[1]);
+		}
+
+		return result;
+	}
+
 	private createId(): string {
 		return IdCreator.createId();
 	}
@@ -265,37 +325,4 @@ export class RenderUnit implements PaintUnitInterface {
 		bufferData.set(arr, n*stride);
 	}
 
-	/**
-	 * 按ID获取实例的真实顶点位置
-	 * @param id 实例id
-	 */
-	public getVertexesPositionById(id: string): number[] {
-		// 顶点
-		const cv = this._meshConfig.currVertexes;
-		// 形变系数
-		const co = this._meshConfig.currOffsetRatios;
-		// 形变值
-		const cov = this.getAttribute(id, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 0, 2);
-		// 偏移
-		const trans = this.getAttribute(id, RenderAttribute.TRANSLATION_AND_ROTATION, 0, 2);
-		// 旋转
-		const rot = this.getAttribute(id, RenderAttribute.TRANSLATION_AND_ROTATION, 2, 1)[0];
-		// 顶点数量
-		const len = cv.length / 2;
-
-		let mat = mat4.create();
-		mat4.fromZRotation(mat, -rot);
-
-		let result = [];
-		for(let i = 0; i < len; i ++) {
-			let v = vec3.fromValues(cv[i*2], cv[i*2+1], 0);
-			let t = vec3.fromValues(co[i*2]*cov[0], co[i*2+1]*cov[1], 0);
-			vec3.add(v, v, t);
-			vec3.transformMat4(v, v, mat);
-			vec3.add(v, v, vec3.fromValues(trans[0], trans[1], 0));
-			result.push(v[0], v[1]);
-		}
-
-		return result;
-	}
 }

@@ -7,8 +7,6 @@ const vec3 = glMatrix.vec3;
 export class Viewport {
 	private _engine: Engine;
 	private _scale: number = 1;
-	private _scaleCenterX: number = 0;
-	private _scaleCenterY: number = 0;
 	private _offsetX: number = 0;
 	private _offsetY: number = 0;
 	constructor(engine: Engine) {

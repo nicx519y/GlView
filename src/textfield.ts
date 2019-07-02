@@ -2,8 +2,9 @@ import { ImageTexture } from "./texture";
 import { RenderObject } from "./render-object";
 import { Generator } from './generator';
 import { IdCreator, arrayEqual } from "./utils";
+import { ComponentInterface } from "./interfaces";
 
-export class TextField {
+export class TextField implements ComponentInterface {
 	private _id: string;
 	private _isShown: boolean = false;
 	private _text: string = '';
@@ -23,6 +24,14 @@ export class TextField {
 		this._g = generator;
 		this._textureMap = textureMap;
 		this._fontObjects = [];
+	}
+	
+	get id(): string {
+		return this._id;
+	}
+
+	get isShown(): boolean {
+		return this._isShown;
 	}
 
 	show(): TextField {

@@ -8,7 +8,7 @@ const TextureConfig = {
 
 const FontConfig = {
 	fontSize: Math.pow(2, 6), 		//生成文字材质尺寸，2的幂，越大质量越好
-	fontFamily: '微软雅黑', 
+	fontFamily: 'sans-serif, Microsoft YaHei', 
 	fontWeight: 'normal',
 }
 
@@ -55,7 +55,14 @@ export class TextureFactroy {
 	}
 
 	public embedFont(chars: string) {
-		const sdf = new TinySDF(FontConfig.fontSize, FontConfig.fontSize/8, FontConfig.fontSize/3, null, null, FontConfig.fontWeight);
+		const sdf = new TinySDF(
+			FontConfig.fontSize, 
+			FontConfig.fontSize/8, 
+			FontConfig.fontSize/3, 
+			null, 
+			FontConfig.fontFamily, 
+			FontConfig.fontWeight
+		);
 		const size = sdf.size;
 		
 		for(let i = 0; i < chars.length; i ++) {

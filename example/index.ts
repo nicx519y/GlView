@@ -1,4 +1,4 @@
-import * as glMatrix from '../lib/gl-matrix'
+import * as glMatrix from '../lib/gl-matrix';
 
 import { 
 	Engine,
@@ -15,14 +15,128 @@ import {
 	TextFieldGenerator,
 	TextField,
 	ArrowGenerator,
-	Arrow, ArrowType,
+	Arrow, ArrowType, GeneratorInterface, ComponentInterface,
+	hexToRgb,
 } from '../src';
 
 
 const vec2 = glMatrix.vec2;
 const vec3 = glMatrix.vec3;
 
-(function main() {
+class ObjList {
+	_list = [];
+	_g: GeneratorInterface;
+	constructor(g: GeneratorInterface) {
+		this._g = g;
+	}
+
+	find(id: string): ComponentInterface {
+		let a = this._list.find(v => v.id == id);
+		return a;
+	}
+
+	add(): ComponentInterface {
+		const obj = this._g.instance().show();
+		this._list.push(obj);
+		return obj;
+	}
+
+	remove(obj: ComponentInterface) {
+		const idx = this._list.indexOf(obj);
+		if(idx < 0) return;
+		obj.hide();
+		this._list.splice(idx, 1);
+	}
+
+	get list(): ComponentInterface[] {
+		return this._list;
+	}
+}
+
+class ObjPane {
+	con;
+	addBtn;
+	conBox;
+	temp;
+	objlist: ObjList;
+	constructor(container, generator: GeneratorInterface, temp: string) {
+		this.con = container;
+		this.addBtn = container.find('.add-btn');
+		this.conBox = container.find('.con-box');
+		this.objlist = new ObjList(generator);
+		this.temp = temp;
+		this.addBtn.click(evt => this.add());
+	}
+
+	add() {
+		const obj = this.objlist.add() as any;
+		const content = $('<div class="content" >');
+		content.html(this.temp);
+		content.attr('name', obj.id);
+		this.conBox.append(content);
+		content.find('input').each((index, input) => $(input).change(evt => this.onChange(evt)));
+		content.find('button.status-btn').click(evt => this.toggle(evt));
+		content.find('button.delete-btn').click(evt => this.remove(evt));
+		content.find('input').each((index, input) => $(input).change());
+		
+	}
+
+	toggle(evt) {
+		const p = $(evt.target).parent();
+		const id = p.attr('name');
+		const obj = this.objlist.find(id) as any;
+		if(obj.isShown) {
+			obj.hide();
+			$(evt.target).html('显示');
+		} else {
+			obj.show();
+			$(evt.target).html('隐藏');
+		}
+	}
+
+	remove(evt) {
+		const p = $(evt.target).parent();
+		const id = p.attr('name');
+		const obj = this.objlist.find(id) as any;
+		this.objlist.remove(obj);
+
+		p.remove();
+	}
+
+	onChange(evt) {
+		const p = $(evt.target).parent();
+		const id = p.attr('name');
+		const attr = $(evt.target).attr('name');
+		const obj = this.objlist.find(id) as any;
+		let value = $(evt.target).val();
+		switch(attr) {
+			case 'x':
+			case 'y':
+				const x = p.find('[name=x]').val();
+				const y = p.find('[name=y]').val();
+				obj.translation = [parseInt(x), parseInt(y)];
+				break;
+			case 'width':
+			case 'height':
+				const w = p.find('[name=width]').val();
+				const h = p.find('[name=height]').val();
+				obj.size = [parseInt(w), parseInt(h)];
+				break;
+			case 'backgroundColor':
+				value = hexToRgb(value);
+				value.push(255);
+				obj.backgroundColor = value;
+				break;
+			case 'rotation':
+				value = value / 180 * Math.PI;
+				obj.rotation = value;
+				break;
+		}
+
+	}
+}
+
+function main() {
 	const canvas = document.getElementById('glcanvas');
 	let engine = new Engine(canvas);
 	let scr = engine.searcher;
@@ -41,12 +155,14 @@ const vec3 = glMatrix.vec3;
 	// canvas.addEventListener('click', clickHandler);
 	canvas.addEventListener('mouseup', dragEnd);
 	// canvas.addEventListener('mousemove', hoverHandler);
-	canvas.addEventListener('mousemove', showCoord);
+	// canvas.addEventListener('mousemove', showCoord);
 	window.addEventListener('resize', windowResize);
+
+	document.getElementById('vp-reset').addEventListener('click', resetViewport);
 
 	windowResize();
 
-	tf.embedFont('打游戏1234567890');
+	tf.embedFont('打游戏1234567890*_+()');
 	
 	const fontTextureMap = tf.getFontTextures();
 
@@ -60,18 +176,30 @@ const vec3 = glMatrix.vec3;
 	function init(images) {
 
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
-		let status = 0;
 		engine.render();
-
-		drawText();
-		// testArrow();
+		rectTest();
+		// drawText();
 		// drawRects(textures[2]);
-		// drawText(fontTexture);
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 
 
 	}
+	function rectTest() {
+		const g = new Generator(engine, new RectMesh());
+		const pane = new ObjPane($('#rect-box'), g, 
+		`
+			宽度：<input type="text" name="width" value="100" />
+			高度：<input type="text" name="height" value="100" />
+			x：<input type="text" name="x" value="100" />
+			y：<input type="text" name="y" value="100" />
+			旋转：<input type="text" name="rotation" value="0" />
+			背景色：<input type="color" name="backgroundColor" value="#ffffff"  >
+			<button class="status-btn" >隐藏</button>
+			<button class="delete-btn" >删除</button>
+		`);
+	}
+
 
 	function testArrow() {
 		const g = new ArrowGenerator(engine, 26, 30, 10);
@@ -150,7 +278,7 @@ const vec3 = glMatrix.vec3;
 		const g: TextFieldGenerator = new TextFieldGenerator(engine, fontTextureMap);
 		const t: TextField = g.instance();
 		t.show();
-		t.text = '94732打游戏';
+		t.text = '(94732打游戏)';
 		t.fontSize = 40;
 		t.color = [255,255,0,255];
 		t.translation = [200, 400];
@@ -165,6 +293,8 @@ const vec3 = glMatrix.vec3;
 		tt.color = [255,0,0,255];
 		tt.translation = [0, 500];
 		tt.wordSpace = 0;
+		tt.borderWidth = 2;
+		tt.borderColor = [0,0,255,255];
 	}
 
 	function drawRects(texture: ImageTexture) {
@@ -301,5 +431,13 @@ const vec3 = glMatrix.vec3;
 		document.getElementById('coor').innerHTML = 'x: ' + Math.round(cs[0]) + 'px; ' + 'y: ' + Math.round(cs[1]) + 'px';
 	}
 	
+	function resetViewport() {
+		const scale = parseInt((document.getElementById('vp-scale') as HTMLInputElement).value) / 100;
+		const x = parseInt((document.getElementById('vp-scale-x') as HTMLInputElement).value);
+		const y = parseInt((document.getElementById('vp-scale-y') as HTMLInputElement).value);
+		vp.resetTranslationAndRotation(scale,x,y);
+	}
 
-})();
+};
+
+window.onload = () => main();

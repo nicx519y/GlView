@@ -5,8 +5,9 @@ import { RenderObject } from './render-object';
 import { TextField } from './textfield';
 import { Arrow } from './arrow';
 import { ImageTexture } from './texture';
+import { GeneratorInterface } from './interfaces';
 
-export class Generator {
+export class Generator implements GeneratorInterface {
 	private engine: Engine;
 	private originUnit: RenderUnit;
 	private borderUnit: RenderUnit;
@@ -22,7 +23,7 @@ export class Generator {
 	}
 }
 
-export class TextFieldGenerator {
+export class TextFieldGenerator implements GeneratorInterface {
 	private engine: Engine;
 	private g: Generator;
 	private txtMap: Map<string, ImageTexture>;
@@ -37,7 +38,7 @@ export class TextFieldGenerator {
 	}
 }
 
-export class ArrowGenerator {
+export class ArrowGenerator implements GeneratorInterface {
 	private engine: Engine;
 	private og: Generator;
 	private tg: Generator;

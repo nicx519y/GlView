@@ -26,6 +26,7 @@ const vsSource = `#version 300 es
 	out float vIsText;
 	out float vTextBorderWidth;
 	out vec4 vTextBorderColor;
+	out float hasTexture;
 
 	uniform mat4 uViewportMatrix;	//视口矩阵
 	uniform vec2 uConversionVec2;	//坐标转换
@@ -97,7 +98,11 @@ const vsSource = `#version 300 es
 		
 		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
 
+		// 如果材质宽度为0 则标志为无材质 
+		hasTexture = step(pow(10.0, -9.0), UVRect.z);
+
 		vTexCoord = vec2(uvAndEdgeOffsetRatio.x * UVRect.p + UVRect.s, uvAndEdgeOffsetRatio.y * UVRect.q + UVRect.t);
+
 		vBgColor = backgroundColor;
 		vIsText = isTextAndBorderWidth.x;
 		vTextBorderWidth = isTextAndBorderWidth.y;
@@ -113,10 +118,11 @@ const fsSource = `#version 300 es
 	in float vIsText;
 	in float vTextBorderWidth;
 	in vec4 vTextBorderColor;
+	in float hasTexture;
 	out vec4 fragColor;
 	void main(void) {
 		vec4 tColor = texture(uSampler, vTexCoord);
-		float a1 = tColor.a;
+		float a1 = tColor.a * hasTexture;
 		float a2 = vBgColor.a;
 		if(vIsText == 0.0) {
 			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);

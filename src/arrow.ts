@@ -1,6 +1,7 @@
 import { RenderObject } from "./render-object";
 import { IdCreator } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
+import { ComponentInterface } from "./interfaces";
 
 const mat4 = glMatrix.mat4;
 const vec2 = glMatrix.vec2;
@@ -10,7 +11,7 @@ export const enum ArrowType {
 	TWO_WAY = 2,
 }
 
-export class Arrow {
+export class Arrow implements ComponentInterface {
 	private _type: ArrowType = ArrowType.ONE_WAY;
 	private _id: string;
 	private _height: number;
@@ -38,6 +39,10 @@ export class Arrow {
 
 	public get id(): string {
 		return this._id;
+	}
+
+	public get isShown(): boolean {
+		return this._isShown;
 	}
 
 	show(): Arrow {

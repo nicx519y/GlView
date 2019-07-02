@@ -45,9 +45,9 @@ export class Viewport {
 	}
 	/**
 	 * 按照中心点缩放
-	 * @param scale 缩放比例
-	 * @param px 缩放中心x
-	 * @param py 缩放中心y
+	 * @param scale 缩放比例 （绝对值)
+	 * @param px 缩放中心x (屏幕坐标)
+	 * @param py 缩放中心y (屏幕坐标)
 	 */
 	setScaleOrigin(scale: number, px: number, py: number) {
 		const vpmat = this._engine.vpMat4;
@@ -82,24 +82,38 @@ export class Viewport {
 
 	/**
 	 * 设置视口平移
-	 * @param x 
-	 * @param y 
+	 * @param dx 增量
+	 * @param dy 增量
 	 */
-	translate(x: number, y: number) {
+	translate(dx: number, dy: number) {
 		const canvas = this._engine.gl.canvas;
 		const width = canvas.width;
 		const height = canvas.height;
 		const vpmat = this._engine.vpMat4;
 		//Y 轴反转
-		const p = vec3.fromValues(x, y, 0);
+		const p = vec3.fromValues(dx, dy, 0);
 		// 转化为归一化坐标
 		vec3.mul(p, p, vec3.fromValues(1/width*2, 1/height*2,1));
 		// 按照坐标系比例缩放
 		vec3.scale(p, p, 1/this._scale);
 		mat4.translate(vpmat, vpmat, p);
 		this._engine.vpMatIsModified = true;
-		this._offsetX += x;
-		this._offsetY += y;
+		this._offsetX += dx;
+		this._offsetY += dy;
+	}
+
+	resetTranslationAndRotation(scale: number=1, offsetX: number=0, offsetY: number=0) {
+		const canvas = this._engine.gl.canvas;
+		const width = canvas.width;
+		const height = canvas.height;
+		const mat = this._engine.vpMat4;
+		const p = vec3.fromValues((-width/2+offsetX)/width*2, (-height/2+offsetY)/height*2, 0);
+		mat4.fromScaling(mat, vec3.fromValues(scale, scale, 1));
+		mat4.translate(mat, mat, p);
+		this._offsetX = offsetX;
+		this._offsetY = offsetY;
+		this._scale = scale;
+		this._engine.vpMatIsModified = true;
 	}
 
 	get offsetX(): number {

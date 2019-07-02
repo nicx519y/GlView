@@ -8,11 +8,11 @@ import { ImageTexture } from './texture';
 import { GeneratorInterface } from './interfaces';
 
 export class Generator implements GeneratorInterface {
-	private engine: Engine;
+	private _engine: Engine;
 	private originUnit: RenderUnit;
 	private borderUnit: RenderUnit;
 	constructor(engine: Engine, mesh: Mesh) {
-	this.engine = engine;
+		this._engine = engine;
 		this.originUnit = new RenderUnit(engine, mesh.originMeshConfig).regist();
 		this.borderUnit = new RenderUnit(engine, mesh.borderMeshConfig).regist();
 		this.engine.registVAO(this.originUnit);
@@ -20,6 +20,17 @@ export class Generator implements GeneratorInterface {
 	}
 	public instance(): RenderObject {
 		return new RenderObject(this.originUnit, this.borderUnit);
+	}
+	public destroy() {
+		this.engine.unRegistVAO(this.originUnit);
+		this.engine.unRegistVAO(this.borderUnit, 1);
+		this.originUnit.destroy();
+		this.borderUnit.destroy();
+		this.originUnit = null;
+		this.borderUnit = null;
+	}
+	public get engine(): Engine {
+		return this._engine;
 	}
 }
 
@@ -35,6 +46,11 @@ export class TextFieldGenerator implements GeneratorInterface {
 
 	public instance(): TextField {
 		return new TextField(this.g, this.txtMap);
+	}
+	
+	public destroy() {
+		this.g.destroy();
+		this.g = null;
 	}
 }
 
@@ -54,6 +70,13 @@ export class ArrowGenerator implements GeneratorInterface {
 
 	public instance(): Arrow {
 		return new Arrow(this.og.instance(), this.tg.instance(), this._height, this._indent);
+	}
+
+	public destroy() {
+		this.og.destroy();
+		this.tg.destroy();
+		this.og = null;
+		this.tg = null;
 	}
 
 }

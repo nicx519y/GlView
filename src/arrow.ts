@@ -2,6 +2,7 @@ import { RenderObject } from "./render-object";
 import { IdCreator } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 import { ComponentInterface } from "./interfaces";
+import { SearchableObject } from "./searchable-object";
 
 const mat4 = glMatrix.mat4;
 const vec2 = glMatrix.vec2;
@@ -11,7 +12,7 @@ export const enum ArrowType {
 	TWO_WAY = 2,
 }
 
-export class Arrow implements ComponentInterface {
+export class Arrow extends SearchableObject implements ComponentInterface {
 	private _type: ArrowType = ArrowType.ONE_WAY;
 	private _id: string;
 	private _height: number;
@@ -22,6 +23,7 @@ export class Arrow implements ComponentInterface {
 	private _twoObj: RenderObject;
 	private _isShown: boolean = false;
 	constructor(one: RenderObject, two: RenderObject, height: number, indent: number = 0) {
+		super(one.engine.searcher);
 		this._id = IdCreator.createId();
 		this._oneObj = one;
 		this._twoObj = two;
@@ -51,6 +53,7 @@ export class Arrow implements ComponentInterface {
 		this.nobj.hide();
 		this.setFromToAndWidth();
 		this._isShown = true;
+		this.searchable && this.registToSearcher();
 		return this;
 	}
 
@@ -58,12 +61,14 @@ export class Arrow implements ComponentInterface {
 		if(!this._isShown) return this;
 		this.robj.hide();
 		this._isShown = false;
+		this.deregistToSearcher();
 		return this;
 	}
 
 	set fromTo(ft: number[]) {
 		this._fromTo = ft;
 		this.setFromToAndWidth();
+		this.searchable && this.registToSearcher();
 	}
 
 	get fromTo(): number[] {
@@ -78,6 +83,7 @@ export class Arrow implements ComponentInterface {
 			this.robj.show();
 			this.borderWidth = this.borderWidth;
 			this.setFromToAndWidth();
+			this.searchable && this.registToSearcher();
 		}
 	}
 
@@ -135,5 +141,9 @@ export class Arrow implements ComponentInterface {
 		this.robj.translation = offset;
 		this.robj.rotation = rotation;
 		this.robj.vertexOffsetValue = [0, dist];
+	}
+
+	public getVertexPositions(expand: number = 0): number[] {
+		return this.robj.getVertexPositions(expand);
 	}
 }

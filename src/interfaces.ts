@@ -1,5 +1,6 @@
 export interface GeneratorInterface {
 	instance(): ComponentInterface;
+	destroy();
 }
 
 export interface ComponentInterface {

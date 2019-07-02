@@ -1,12 +1,12 @@
-import { 
-	RenderAttribute, 
-	RenderUnit } from './render-unit';
+import { Engine } from './engine';
+import { RenderAttribute, RenderUnit } from './render-unit';
 import { ImageTexture } from './texture';
 import { Searcher } from './searcher';
 import { getBounds, IdCreator, arrayEqual } from './utils';
 import { ComponentInterface } from './interfaces';
+import { SearchableObject } from './searchable-object';
 
-export class RenderObject implements ComponentInterface {
+export class RenderObject extends SearchableObject implements ComponentInterface {
 	private _id: string;
 	private _originUnit: RenderUnit;
 	private _borderUnit: RenderUnit;
@@ -32,6 +32,7 @@ export class RenderObject implements ComponentInterface {
 	};
 
 	constructor(originUnit: RenderUnit, borderUnit: RenderUnit) {
+		super(originUnit.engine.searcher);
 		this._originUnit = originUnit;
 		this._borderUnit = borderUnit;
 		this._id = IdCreator.createId();
@@ -42,6 +43,10 @@ export class RenderObject implements ComponentInterface {
 		return this._id;
 	}
 
+	public get engine(): Engine {
+		return this._originUnit.engine;
+	}
+
 	public get isShown(): boolean {
 		return this._isAdded;
 	}
@@ -50,9 +55,8 @@ export class RenderObject implements ComponentInterface {
 		if(!this._isAdded) {
 			this._originId = this._originUnit.add();
 			this._isAdded = true;
-			
 			this.updateStatus();
-			
+			this.searchable && this.registToSearcher();
 		}
 		return this;
 	}
@@ -62,34 +66,8 @@ export class RenderObject implements ComponentInterface {
 		this._isBorderAdded && this._borderUnit.remove(this._borderId);
 		this._isAdded = false;
 		this._isBorderAdded = false;
+		this.deregistToSearcher();
 		return this;
-	}
-
-	private updateStatus() {
-		this._needReset = true;
-		const s = this._attribs;
-		for(let i in s) {
-			this[i] = s[i];
-		}
-		this._needReset = false;
-	}
-
-	private addBorder() {
-		if(!this._isBorderAdded) {
-			this._borderId = this._borderUnit.add();
-			this._isBorderAdded = true;
-
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, this.translation, 0);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
-		}
-	}
-
-	private removeBorder() {
-		if(this._isBorderAdded) {
-			this._borderUnit.remove(this._borderId);
-			this._isBorderAdded = false;
-		}
 	}
 
 	public set translation(offset: number[]) {
@@ -97,6 +75,7 @@ export class RenderObject implements ComponentInterface {
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
 		this._attribs['translation'] = offset;
+		this.searchable && this.registToSearcher();
 	}
 
 	public get translation(): number[] {
@@ -109,6 +88,7 @@ export class RenderObject implements ComponentInterface {
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
 		this._attribs['rotation'] = radian;
+		this.searchable && this.registToSearcher();
 	}
 
 	public get rotation(): number {
@@ -176,6 +156,7 @@ export class RenderObject implements ComponentInterface {
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
 		this._attribs['vertexOffsetValue'] = value;
+		this.searchable && this.registToSearcher();
 	}
 
 	public get vertexOffsetValue(): number[] {
@@ -223,10 +204,40 @@ export class RenderObject implements ComponentInterface {
 		return this._attribs['textBorderColor'];
 	}
 
+	public getVertexPositions(expand: number = 0): number[] {
+		return this._originUnit.getVertexesPositionById(this._originId, expand);
+	}
+
 	private changeUV(texture: ImageTexture) {
 		const uv = [texture.u, texture.v, texture.width, texture.height];
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.UV_RECT, uv);
 		this._attribs['uv'] = uv;
 	}
 
+	private updateStatus() {
+		this._needReset = true;
+		const s = this._attribs;
+		for(let i in s) {
+			this[i] = s[i];
+		}
+		this._needReset = false;
+	}
+
+	private addBorder() {
+		if(!this._isBorderAdded) {
+			this._borderId = this._borderUnit.add();
+			this._isBorderAdded = true;
+
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, this.translation, 0);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
+		}
+	}
+
+	private removeBorder() {
+		if(this._isBorderAdded) {
+			this._borderUnit.remove(this._borderId);
+			this._isBorderAdded = false;
+		}
+	}
 }

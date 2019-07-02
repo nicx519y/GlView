@@ -126,7 +126,7 @@ const fsSource = `#version 300 es
 		float a2 = vBgColor.a;
 		if(vIsText == 0.0) {
 			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);
-		} else if(0.0 < vTextBorderWidth) {
+		} else if (0.0 < vTextBorderWidth) {
 			float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
 			float r1 = smoothstep(min, min + 0.2, tColor.r);
 			float r2 = smoothstep(0.6, 0.8, tColor.r);
@@ -212,6 +212,13 @@ export class Engine {
 		}
 		this._unitList[index].push(unit);
 		return unit;
+	}
+
+	public unRegistVAO(unit: PaintUnitInterface, index: number = 0) {
+		if(index >= this._unitList.length) return;
+		const idx = this._unitList[index].indexOf(unit);
+		if(idx < 0) return;
+		this._unitList[index].splice(idx, 1);
 	}
 
 	public render() {

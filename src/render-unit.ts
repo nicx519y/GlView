@@ -281,6 +281,14 @@ export class RenderUnit implements PaintUnitInterface {
 		return result;
 	}
 
+	public destroy() {
+		this.attribBuffers.clear();
+		this.attribBufferDatas.clear();
+		this.attribIsModifieds.clear();
+		this.attribLocals.clear();
+		this.idmap.clear();
+	}
+
 	private createId(): string {
 		return IdCreator.createId();
 	}

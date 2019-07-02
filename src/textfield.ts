@@ -3,8 +3,9 @@ import { RenderObject } from "./render-object";
 import { Generator } from './generator';
 import { IdCreator, arrayEqual } from "./utils";
 import { ComponentInterface } from "./interfaces";
+import { SearchableObject } from "./searchable-object";
 
-export class TextField implements ComponentInterface {
+export class TextField extends SearchableObject implements ComponentInterface {
 	private _id: string;
 	private _isShown: boolean = false;
 	private _text: string = '';
@@ -20,6 +21,7 @@ export class TextField implements ComponentInterface {
 	private _g: Generator;
 
 	constructor(generator: Generator, textureMap: Map<string, ImageTexture>) {
+		super(generator.engine.searcher);
 		this._id = IdCreator.createId();
 		this._g = generator;
 		this._textureMap = textureMap;
@@ -38,6 +40,7 @@ export class TextField implements ComponentInterface {
 		if(this._isShown) return this;
 		this._isShown = true;
 		this.resetFonts();
+		this.searchable && this.registToSearcher();
 		return this;
 	}
 
@@ -45,6 +48,7 @@ export class TextField implements ComponentInterface {
 		if(!this._isShown) return this;
 		this._isShown = false;
 		this.resetFonts();
+		this.deregistToSearcher();
 		return this;
 	}
 
@@ -57,6 +61,7 @@ export class TextField implements ComponentInterface {
 	set translation(offset: number[]) {
 		this._translation = offset;
 		this.setFontsTranslation();
+		this.searchable && this.registToSearcher();
 	}
 
 	get translation(): number[] {
@@ -66,6 +71,7 @@ export class TextField implements ComponentInterface {
 	set fontSize(size: number) {
 		this._fontSize = size;
 		this.setFontsTranslation();
+		this.searchable && this.registToSearcher();
 	}
 
 	get fontSize(): number {
@@ -85,6 +91,7 @@ export class TextField implements ComponentInterface {
 		if(this._wordSpace == n) return;
 		this._wordSpace = n;
 		this.setFontsTranslation();
+		this.searchable && this.registToSearcher();
 	}
 
 	get wordSpace(): number {
@@ -160,5 +167,20 @@ export class TextField implements ComponentInterface {
 			obj.translation = [k*(s+space) + offset[0] + 0.5*s, offset[1]];
 			obj.size = [s, s];
 		});
+	}
+
+	public getVertexPositions(expand: number = 0): number[] {
+		const len = this._fontObjects.length;
+		if(len <= 0) return [];
+		const first = this._fontObjects[0].getVertexPositions(expand);
+		const last = this._fontObjects[len - 1].getVertexPositions(expand);
+		const vs = first.concat(last);
+		const vx = vs.filter((v, k) => k % 2 == 0);
+		const vy = vs.filter((v, k) => k % 2 != 0);
+		const minX = Math.min.apply(null, vx);
+		const maxX = Math.max.apply(null, vx);
+		const minY = Math.min.apply(null, vy);
+		const maxY = Math.max.apply(null, vy);
+		return [minX, maxY, minX, minY, maxX, minY, maxX, maxY];
 	}
 }

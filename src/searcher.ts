@@ -1,5 +1,4 @@
 import { Rectangle } from "./utils";
-// import * as RTree from '../lib/rtree';
 import * as RBush from 'rbush';
 
 /**
@@ -47,7 +46,7 @@ function rayCasting(p: number[], poly: number[]): boolean {
 	return flag;
 }
 
-export interface SearchObject {
+export interface SearchObjectInterface {
 	id: string,
 	bounds: {
 		minX: number,
@@ -60,14 +59,13 @@ export interface SearchObject {
 
 export class Searcher {
 	private _sobj;
-	private _buffer: Map<string, SearchObject>;
+	private _buffer: Map<string, SearchObjectInterface>;
 	constructor() {
-		// this._sobj = RTree(200);
 		this._sobj = new RBush(200);
 		this._buffer = new Map();
 	}
 
-	public insert(obj: SearchObject) {
+	public insert(obj: SearchObjectInterface) {
 		const id = obj.id;
 		const bufferObj = this._buffer.get(id);
 
@@ -84,7 +82,7 @@ export class Searcher {
 		this._buffer.delete(obj.id);
 	}
 
-	public search(x: number, y: number, width: number = 0, height: number = 0): SearchObject[] {
+	public search(x: number, y: number, width: number = 0, height: number = 0): SearchObjectInterface[] {
 		let result = this._sobj.search({ minX: x, minY: y, maxX: width + x, maxY: height + y })
 			.map(v => this._buffer.get(v.id));
 		if(width == 0 && height == 0) {

@@ -7,7 +7,7 @@ import {
 	RectMesh, 
 	OneWayArrowMesh, 
 	TwoWayArrowMesh,
-	SearchObject,
+	SearchObjectInterface,
 	TextureFactroy, 
 	RenderObject, 
 	loadImages, 
@@ -69,7 +69,7 @@ class ObjPane {
 	}
 
 	add() {
-		const obj = this.objlist.add() as any;
+		const obj = this.objlist.add() as RenderObject;
 		const content = $('<div class="content" >');
 		content.html(this.temp);
 		content.attr('name', obj.id);
@@ -78,7 +78,6 @@ class ObjPane {
 		content.find('button.status-btn').click(evt => this.toggle(evt));
 		content.find('button.delete-btn').click(evt => this.remove(evt));
 		content.find('input').each((index, input) => $(input).change());
-		
 	}
 
 	toggle(evt) {
@@ -132,7 +131,6 @@ class ObjPane {
 				obj.rotation = value;
 				break;
 		}
-
 	}
 }
 
@@ -345,13 +343,22 @@ function main() {
 	}
 
 	function drawTwoWayArrow() {
-		const arrowMesh: TwoWayArrowMesh = new TwoWayArrowMesh(100, 100);
-		const g: Generator = new Generator(engine, arrowMesh);
-		const obj = g.instance().show();
-		obj.translation = [100, 100];
-		obj.vertexOffsetValue = [0, 100];
-		obj.rotation = Math.PI / 4;
+		// const arrowMesh: TwoWayArrowMesh = new TwoWayArrowMesh(100, 100);
+		// const g: Generator = new Generator(engine, arrowMesh);
+		// const obj = g.instance().show();
+		// obj.translation = [100, 100];
+		// obj.vertexOffsetValue = [0, 100];
+		// obj.rotation = Math.PI / 4;
+		// obj.backgroundColor = getRandomColor();
+
+		const g = new ArrowGenerator(engine, 100, 100, 10);
+		const obj = g.instance() as Arrow;
+		obj.fromTo = [100, 100, 300, 300];
+		obj.type = 2;
+		obj.show();
 		obj.backgroundColor = getRandomColor();
+		
+		
 	}
 
 	function wheelHandler(evt) {
@@ -395,18 +402,18 @@ function main() {
 
 	function hoverHandler(evt) {
 		//调用viewport的方法转换坐标系
-		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
+		// let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		// const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
 		// objArr.forEach(obj => console.log('obj ' + obj.id + ' is hovered'))
 	}
 
 	function clickHandler(evt) {
-		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
-		if(!objArr || objArr.length <= 0) return;
-		const id = objArr[0].id;
-		const r = objlist.find(obj => obj.id == id) as RenderObject;
-		r.hide();
+		// let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		// const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
+		// if(!objArr || objArr.length <= 0) return;
+		// const id = objArr[0].id;
+		// const r = objlist.find(obj => obj.id == id) as RenderObject;
+		// r.hide();
 	}
 
 	function testAdd(g: Generator): RenderObject {

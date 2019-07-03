@@ -27,6 +27,7 @@ const vsSource = `#version 300 es
 	out float vTextBorderWidth;
 	out vec4 vTextBorderColor;
 	out float hasTexture;
+	out vec2 vPos;
 
 	uniform mat4 uViewportMatrix;	//视口矩阵
 	uniform vec2 uConversionVec2;	//坐标转换
@@ -107,6 +108,7 @@ const vsSource = `#version 300 es
 		vIsText = isTextAndBorderWidth.x;
 		vTextBorderWidth = isTextAndBorderWidth.y;
 		vTextBorderColor = textBorderColor;
+		vPos = pv;
 	}
 `;
 
@@ -119,6 +121,7 @@ const fsSource = `#version 300 es
 	in float vTextBorderWidth;
 	in vec4 vTextBorderColor;
 	in float hasTexture;
+	in vec2 vPos;
 	out vec4 fragColor;
 	void main(void) {
 		vec4 tColor = texture(uSampler, vTexCoord);
@@ -126,6 +129,13 @@ const fsSource = `#version 300 es
 		float a2 = vBgColor.a;
 		if(vIsText == 0.0) {
 			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);
+			// float vpx = float(vPos.x * 100.0);
+			// float vpy = float(vPos.y * 100.0);
+			// float modx = mod(vpx, 2.0);
+			// float mody = mod(vpy, 2.0);
+			// if(mody == 0.0) {
+			// 	discard;
+			// }
 		} else if (0.0 < vTextBorderWidth) {
 			float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
 			float r1 = smoothstep(min, min + 0.2, tColor.r);

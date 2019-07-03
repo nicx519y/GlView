@@ -107,11 +107,16 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set texture(texture: ImageTexture) {
-		if(!texture || texture instanceof ImageTexture) return;
+		if(!texture || !(texture instanceof ImageTexture)) return;
 		const t = this._texture;
 		const tt = texture as ImageTexture;
-		if(!this._needReset && arrayEqual([t.u,t.v,t.width,t.height], [tt.u,tt.v,tt.width,tt.height])) return;
-		this._texture.unbind(this._textureHandler);
+
+		if ( !this._needReset && 
+			t instanceof ImageTexture && 
+			arrayEqual([t.u,t.v,t.width,t.height], [tt.u,tt.v,tt.width,tt.height])) return;
+
+		(this._texture instanceof ImageTexture) && this._texture.unbind(this._textureHandler);
+		
 		this._texture = texture;
 		this.changeUV(this._texture);
 		this._texture.bind(this._textureHandler);

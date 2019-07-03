@@ -171,7 +171,6 @@ function main() {
 	tf.embedFont('打游戏1234567890*_+()');
 	
 	const fontTextureMap = tf.getFontTextures();
-
 	loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']).then(init);
 
 	tf.updateToGL();
@@ -184,7 +183,7 @@ function main() {
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
 		engine.render();
 		rectTest();
-		// drawText();
+		drawText();
 		// drawRects(textures[2]);
 		// drawOneWayArrow();
 		// drawTwoWayArrow();

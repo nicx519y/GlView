@@ -1,4 +1,4 @@
-import { ImageTexture } from "./texture";
+import { ImageTexture, TextureFactroy } from "./texture";
 import { RenderObject } from "./render-object";
 import { Generator } from './generator';
 import { IdCreator, arrayEqual } from "./utils";
@@ -16,15 +16,15 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	private _borderWidth: number = 0;
 	private _borderColor: number[] = [0,0,0,0];
 	
-	private _textureMap: Map<string, ImageTexture>;
+	private _tf: TextureFactroy;
 	private _fontObjects: RenderObject[];
 	private _g: Generator;
 
-	constructor(generator: Generator, textureMap: Map<string, ImageTexture>) {
+	constructor(generator: Generator, textureFactroy: TextureFactroy) {
 		super(generator.engine.searcher);
 		this._id = IdCreator.createId();
 		this._g = generator;
-		this._textureMap = textureMap;
+		this._tf = textureFactroy;
 		this._fontObjects = [];
 	}
 	
@@ -117,9 +117,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	private resetFonts() {
 		const len = this._text.length;
 		const nowLen = this._fontObjects.length;
-		const map = this._textureMap;
+		const f = this._tf;
 		const g = this._g;
-
 		if(len > nowLen) {
 			let l = len - nowLen;
 			while(l > 0) {
@@ -147,13 +146,12 @@ export class TextField extends SearchableObject implements ComponentInterface {
 			v.backgroundColor = this._color;
 			v.textBorderWidth = this._borderWidth;
 			v.textBorderColor = this._borderColor;
-
-			let texture = map.get(text);
+			let texture = f.getFontTexture(text);
 			if(!texture || !(texture instanceof ImageTexture)) {
 				console.error('Can not found ImageTexture of text: "'+text+'".');
 				return;
 			} else {
-				v.texture = map.get(text);
+				v.texture = texture;
 			}
 			
 		});

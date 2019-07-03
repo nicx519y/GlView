@@ -168,7 +168,7 @@ function main() {
 
 	windowResize();
 
-	tf.embedFont('打游戏1234567890*_+()');
+	// tf.embedFont('打游戏1234567890*_+()');
 	
 	const fontTextureMap = tf.getFontTextures();
 	loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']).then(init);
@@ -282,7 +282,7 @@ function main() {
 
 	function drawText() {
 		
-		const g: TextFieldGenerator = new TextFieldGenerator(engine, fontTextureMap);
+		const g: TextFieldGenerator = new TextFieldGenerator(engine, tf);
 		const t: TextField = g.instance();
 		t.show();
 		t.text = '(94732打游戏)';
@@ -302,6 +302,8 @@ function main() {
 		tt.wordSpace = 0;
 		tt.borderWidth = 2;
 		tt.borderColor = [0,0,255,255];
+
+		tt.text = '星际争霸';
 	}
 
 	function drawRects(texture: ImageTexture) {

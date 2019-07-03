@@ -50,6 +50,16 @@ export class TextureFactroy {
 		return t;
 	}
 
+	public getFontTexture(str: string): ImageTexture {
+		const t = str.substr(0, 1);
+		if(t == '') return null;
+		if(!this.fontMaps.has(t)) {
+			this.embedFont(t);
+			this.updateToGL();
+		}
+		return this.fontMaps.get(str);
+	}
+
 	public getFontTextures(): Map<string, ImageTexture> {
 		return this.fontMaps;
 	}

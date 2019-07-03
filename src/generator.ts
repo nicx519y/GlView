@@ -4,7 +4,7 @@ import { RenderUnit } from './render-unit';
 import { RenderObject } from './render-object';
 import { TextField } from './textfield';
 import { Arrow } from './arrow';
-import { ImageTexture } from './texture';
+import { TextureFactroy } from './texture';
 import { GeneratorInterface } from './interfaces';
 
 export class Generator implements GeneratorInterface {
@@ -37,15 +37,15 @@ export class Generator implements GeneratorInterface {
 export class TextFieldGenerator implements GeneratorInterface {
 	private engine: Engine;
 	private g: Generator;
-	private txtMap: Map<string, ImageTexture>;
-	constructor(engine: Engine, txtMap: Map<string, ImageTexture>) {
+	private _tf: TextureFactroy;
+	constructor(engine: Engine, textureFactroy: TextureFactroy) {
 		this.engine = engine;
-		this.txtMap = txtMap;
+		this._tf = textureFactroy;
 		this.g = new Generator(engine, new RectMesh());
 	}
 
 	public instance(): TextField {
-		return new TextField(this.g, this.txtMap);
+		return new TextField(this.g, this._tf);
 	}
 	
 	public destroy() {

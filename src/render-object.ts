@@ -21,14 +21,14 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	private _attribs = {
 		'translation': [0,0],
 		'rotation': 0,
-		'backgroundColor': [0,0,0,255],
+		'backgroundColor': [0,0,0,0],
 		'uv': null,
 		'vertexOffsetValue': [0,0],
 		'isText': false,
 		'textBorderWidth': 0,
 		'textBorderColor': [0,0,0,0],
 		'borderWidth': 0,
-		'borderColor': [0,0,0,255],
+		'borderColor': [0,0,0,0],
 	};
 
 	constructor(originUnit: RenderUnit, borderUnit: RenderUnit) {
@@ -121,11 +121,14 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		if(!this._needReset && width == this._attribs.borderWidth) return;
 		
 		const data = [width];
-		if(width <= 0) {
+
+		if(width > 0 && this.borderWidth <= 0) {
+			this.addBorder();
+		}
+
+		if(width <= 0 && this.borderWidth > 0) {
 			this.removeBorder();
 			return;
-		} else if(this.borderWidth <= 0) {
-			this.addBorder();
 		}
 
 		if(this._isBorderAdded) {
@@ -231,6 +234,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, this.translation, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
 		}
 	}
 

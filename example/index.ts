@@ -130,6 +130,14 @@ class ObjPane {
 				value = value / 180 * Math.PI;
 				obj.rotation = value;
 				break;
+			case 'borderWidth':
+				obj.borderWidth = parseInt(value);
+				break;
+			case 'borderColor':
+				value = hexToRgb(value);
+				value.push(255);
+				obj.borderColor = value;
+				break;
 		}
 	}
 }
@@ -192,7 +200,9 @@ function main() {
 			x：<input type="text" name="x" value="100" />
 			y：<input type="text" name="y" value="100" />
 			旋转：<input type="text" name="rotation" value="0" />
-			背景色：<input type="color" name="backgroundColor" value="#ffffff"  >
+			背景色：<input type="color" name="backgroundColor" value="#ffffff"  />
+			边框：<input type="text" name="borderWidth" value="0" />
+			边框颜色：<input type="color" name="borderColor" value="#000000" />
 			<button class="status-btn" >隐藏</button>
 			<button class="delete-btn" >删除</button>
 		`);

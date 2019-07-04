@@ -18,6 +18,7 @@ import {
 	Arrow, ArrowType, GeneratorInterface, ComponentInterface,
 	hexToRgb,
 } from '../src';
+import { brotliDecompress } from 'zlib';
 
 
 const vec2 = glMatrix.vec2;
@@ -189,7 +190,7 @@ function main() {
 		rectTest();
 		drawText();
 		// drawRects(textures[2]);
-		// drawOneWayArrow();
+		drawOneWayArrow();
 		// drawTwoWayArrow();
 
 
@@ -356,16 +357,11 @@ function main() {
 		obj.vertexOffsetValue = [0,100];
 		obj.rotation = Math.PI / 4;
 		obj.backgroundColor = getRandomColor();
+		obj.searchable = true;
+		obj.expandRadius = 20;
 	}
 
 	function drawTwoWayArrow() {
-		// const arrowMesh: TwoWayArrowMesh = new TwoWayArrowMesh(100, 100);
-		// const g: Generator = new Generator(engine, arrowMesh);
-		// const obj = g.instance().show();
-		// obj.translation = [100, 100];
-		// obj.vertexOffsetValue = [0, 100];
-		// obj.rotation = Math.PI / 4;
-		// obj.backgroundColor = getRandomColor();
 
 		const g = new ArrowGenerator(engine, 100, 100, 10);
 		const obj = g.instance() as Arrow;
@@ -373,7 +369,11 @@ function main() {
 		obj.type = 2;
 		obj.show();
 		obj.backgroundColor = getRandomColor();
-		
+		obj.borderWidth = 3;
+		obj.borderDashed = 10;
+		obj.borderColor = [0,0,0,255];
+		obj.searchable = true;
+		obj.expandRadius = 20;
 		
 	}
 

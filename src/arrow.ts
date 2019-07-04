@@ -53,7 +53,6 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 		this.nobj.hide();
 		this.setFromToAndWidth();
 		this._isShown = true;
-		this.searchable && this.registToSearcher();
 		return this;
 	}
 
@@ -68,7 +67,6 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 	set fromTo(ft: number[]) {
 		this._fromTo = ft;
 		this.setFromToAndWidth();
-		this.searchable && this.registToSearcher();
 	}
 
 	get fromTo(): number[] {
@@ -83,7 +81,6 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 			this.robj.show();
 			this.borderWidth = this.borderWidth;
 			this.setFromToAndWidth();
-			this.searchable && this.registToSearcher();
 		}
 	}
 
@@ -150,6 +147,8 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 		this.robj.translation = offset;
 		this.robj.rotation = rotation;
 		this.robj.vertexOffsetValue = [0, dist];
+
+		this.searchable && this.registToSearcher();
 	}
 
 	public getVertexPositions(expand: number = 0): number[] {

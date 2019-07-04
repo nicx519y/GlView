@@ -23,7 +23,14 @@ export class SearchableObject {
 	}
 
 	public set expandRadius(r: number) {
+		if(this._expandRadius == r) return;
 		this._expandRadius = r;
+		// 刷新搜索区域
+		this._sable && this.registToSearcher();
+	}
+
+	public get expandRadius(): number {
+		return this._expandRadius;
 	}
 
 	protected get id(): string { 

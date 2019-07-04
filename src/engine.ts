@@ -150,15 +150,20 @@ const fsSource = `#version 300 es
 		if(vNotBorder != 1.0 && vBorderDashed > 0.0) {
 			vec2 fw = fwidth(vPos.xy);
 			float d;
+			float dd;
 			
 			// if(fw.x < fw.y) {
 			// 	d = gl_FragCoord.y;
 			// } else {
 			// 	d = gl_FragCoord.x;
 			// }
+			dd = smoothstep(0.95, 1.05, fw.y/fw.x);
 
-			// 以上用step优化if else
-			d = step(fw.x, fw.y) * gl_FragCoord.y + step(fw.y, fw.x) * gl_FragCoord.x;
+			if(0.0 < dd && 1.0 > dd) {
+				d = gl_FragCoord.x;
+			} else { // 以上用step优化if else
+				d = step(fw.x, fw.y) * gl_FragCoord.y + step(fw.y, fw.x) * gl_FragCoord.x;
+			}
 
 			if(mod(floor( d / vBorderDashed ), 2.0) == 0.0) {
 				discard;

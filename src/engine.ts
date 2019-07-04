@@ -152,20 +152,16 @@ const fsSource = `#version 300 es
 			float d;
 			float dd;
 			
-			// if(fw.x < fw.y) {
-			// 	d = gl_FragCoord.y;
-			// } else {
-			// 	d = gl_FragCoord.x;
-			// }
-			dd = smoothstep(0.95, 1.05, fw.y/fw.x);
+			dd = smoothstep(0.95, 1.05, fw.y * (1.0/fw.x));
 
+			// 中间值区域 fw.x == fw.y 附近区域存在左右摇摆情况，所以用一个范围区域去覆盖
 			if(0.0 < dd && 1.0 > dd) {
 				d = gl_FragCoord.x;
 			} else { // 以上用step优化if else
 				d = step(fw.x, fw.y) * gl_FragCoord.y + step(fw.y, fw.x) * gl_FragCoord.x;
 			}
 
-			if(mod(floor( d / vBorderDashed ), 2.0) == 0.0) {
+			if(mod(floor( d * (1.0/vBorderDashed) ), 2.0) == 0.0) {
 				discard;
 			}
 		}

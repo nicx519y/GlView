@@ -125,7 +125,12 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set texture(texture: ImageTexture) {
-		if(!texture || !(texture instanceof ImageTexture)) return;
+		if(!texture || !(texture instanceof ImageTexture)) {
+			this._texture.unbind(this._textureHandler);
+			this._texture = null;
+			this.changeUV(null);
+			return;
+		} 
 		const t = this._texture;
 		const tt = texture as ImageTexture;
 
@@ -244,9 +249,13 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	private changeUV(texture: ImageTexture) {
-		const uv = [texture.u, texture.v, texture.width, texture.height];
-		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.UV_RECT, uv);
-		this._attribs['uv'] = uv;
+		if(!texture || !(texture instanceof ImageTexture)) {
+			this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.UV_RECT, [0,0,0,0]);	
+		} else {
+			const uv = [texture.u, texture.v, texture.width, texture.height];
+			this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.UV_RECT, uv);
+			this._attribs['uv'] = uv;
+		}
 	}
 
 	private updateStatus() {
@@ -254,6 +263,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		const list = this._attriblist;
 		const s = this._attribs;
 		list.forEach(v => this[v] = s[v]);
+		this.changeUV(this._texture);
 		this._needReset = false;
 	}
 

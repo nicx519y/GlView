@@ -59,13 +59,15 @@ class ObjPane {
 	addBtn;
 	conBox;
 	temp;
+	txt: ImageTexture;
 	objlist: ObjList;
-	constructor(container, generator: GeneratorInterface, temp: string) {
+	constructor(container, generator: GeneratorInterface, temp: string, texture: ImageTexture) {
 		this.con = container;
 		this.addBtn = container.find('.add-btn');
 		this.conBox = container.find('.con-box');
 		this.objlist = new ObjList(generator);
 		this.temp = temp;
+		this.txt = texture;
 		this.addBtn.click(evt => this.add());
 	}
 
@@ -80,6 +82,7 @@ class ObjPane {
 		content.find('button.delete-btn').click(evt => this.remove(evt));
 		content.find('input').each((index, input) => $(input).change());
 		obj.searchable = true;
+		obj.texture = this.txt;
 	}
 
 	toggle(evt) {
@@ -187,7 +190,7 @@ function main() {
 
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
 		engine.render();
-		rectTest();
+		rectTest(textures[0]);
 		drawText();
 		// drawRects(textures[2]);
 		drawOneWayArrow();
@@ -195,7 +198,7 @@ function main() {
 
 
 	}
-	function rectTest() {
+	function rectTest(txt: ImageTexture) {
 		const g = new Generator(engine, new RectMesh());
 		const pane = new ObjPane($('#rect-box'), g, 
 		`
@@ -210,7 +213,7 @@ function main() {
 			边框颜色：<input type="color" name="borderColor" value="#000000" />
 			<button class="status-btn" >隐藏</button>
 			<button class="delete-btn" >删除</button>
-		`);
+		`,txt);
 	}
 
 

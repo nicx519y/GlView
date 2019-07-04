@@ -129,42 +129,65 @@ const fsSource = `#version 300 es
 	in float vNotBorder;
 	in float vBorderDashed;
 	out vec4 fragColor;
-	void main(void) {
 
-		// 绘制边框
-		if(vNotBorder != 1.0 && vBorderDashed > 0.0) {
-			vec2 fw = fwidth(vPos.xy);
-			float k = fw.y * (1.0/fw.x);
-			float d;
+	float inBorderDashed() {
 
-			// 中间值区域 fw.x == fw.y 附近区域存在左右摇摆情况，所以用一个范围区域去覆盖
-			if(0.95 < k && 1.05 > k) {
-				d = gl_FragCoord.x;
-			} else { // 以上用step优化if else
-				d = step(1.0, k) * gl_FragCoord.y + step(k, 1.0) * gl_FragCoord.x;
-			}
+		// 是否绘制虚线
+		float hasDashed = step(0.0, vBorderDashed);
 
-			if(mod(floor( d * (1.0/vBorderDashed) ), 2.0) == 0.0) {
-				discard;
-			}
-		}
+		vec2 fw = fwidth(vPos.xy);
+		float k = fw.y * (1.0/fw.x);
 
-		vec4 tColor = texture(uSampler, vTexCoord);
-		float a1 = tColor.a * vHasTexture;
+		// 如果k在 0.95 和 1.05 之间
+		float c1 = step(0.95, k) * step(k, 1.05);
+		// 如果 c1 == 0.1 则 c2 = 0.0 否则 c2 = 1.0
+		float c2 = step(c1, 0.5);
+		// 如果 c1 条件成立 则 gl_FragCoord.x 否则 ...
+		float d = gl_FragCoord.x * c1 + (step(1.0, k) * gl_FragCoord.y + step(k, 1.0) * gl_FragCoord.x) * c2;
+
+		return mod(floor( d * (1.0/vBorderDashed) ), 2.0) * (1.0/hasDashed);
+	}
+
+	vec4 drawText(vec4 texture) {
+		// 文字边框是否大于0
+		float c1 = step(0.0, vTextBorderWidth);
+		// 文字边框是否小于等于0
+		float c2 = step(c1, 0.5);
+
+		// 第一个插值阶梯
+		float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
+		// 边框插值系数
+		float r1 = smoothstep(min, min + 0.2, texture.r);
+		// 文字插值系数
+		float r2 = smoothstep(0.6, 0.8, texture.r);
+		// 绘制有边框的文字 将文字部分和边框混合
+		vec4 hasBorder = vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
+		// 仅绘制无边框字体
+		vec4 hasNoBorder = vec4(vBgColor.rgb, r2);
+
+		return hasBorder * c1 + hasNoBorder * c2;
+	}
+
+	vec4 drawNormal(vec4 texture) {
+		float a1 = texture.a * vHasTexture;
 		float a2 = vBgColor.a;
-		if(vIsText == 0.0) {
-			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);
-		} else if (0.0 < vTextBorderWidth) {
-			float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
-			float r1 = smoothstep(min, min + 0.2, tColor.r);
-			float r2 = smoothstep(0.6, 0.8, tColor.r);
-			fragColor = vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
-		} else {
-			float r2 = smoothstep(0.6, 0.8, tColor.r);
-			fragColor = vec4(vBgColor.rgb, r2);
+		return vec4(mix(vBgColor.rgb, texture.rgb, a1), a1+(1.0-a1)*a2);
+	}
+
+	void main(void) {
+		if(inBorderDashed() == 0.0) {
+			discard;
+			return;
 		}
 
-		
+		// 材质
+		vec4 tColor = texture(uSampler, vTexCoord);
+		// 绘制字体
+		vec4 textColor = drawText(tColor);
+		// 绘制普通对象
+		vec4 normalColor = drawNormal(tColor);
+
+		fragColor = vIsText * textColor + step(vIsText, 0.5) * normalColor;
 	}
 `;
 

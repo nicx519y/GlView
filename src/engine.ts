@@ -102,11 +102,10 @@ const vsSource = `#version 300 es
 		
 		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
 
+		// out
 		// 如果材质宽度为0 则标志为无材质 
 		vHasTexture = step(pow(10.0, -9.0), UVRect.z);
-
 		vTexCoord = vec2(uvAndEdgeOffsetRatio.x * UVRect.p + UVRect.s, uvAndEdgeOffsetRatio.y * UVRect.q + UVRect.t);
-
 		vBgColor = backgroundColor;
 		vIsText = isTextAndBorderWidthAndDashed.x;
 		vTextBorderWidth = isTextAndBorderWidthAndDashed.y;
@@ -149,16 +148,14 @@ const fsSource = `#version 300 es
 		// 绘制边框
 		if(vNotBorder != 1.0 && vBorderDashed > 0.0) {
 			vec2 fw = fwidth(vPos.xy);
+			float k = fw.y * (1.0/fw.x);
 			float d;
-			float dd;
-			
-			dd = smoothstep(0.95, 1.05, fw.y * (1.0/fw.x));
 
 			// 中间值区域 fw.x == fw.y 附近区域存在左右摇摆情况，所以用一个范围区域去覆盖
-			if(0.0 < dd && 1.0 > dd) {
+			if(0.95 < k && 1.05 > k) {
 				d = gl_FragCoord.x;
 			} else { // 以上用step优化if else
-				d = step(fw.x, fw.y) * gl_FragCoord.y + step(fw.y, fw.x) * gl_FragCoord.x;
+				d = step(1.0, k) * gl_FragCoord.y + step(k, 1.0) * gl_FragCoord.x;
 			}
 
 			if(mod(floor( d * (1.0/vBorderDashed) ), 2.0) == 0.0) {

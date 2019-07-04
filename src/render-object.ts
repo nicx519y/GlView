@@ -141,15 +141,14 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set borderWidth(width: number) {
-		if(!this._needReset && width == this._attribs.borderWidth) return;
+		if(this._isBorderAdded && width == this._attribs.borderWidth) return;
 		
 		const data = [width];
-
-		if(width > 0 && (this._needReset || this.borderWidth <= 0)) {
+		if(width > 0 && (!this._isBorderAdded || this.borderWidth <= 0)) {
 			this.addBorder();
 		}
 
-		if(width <= 0 && this.borderWidth > 0) {
+		if(this._isBorderAdded && width <= 0 && this.borderWidth > 0) {
 			this.removeBorder();
 			return;
 		}
@@ -274,6 +273,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	private removeBorder() {
 		if(this._isBorderAdded) {
 			this._borderUnit.remove(this._borderId);
+			this._borderId = undefined;
 			this._isBorderAdded = false;
 		}
 	}

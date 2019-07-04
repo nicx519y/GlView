@@ -130,20 +130,6 @@ const fsSource = `#version 300 es
 	in float vBorderDashed;
 	out vec4 fragColor;
 	void main(void) {
-		vec4 tColor = texture(uSampler, vTexCoord);
-		float a1 = tColor.a * vHasTexture;
-		float a2 = vBgColor.a;
-		if(vIsText == 0.0) {
-			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);
-		} else if (0.0 < vTextBorderWidth) {
-			float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
-			float r1 = smoothstep(min, min + 0.2, tColor.r);
-			float r2 = smoothstep(0.6, 0.8, tColor.r);
-			fragColor = vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
-		} else {
-			float r2 = smoothstep(0.6, 0.8, tColor.r);
-			fragColor = vec4(vBgColor.rgb, r2);
-		}
 
 		// 绘制边框
 		if(vNotBorder != 1.0 && vBorderDashed > 0.0) {
@@ -162,6 +148,23 @@ const fsSource = `#version 300 es
 				discard;
 			}
 		}
+
+		vec4 tColor = texture(uSampler, vTexCoord);
+		float a1 = tColor.a * vHasTexture;
+		float a2 = vBgColor.a;
+		if(vIsText == 0.0) {
+			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);
+		} else if (0.0 < vTextBorderWidth) {
+			float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
+			float r1 = smoothstep(min, min + 0.2, tColor.r);
+			float r2 = smoothstep(0.6, 0.8, tColor.r);
+			fragColor = vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
+		} else {
+			float r2 = smoothstep(0.6, 0.8, tColor.r);
+			fragColor = vec4(vBgColor.rgb, r2);
+		}
+
+		
 	}
 `;
 

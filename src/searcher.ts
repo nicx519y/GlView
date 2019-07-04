@@ -1,4 +1,3 @@
-import { Rectangle } from "./utils";
 import * as RBush from 'rbush';
 
 /**

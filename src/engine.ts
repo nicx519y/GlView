@@ -105,11 +105,12 @@ const vsSource = `#version 300 es
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
 		mat4 rotationMatrix = getRotationMatrix();
-		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * rotationMatrix * getScaleMatrix();
+		mat4 scaleMatrix = getScaleMatrix();
+		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * rotationMatrix;
 		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValue.z * uvAndEdgeOffsetRatio.z);
 		
-		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
+		gl_Position = uViewportMatrix * transMat * scaleMatrix * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
 
 		// out
 		// 如果材质宽度为0 则标志为无材质 
@@ -121,13 +122,14 @@ const vsSource = `#version 300 es
 		vTextBorderColor = textBorderColor;
 		vNotBorder = step(vertexAndEdgeOffsetValue.z, 0.0);
 		vPos = rotationMatrix * vec4(cv, 0, 1);
-		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;		
+		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;	
 	}
 `;
 
 const fsSource = `#version 300 es
 	precision mediump float;
 	uniform sampler2D uSampler;
+	// uniform vec2 uConversionVec2;	//坐标转换
 	in vec2 vTexCoord;
 	in vec4 vBgColor;
 	in float vIsText;

@@ -1,11 +1,9 @@
 import { Engine } from './engine';
 import { RenderAttribute, RenderUnit } from './render-unit';
 import { ImageTexture } from './texture';
-import { Searcher } from './searcher';
-import { getBounds, IdCreator, arrayEqual } from './utils';
+import { IdCreator, arrayEqual } from './utils';
 import { ComponentInterface } from './interfaces';
 import { SearchableObject } from './searchable-object';
-import { timingSafeEqual } from 'crypto';
 
 export class RenderObject extends SearchableObject implements ComponentInterface {
 	private _id: string;
@@ -292,6 +290,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed], 2);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.scale], 3);
 		}
 	}
 

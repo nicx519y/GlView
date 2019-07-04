@@ -156,7 +156,7 @@ class ObjPane {
 				obj.borderDashed = value;
 				break;
 			case 'scale':
-				obj.scale = value;
+				obj.scale = value * 1;
 				break;
 		}
 	}
@@ -173,7 +173,7 @@ function main() {
 	let activeShape: RenderObject;
 	let uvlist = [];
 	let objlist = [];
-	vp.setBackgroundColor(getRandomColor());
+	vp.setBackgroundColor([186, 186, 186, 255]);
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
@@ -337,7 +337,6 @@ function main() {
 			for(let j = 0; j < count; j ++) {
 				let c = getRandomColor();
 				c[3] = 200;
-				let idx = Math.round(Math.random() * 2);
 				let obj = g.instance().show();
 				obj.translation = [i*w+w/2, j*w+w/2];
 				obj.backgroundColor = c;

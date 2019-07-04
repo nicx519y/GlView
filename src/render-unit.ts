@@ -29,7 +29,7 @@ export const enum RenderAttribute {
 	BACKGROUND_COLOR = 'backgroundColor',
 	UV_RECT = 'UVRect',
 	TRANSLATION_AND_ROTATION = 'translationAndRotation',
-	IS_TEXT_AND_BORDER_WIDTH = 'isTextAndBorderWidth',
+	IS_TEXT_AND_BORDER_WIDTH_AND_DASHED = 'isTextAndBorderWidthAndDashed',
 	TEXT_BORDER_COLOR = 'textBorderColor',
 }
 
@@ -38,7 +38,7 @@ RenderAttributeStride.set(RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 4);
 RenderAttributeStride.set(RenderAttribute.BACKGROUND_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
 RenderAttributeStride.set(RenderAttribute.TRANSLATION_AND_ROTATION, 4);
-RenderAttributeStride.set(RenderAttribute.IS_TEXT_AND_BORDER_WIDTH, 2);
+RenderAttributeStride.set(RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED, 4);
 RenderAttributeStride.set(RenderAttribute.TEXT_BORDER_COLOR, 4);
 
 export const RenderAttributeList = [
@@ -46,7 +46,7 @@ export const RenderAttributeList = [
 	RenderAttribute.BACKGROUND_COLOR,
 	RenderAttribute.UV_RECT,
 	RenderAttribute.TRANSLATION_AND_ROTATION,
-	RenderAttribute.IS_TEXT_AND_BORDER_WIDTH,
+	RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED,
 	RenderAttribute.TEXT_BORDER_COLOR,
 ];
 

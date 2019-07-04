@@ -1,7 +1,7 @@
 import { ImageTexture, TextureFactroy } from "./texture";
 import { RenderObject } from "./render-object";
 import { Generator } from './generator';
-import { IdCreator, arrayEqual } from "./utils";
+import { IdCreator, arrayEqual, isChinese } from "./utils";
 import { ComponentInterface } from "./interfaces";
 import { SearchableObject } from "./searchable-object";
 
@@ -161,8 +161,20 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		const s = this._fontSize;
 		const offset = this._translation;
 		const space = (this._wordSpace - 25) / 100 * s;
+		const half = 0.5*s;
+		const intIndent = s * 0.8;
+		let ox = half;
 		this._fontObjects.forEach((obj, k) => {
-			obj.translation = [k*(s+space) + offset[0] + 0.5*s, offset[1]];
+			let x = ox;
+			if(k != 0) {
+				x += space;
+			}
+			if(!isChinese(this._text[k])) {
+				ox = x + intIndent;
+			} else {
+				ox = x + s;
+			}
+			obj.translation = [x + offset[0], offset[1]];
 			obj.size = [s, s];
 		});
 	}

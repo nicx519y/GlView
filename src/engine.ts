@@ -18,7 +18,7 @@ const vsSource = `#version 300 es
 	layout(location=6) in vec4 UVRect;						//UVRect
 	layout(location=7) in vec4 backgroundColor;				//背景色
 	layout(location=8) in vec4 translationAndRotation;		//形变
-	layout(location=9) in vec2 isTextAndBorderWidth;		//是否渲染文字 以及 文字边框粗细
+	layout(location=9) in vec4 isTextAndBorderWidthAndDashed;		//是否渲染文字 以及 文字边框粗细 以及物体边框虚线
 	layout(location=10) in vec4 textBorderColor;			//文字边框颜色
 
 	out vec2 vTexCoord;				//UV
@@ -26,8 +26,10 @@ const vsSource = `#version 300 es
 	out float vIsText;
 	out float vTextBorderWidth;
 	out vec4 vTextBorderColor;
-	out float hasTexture;
-	out vec2 vPos;
+	out float vHasTexture;
+	out vec4 vPos;
+	out float vNotBorder;
+	out float vBorderDashed;
 
 	uniform mat4 uViewportMatrix;	//视口矩阵
 	uniform vec2 uConversionVec2;	//坐标转换
@@ -93,22 +95,25 @@ const vsSource = `#version 300 es
 		vec2 nv = getVertex(nextVertexAndRatio.xy, nextVertexAndRatio.zw, vertexAndEdgeOffsetValue.xy);
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
-		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * getRotationMatrix();
+		mat4 rotationMatrix = getRotationMatrix();
+		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * rotationMatrix;
 		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValue.z * uvAndEdgeOffsetRatio.z);
 		
 		gl_Position = uViewportMatrix * transMat * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
 
 		// 如果材质宽度为0 则标志为无材质 
-		hasTexture = step(pow(10.0, -9.0), UVRect.z);
+		vHasTexture = step(pow(10.0, -9.0), UVRect.z);
 
 		vTexCoord = vec2(uvAndEdgeOffsetRatio.x * UVRect.p + UVRect.s, uvAndEdgeOffsetRatio.y * UVRect.q + UVRect.t);
 
 		vBgColor = backgroundColor;
-		vIsText = isTextAndBorderWidth.x;
-		vTextBorderWidth = isTextAndBorderWidth.y;
+		vIsText = isTextAndBorderWidthAndDashed.x;
+		vTextBorderWidth = isTextAndBorderWidthAndDashed.y;
 		vTextBorderColor = textBorderColor;
-		vPos = pv;
+		vNotBorder = step(vertexAndEdgeOffsetValue.z, 0.0);
+		vPos = rotationMatrix * vec4(cv, 0, 1);
+		vBorderDashed = isTextAndBorderWidthAndDashed.z;		
 	}
 `;
 
@@ -120,22 +125,17 @@ const fsSource = `#version 300 es
 	in float vIsText;
 	in float vTextBorderWidth;
 	in vec4 vTextBorderColor;
-	in float hasTexture;
-	in vec2 vPos;
+	in float vHasTexture;
+	in vec4 vPos;
+	in float vNotBorder;
+	in float vBorderDashed;
 	out vec4 fragColor;
 	void main(void) {
 		vec4 tColor = texture(uSampler, vTexCoord);
-		float a1 = tColor.a * hasTexture;
+		float a1 = tColor.a * vHasTexture;
 		float a2 = vBgColor.a;
 		if(vIsText == 0.0) {
 			fragColor = vec4(mix(vBgColor.rgb, tColor.rgb, a1), a1+(1.0-a1)*a2);
-			// float vpx = float(vPos.x * 100.0);
-			// float vpy = float(vPos.y * 100.0);
-			// float modx = mod(vpx, 2.0);
-			// float mody = mod(vpy, 2.0);
-			// if(mody == 0.0) {
-			// 	discard;
-			// }
 		} else if (0.0 < vTextBorderWidth) {
 			float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
 			float r1 = smoothstep(min, min + 0.2, tColor.r);
@@ -144,6 +144,25 @@ const fsSource = `#version 300 es
 		} else {
 			float r2 = smoothstep(0.6, 0.8, tColor.r);
 			fragColor = vec4(vBgColor.rgb, r2);
+		}
+
+		// 绘制边框
+		if(vNotBorder != 1.0 && vBorderDashed > 0.0) {
+			vec2 fw = fwidth(vPos.xy);
+			float d;
+			
+			// if(fw.x < fw.y) {
+			// 	d = gl_FragCoord.y;
+			// } else {
+			// 	d = gl_FragCoord.x;
+			// }
+
+			// 以上用step优化if else
+			d = step(fw.x, fw.y) * gl_FragCoord.y + step(fw.y, fw.x) * gl_FragCoord.x;
+
+			if(mod(floor( d / vBorderDashed ), 2.0) == 0.0) {
+				discard;
+			}
 		}
 	}
 `;

@@ -120,3 +120,16 @@ export function hexToRgb (str: string){
         return sColor;        
 	}
 };
+
+// 判断字符串是否是数字
+export function isInteger(str: string) {  
+	let reg = new RegExp("^[-\\+]?[\\d]*$"); 
+	return reg.test(str);
+}
+
+export function isChinese(str: string)
+{
+	//通过字节码进行判断
+	const code = str.charCodeAt(0);
+	return code >= 0x4E00 && code <= 0x29FA5;
+}

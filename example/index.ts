@@ -78,6 +78,7 @@ class ObjPane {
 		content.find('button.status-btn').click(evt => this.toggle(evt));
 		content.find('button.delete-btn').click(evt => this.remove(evt));
 		content.find('input').each((index, input) => $(input).change());
+		obj.searchable = true;
 	}
 
 	toggle(evt) {
@@ -138,6 +139,9 @@ class ObjPane {
 				value.push(255);
 				obj.borderColor = value;
 				break;
+			case 'borderDashed':
+				obj.borderDashed = value;
+				break;
 		}
 	}
 }
@@ -158,7 +162,7 @@ function main() {
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
 	canvas.addEventListener('mousemove', drag);
-	// canvas.addEventListener('click', clickHandler);
+	canvas.addEventListener('click', clickHandler);
 	canvas.addEventListener('mouseup', dragEnd);
 	// canvas.addEventListener('mousemove', hoverHandler);
 	// canvas.addEventListener('mousemove', showCoord);
@@ -194,13 +198,14 @@ function main() {
 		const g = new Generator(engine, new RectMesh());
 		const pane = new ObjPane($('#rect-box'), g, 
 		`
-			宽度：<input type="text" name="width" value="100" />
+			宽度：<input type="text" name="width" value="200" />
 			高度：<input type="text" name="height" value="100" />
-			x：<input type="text" name="x" value="100" />
-			y：<input type="text" name="y" value="100" />
+			x：<input type="text" name="x" value="300" />
+			y：<input type="text" name="y" value="300" />
 			旋转：<input type="text" name="rotation" value="0" />
 			背景色：<input type="color" name="backgroundColor" value="#ffffff"  />
-			边框：<input type="text" name="borderWidth" value="0" />
+			边框：<input type="text" name="borderWidth" value="3" />
+			虚线：<input type="text" name="borderDashed" value="5" />
 			边框颜色：<input type="color" name="borderColor" value="#000000" />
 			<button class="status-btn" >隐藏</button>
 			<button class="delete-btn" >删除</button>
@@ -285,7 +290,7 @@ function main() {
 		const g: TextFieldGenerator = new TextFieldGenerator(engine, tf);
 		const t: TextField = g.instance();
 		t.show();
-		t.text = '(94732打游戏)';
+		t.text = '2B星际争霸ABCdeF';
 		t.fontSize = 40;
 		t.color = [255,255,0,255];
 		t.translation = [200, 400];
@@ -303,7 +308,7 @@ function main() {
 		tt.borderWidth = 2;
 		tt.borderColor = [0,0,255,255];
 
-		tt.text = '星际争霸';
+		tt.text = '2B星际争霸ABCdeF';
 	}
 
 	function drawRects(texture: ImageTexture) {
@@ -419,12 +424,10 @@ function main() {
 	}
 
 	function clickHandler(evt) {
-		// let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		// const objArr: SearchObject[] = scr.search(cs[0], cs[1]);
-		// if(!objArr || objArr.length <= 0) return;
-		// const id = objArr[0].id;
-		// const r = objlist.find(obj => obj.id == id) as RenderObject;
-		// r.hide();
+		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
+		console.log(objArr);
+		if(!objArr || objArr.length <= 0) return;
 	}
 
 	function testAdd(g: Generator): RenderObject {

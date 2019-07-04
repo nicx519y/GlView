@@ -119,6 +119,15 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 		return this.robj.borderColor;
 	}
 
+	set borderDashed(n: number) {
+		this.robj.borderDashed = n;
+		this.nobj.borderDashed = n;
+	}
+
+	get borderDashed(): number {
+		return this.robj.borderDashed;
+	}
+
 	private setFromToAndWidth() {
 		const ft = this._fromTo;
 		const indent = this._indent;

@@ -22,6 +22,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	private _attribs = {
 		'translation': [0,0],
 		'rotation': 0,
+		'scale': 1,
 		'backgroundColor': [0,0,0,0],
 		'uv': null,
 		'vertexOffsetValue': [0,0],
@@ -37,6 +38,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'vertexOffsetValue',
 		'translation',
 		'rotation',
+		'scale',
 		'backgroundColor',
 		'uv',
 
@@ -113,6 +115,19 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		return this._attribs['rotation'];
 	}
 
+	public set scale(n: number) {
+		if(!this._needReset && this.scale == n) return;
+		const data = [n];
+		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, data, 3);
+		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, data, 3);
+		this._attribs['scale'] = n;
+		this.searchable && this.registToSearcher();
+	}
+
+	public get scale(): number {
+		return this._attribs['scale'];
+	}
+
 	public set backgroundColor(color: number[]) {
 		if(!this._needReset && arrayEqual(color, this._attribs['backgroundColor'])) return;
 		const data = color.map(c => c/255);
@@ -183,7 +198,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 	public set borderDashed(n: number) {
 		if(!this._needReset && n == this._attribs.borderDashed) return;
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED, [n], 2);
+		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [n], 2);
 		this._attribs.borderDashed = n;
 	}
 
@@ -215,7 +230,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		if(!this._needReset && this._attribs['isText'] == ist) return;
 		let r = ist? 1: 0;
 		const data = [r];
-		this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED, data, 0);
+		this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, data, 0);
 		this._attribs['isText'] = ist;
 	}
 
@@ -226,7 +241,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	public set textBorderWidth(n: number) {
 		if(!this._needReset && n == this._attribs['textBorderWidth']) return;
 		const data = [n];
-		this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED, data, 1);
+		this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, data, 1);
 		this._attribs['textBorderWidth'] = n;
 	}
 
@@ -276,7 +291,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED, [this.borderDashed], 2);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed], 2);
 		}
 	}
 

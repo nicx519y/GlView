@@ -1,6 +1,8 @@
 export interface GeneratorInterface {
+	readonly engine;
 	instance(): ComponentInterface;
-	destroy();
+	destroy(): void;
+	clear(): void;
 }
 
 export interface ComponentInterface {

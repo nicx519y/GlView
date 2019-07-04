@@ -8,7 +8,7 @@ const TextureConfig = {
 
 const FontConfig = {
 	fontSize: Math.pow(2, 6), 		//生成文字材质尺寸，2的幂，越大质量越好
-	fontFamily: 'sans-serif, Microsoft YaHei', 
+	fontFamily: 'Black Arial, SimHei', 
 	fontWeight: 'normal',
 }
 

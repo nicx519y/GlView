@@ -57,18 +57,23 @@ class ObjList {
 class ObjPane {
 	con;
 	addBtn;
+	clearBtn;
 	conBox;
 	temp;
 	txt: ImageTexture;
+	g;
 	objlist: ObjList;
 	constructor(container, generator: GeneratorInterface, temp: string, texture: ImageTexture) {
 		this.con = container;
 		this.addBtn = container.find('.add-btn');
+		this.clearBtn = container.find('.clear-btn');
 		this.conBox = container.find('.con-box');
 		this.objlist = new ObjList(generator);
 		this.temp = temp;
 		this.txt = texture;
+		this.g = generator;
 		this.addBtn.click(evt => this.add());
+		this.clearBtn.click(evt => this.clear());
 	}
 
 	add() {
@@ -105,6 +110,10 @@ class ObjPane {
 		this.objlist.remove(obj);
 
 		p.remove();
+	}
+
+	clear() {
+		this.g.clear();
 	}
 
 	onChange(evt) {
@@ -145,6 +154,9 @@ class ObjPane {
 				break;
 			case 'borderDashed':
 				obj.borderDashed = value;
+				break;
+			case 'scale':
+				obj.scale = value;
 				break;
 		}
 	}
@@ -207,6 +219,7 @@ function main() {
 			x：<input type="text" name="x" value="300" />
 			y：<input type="text" name="y" value="300" />
 			旋转：<input type="text" name="rotation" value="0" />
+			缩放：<input type="text" name="scale" value="1" />
 			背景色：<input type="color" name="backgroundColor" value="#ffffff"  />
 			边框：<input type="text" name="borderWidth" value="3" />
 			虚线：<input type="text" name="borderDashed" value="5" />
@@ -305,12 +318,12 @@ function main() {
 		const tt: TextField = g.instance();
 		tt.show();
 		tt.text = "982";
-		tt.fontSize = 30;
-		tt.color = [255,0,0,255];
+		tt.fontSize = 20;
+		tt.color = [0,0,0,255];
 		tt.translation = [0, 500];
 		tt.wordSpace = 0;
 		tt.borderWidth = 2;
-		tt.borderColor = [0,0,255,255];
+		tt.borderColor = [255,255,255,255];
 
 		tt.text = '2B星际争霸ABCdeF';
 	}

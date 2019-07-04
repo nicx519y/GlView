@@ -29,17 +29,21 @@ export class Generator implements GeneratorInterface {
 		this.originUnit = null;
 		this.borderUnit = null;
 	}
+	public clear() {
+		this.originUnit.clear();
+		this.borderUnit.clear();
+	}
 	public get engine(): Engine {
 		return this._engine;
 	}
 }
 
 export class TextFieldGenerator implements GeneratorInterface {
-	private engine: Engine;
+	private _engine: Engine;
 	private g: Generator;
 	private _tf: TextureFactroy;
 	constructor(engine: Engine, textureFactroy: TextureFactroy) {
-		this.engine = engine;
+		this._engine = engine;
 		this._tf = textureFactroy;
 		this.g = new Generator(engine, new RectMesh());
 	}
@@ -52,16 +56,24 @@ export class TextFieldGenerator implements GeneratorInterface {
 		this.g.destroy();
 		this.g = null;
 	}
+
+	public clear() {
+		this.g.clear();
+	}
+
+	public get engine(): Engine {
+		return this._engine;
+	}
 }
 
 export class ArrowGenerator implements GeneratorInterface {
-	private engine: Engine;
+	private _engine: Engine;
 	private og: Generator;
 	private tg: Generator;
 	private _height: number;
 	private _indent: number;
 	constructor(engine: Engine, width: number, height: number, indent: number = 0) {
-		this.engine = engine;
+		this._engine = engine;
 		this.og = new Generator(engine, new OneWayArrowMesh(width, height));
 		this.tg = new Generator(engine, new TwoWayArrowMesh(width, height));
 		this._height = height;
@@ -77,6 +89,15 @@ export class ArrowGenerator implements GeneratorInterface {
 		this.tg.destroy();
 		this.og = null;
 		this.tg = null;
+	}
+
+	public clear() {
+		this.og.clear();
+		this.tg.clear();
+	}
+
+	public get engine(): Engine {
+		return this._engine;
 	}
 
 }

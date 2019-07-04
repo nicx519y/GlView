@@ -29,7 +29,7 @@ export const enum RenderAttribute {
 	BACKGROUND_COLOR = 'backgroundColor',
 	UV_RECT = 'UVRect',
 	TRANSLATION_AND_ROTATION = 'translationAndRotation',
-	IS_TEXT_AND_BORDER_WIDTH_AND_DASHED = 'isTextAndBorderWidthAndDashed',
+	IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE = 'isTextAndBorderWidthAndDashedAndScale',
 	TEXT_BORDER_COLOR = 'textBorderColor',
 }
 
@@ -38,7 +38,7 @@ RenderAttributeStride.set(RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 4);
 RenderAttributeStride.set(RenderAttribute.BACKGROUND_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
 RenderAttributeStride.set(RenderAttribute.TRANSLATION_AND_ROTATION, 4);
-RenderAttributeStride.set(RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED, 4);
+RenderAttributeStride.set(RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, 4);
 RenderAttributeStride.set(RenderAttribute.TEXT_BORDER_COLOR, 4);
 
 export const RenderAttributeList = [
@@ -46,7 +46,7 @@ export const RenderAttributeList = [
 	RenderAttribute.BACKGROUND_COLOR,
 	RenderAttribute.UV_RECT,
 	RenderAttribute.TRANSLATION_AND_ROTATION,
-	RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED,
+	RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE,
 	RenderAttribute.TEXT_BORDER_COLOR,
 ];
 
@@ -64,7 +64,6 @@ export class RenderUnit implements PaintUnitInterface {
 	private attribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
 	private attribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
 	private attribIsModifieds: Map<RenderAttribute, boolean> = new Map();
-	private attribLocals: Map<RenderAttribute, any> = new Map();
 
 	constructor(engine: Engine, meshConfig: MeshConfig) {
 		this._engine = engine;
@@ -113,10 +112,6 @@ export class RenderUnit implements PaintUnitInterface {
 			v3.push(nextVs[i*2], nextVs[i*2+1], nextRt[i*2], nextRt[i*2+1]);
 			v4.push(uvc[i*2], uvc[i*2+1], eor[i], 0);
 		}
-
-		RenderAttributeList.forEach(v => {
-			this.attribLocals.set(v, gl.getAttribLocation(prg, v));
-		});
 
 		this.vao = gl.createVertexArray();
 		gl.bindVertexArray(this.vao);
@@ -214,6 +209,26 @@ export class RenderUnit implements PaintUnitInterface {
 
 	}
 
+	public clear() {
+		this.attribBufferDatas.forEach(v => v.fill(0));
+		this.attribIsModifieds.forEach((v, k) => this.attribIsModifieds.set(k, true));
+		this.idmap.clear();
+		this.idlist = [];
+		this.instanceCount = 0;
+	}
+
+	public destroy() {
+		this.attribBuffers.clear();
+		this.attribBufferDatas.clear();
+		this.attribIsModifieds.clear();
+		this.idmap.clear();
+		this.idlist = [];
+		this.instanceCount = 0;
+		this.vao = null;
+		this.borderVao = null;
+	}
+
+
 	public draw() {
 		const gl = this._engine.gl;
 		const oc = this._meshConfig;
@@ -281,14 +296,6 @@ export class RenderUnit implements PaintUnitInterface {
 		return result;
 	}
 
-	public destroy() {
-		this.attribBuffers.clear();
-		this.attribBufferDatas.clear();
-		this.attribIsModifieds.clear();
-		this.attribLocals.clear();
-		this.idmap.clear();
-	}
-
 	private createId(): string {
 		return IdCreator.createId();
 	}
@@ -324,10 +331,10 @@ export class RenderUnit implements PaintUnitInterface {
 	
 	private removeAttributeBufferData(id: string, attrib: RenderAttribute) {
 		const idx = this.idmap.get(id);
-		let bufferData: Float32Array = this.attribBufferDatas.get(attrib);
-		let stride: number = RenderAttributeStride.get(attrib);
-		let n: number = Math.max(1, this.instanceCount - 1);
-		let arr = new Array<number>(stride);
+		const bufferData: Float32Array = this.attribBufferDatas.get(attrib);
+		const stride: number = RenderAttributeStride.get(attrib);
+		const n: number = Math.max(1, this.instanceCount - 1);
+		const arr = new Array<number>(stride);
 		arr.fill(0);
 		bufferData.set(bufferData.slice(n*stride, (n+1)*stride), idx*stride);
 		bufferData.set(arr, n*stride);

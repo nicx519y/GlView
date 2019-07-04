@@ -18,7 +18,7 @@ const vsSource = `#version 300 es
 	layout(location=6) in vec4 UVRect;						//UVRect
 	layout(location=7) in vec4 backgroundColor;				//背景色
 	layout(location=8) in vec4 translationAndRotation;		//形变
-	layout(location=9) in vec4 isTextAndBorderWidthAndDashed;		//是否渲染文字 以及 文字边框粗细 以及物体边框虚线
+	layout(location=9) in vec4 isTextAndBorderWidthAndDashedAndScale;		//是否渲染文字 以及 文字边框粗细 以及物体边框虚线 缩放
 	layout(location=10) in vec4 textBorderColor;			//文字边框颜色
 
 	out vec2 vTexCoord;				//UV
@@ -33,6 +33,15 @@ const vsSource = `#version 300 es
 
 	uniform mat4 uViewportMatrix;	//视口矩阵
 	uniform vec2 uConversionVec2;	//坐标转换
+
+	mat4 getScaleMatrix() {
+		return mat4(
+			isTextAndBorderWidthAndDashedAndScale.w, 0.0, 0.0, 0.0,
+			0.0, isTextAndBorderWidthAndDashedAndScale.w, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0
+		);
+	}
 	
 	mat4 getConversionMatrix() {
 		return mat4(
@@ -96,7 +105,7 @@ const vsSource = `#version 300 es
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
 		mat4 rotationMatrix = getRotationMatrix();
-		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * rotationMatrix;
+		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * rotationMatrix * getScaleMatrix();
 		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValue.z * uvAndEdgeOffsetRatio.z);
 		
@@ -107,12 +116,12 @@ const vsSource = `#version 300 es
 		vHasTexture = step(pow(10.0, -9.0), UVRect.z);
 		vTexCoord = vec2(uvAndEdgeOffsetRatio.x * UVRect.p + UVRect.s, uvAndEdgeOffsetRatio.y * UVRect.q + UVRect.t);
 		vBgColor = backgroundColor;
-		vIsText = isTextAndBorderWidthAndDashed.x;
-		vTextBorderWidth = isTextAndBorderWidthAndDashed.y;
+		vIsText = isTextAndBorderWidthAndDashedAndScale.x;
+		vTextBorderWidth = isTextAndBorderWidthAndDashedAndScale.y;
 		vTextBorderColor = textBorderColor;
 		vNotBorder = step(vertexAndEdgeOffsetValue.z, 0.0);
 		vPos = rotationMatrix * vec4(cv, 0, 1);
-		vBorderDashed = isTextAndBorderWidthAndDashed.z;		
+		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;		
 	}
 `;
 

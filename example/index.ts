@@ -214,7 +214,7 @@ function main() {
 		const g = new Generator(engine, new RectMesh());
 		const pane = new ObjPane($('#rect-box'), g, 
 		`
-			宽度：<input type="text" name="width" value="200" />
+			宽度：<input type="text" name="width" value="100" />
 			高度：<input type="text" name="height" value="100" />
 			x：<input type="text" name="x" value="300" />
 			y：<input type="text" name="y" value="300" />
@@ -309,20 +309,20 @@ function main() {
 		t.show();
 		t.text = '2B星际争霸ABCdeF';
 		t.fontSize = 40;
-		t.color = [255,255,0,255];
+		t.color = [255,0,0,255];
 		t.translation = [200, 400];
 		t.wordSpace = 8;
-		t.borderWidth = 1;
-		t.borderColor = [255,0,0,255];
+		t.borderWidth = 2;
+		t.borderColor = [255,255,0,255];
 
 		const tt: TextField = g.instance();
 		tt.show();
 		tt.text = "982";
 		tt.fontSize = 20;
-		tt.color = [0,0,0,255];
+		tt.color = [255,255,255,255];
 		tt.translation = [0, 500];
 		tt.wordSpace = 0;
-		tt.borderWidth = 2;
+		tt.borderWidth = 0;
 		tt.borderColor = [255,255,255,255];
 
 		tt.text = '2B星际争霸ABCdeF';

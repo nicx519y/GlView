@@ -161,22 +161,18 @@ const fsSource = `#version 300 es
 
 	vec4 drawText(vec4 texture) {
 		// 文字边框是否大于0
-		float c1 = step(0.0, vTextBorderWidth);
+		float c1 = step(0.1, vTextBorderWidth);
 		// 文字边框是否小于等于0
 		float c2 = step(c1, 0.5);
 
 		// 第一个插值阶梯
 		float min = max(0.0, 0.6 - vTextBorderWidth * 0.1);
 		// 边框插值系数
-		float r1 = smoothstep(min, min + 0.2, texture.r);
+		float r1 = smoothstep(min, min + 0.2, texture.r) * c1;
 		// 文字插值系数
 		float r2 = smoothstep(0.6, 0.8, texture.r);
-		// 绘制有边框的文字 将文字部分和边框混合
-		vec4 hasBorder = vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
-		// 仅绘制无边框字体
-		vec4 hasNoBorder = vec4(vBgColor.rgb, r2);
-
-		return hasBorder * c1 + hasNoBorder * c2;
+		
+		return vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
 	}
 
 	vec4 drawNormal(vec4 texture) {
@@ -214,6 +210,7 @@ export class Engine {
 	private _unitList: PaintUnitInterface[][];
 	private _num: number = 0;
 	constructor(canvas) {
+		const ratio = window.devicePixelRatio;
 		const width = canvas.width;
 		const height = canvas.height;
 		this._gl = canvas.getContext('webgl2', { 

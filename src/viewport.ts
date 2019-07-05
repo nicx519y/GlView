@@ -3,6 +3,8 @@ import * as glMatrix from "../lib/gl-matrix.js"
 
 const mat4 = glMatrix.mat4;
 const vec3 = glMatrix.vec3;
+const RATIO = window.devicePixelRatio;
+
 
 export class Viewport {
 	private _engine: Engine;
@@ -14,7 +16,7 @@ export class Viewport {
 		const canvas = engine.gl.canvas;
 		const width = canvas.width;
 		const height = canvas.height;
-		this.translate(-width/2, -height/2);
+		this.translate(-width/2/RATIO, -height/2/RATIO);
 	}
 
 	/**
@@ -34,12 +36,11 @@ export class Viewport {
 		const gl = this._engine.gl;
 		const canvas = gl.canvas;
 		let cvVec2 = this._engine.cvVec2;
-		canvas.width = width;
-		canvas.height = height;
+		canvas.width = width * RATIO;
+		canvas.height = height * RATIO;
 		canvas.style.width = width + 'px';
 		canvas.style.height = height + 'px';
 		cvVec2.set([1/width*2, 1/height*2], 0);
-
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		this._engine.cvMatIsModified = true;
 	}
@@ -49,25 +50,15 @@ export class Viewport {
 	 * @param px 缩放中心x (屏幕坐标)
 	 * @param py 缩放中心y (屏幕坐标)
 	 */
-	setScaleOrigin(scale: number, px: number, py: number) {
+	scaleOrigin(scale: number, px: number, py: number) {
 		const vpmat = this._engine.vpMat4;
 		const canvas = this._engine.gl.canvas;
-		const width = canvas.width;
-		const height = canvas.height;
-		scale = Math.max(Math.min(1, scale), 0.1);
-		const s = scale/this._scale;
-
-		//y轴反转
-		let p = vec3.fromValues(px - width/2, height/2 - py, 0);
-		//当前视口矩阵逆矩阵	
-		let invertMat = mat4.create();
-		mat4.invert(invertMat, vpmat);
-		//归一化坐标系
-		vec3.mul(p, p, vec3.fromValues(1/width*2, 1/height*2,1));
-		//乘逆矩阵 求世界坐标
-		vec3.transformMat4(p, p, invertMat);
-		//偏移
-		mat4.translate(vpmat, vpmat, vec3.fromValues(p[0]*(1-s), p[1]*(1-s), 0));
+		const width = canvas.width/RATIO/2;
+		const height = canvas.height/RATIO/2;
+		const s = Math.max(Math.min(1, scale), 0.1)/this._scale;
+		px /= width;
+		py /= height;
+		mat4.translate(vpmat, vpmat, vec3.fromValues(px*(1-s), py*(1-s), 0));
 		//缩放
 		mat4.scale(vpmat, vpmat, vec3.fromValues(s,s,1));
 		this._engine.vpMatIsModified = true;
@@ -91,7 +82,7 @@ export class Viewport {
 		const height = canvas.height;
 		const vpmat = this._engine.vpMat4;
 		//Y 轴反转
-		const p = vec3.fromValues(dx, dy, 0);
+		const p = vec3.fromValues(dx * RATIO, dy * RATIO, 0);
 		// 转化为归一化坐标
 		vec3.mul(p, p, vec3.fromValues(1/width*2, 1/height*2,1));
 		// 按照坐标系比例缩放
@@ -102,14 +93,17 @@ export class Viewport {
 		this._offsetY += dy;
 	}
 
-	resetTranslationAndRotation(scale: number=1, offsetX: number=0, offsetY: number=0) {
+	resetTranslationAndRotation(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
 		const canvas = this._engine.gl.canvas;
-		const width = canvas.width;
-		const height = canvas.height;
+		const width = canvas.width/RATIO/2;
+		const height = canvas.height/RATIO/2;
 		const mat = this._engine.vpMat4;
-		const p = vec3.fromValues((-width/2+offsetX)/width*2, (-height/2+offsetY)/height*2, 0);
-		mat4.fromScaling(mat, vec3.fromValues(scale, scale, 1));
-		mat4.translate(mat, mat, p);
+		const p: Float32Array = vec3.fromValues((-width/2)/width*2, (-height/2)/height*2, 0);
+		const dp: Float32Array = vec3.fromValues(offsetX/width, offsetY/height, 0);
+		const op: Float32Array = vec3.fromValues(originX/width, originY/height, 0);
+		mat4.fromTranslation(mat, p.map((v,k)=>v+dp[k]*scale+op[k]*(1-scale)));
+		mat4.scale(mat, mat, vec3.fromValues(scale, scale, 1));
+
 		this._offsetX = offsetX;
 		this._offsetY = offsetY;
 		this._scale = scale;
@@ -132,14 +126,13 @@ export class Viewport {
 	 */
 	changeCoordinateFromScreen(x: number, y: number, z: number = 0) {
 		const vpmat = this._engine.vpMat4;
-		const width = this._engine.gl.canvas.width;
-		const height = this._engine.gl.canvas.height;
+		const w = this._engine.gl.canvas.width/RATIO/2;
+		const h = this._engine.gl.canvas.height/RATIO/2;
 		let invertMat = mat4.create();
 		mat4.invert(invertMat, vpmat);
-		let v = vec3.fromValues(x - width/2, - y + height/2, z);
-		vec3.mul(v, v, vec3.fromValues(1/width*2, 1/height*2,1));
+		let v:Float32Array = vec3.fromValues(x/w - 1, - y/h + 1, z);
 		vec3.transformMat4(v, v, invertMat);
-		vec3.mul(v, v, vec3.fromValues(width/2, height/2, 1));
+		vec3.mul(v, v, vec3.fromValues(w, h, 1));
 		return v;
 	}
 

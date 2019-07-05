@@ -196,7 +196,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 	public set borderDashed(n: number) {
 		if(!this._needReset && n == this._attribs.borderDashed) return;
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [n], 2);
+		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [n*window.devicePixelRatio], 2);
 		this._attribs.borderDashed = n;
 	}
 

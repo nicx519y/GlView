@@ -312,7 +312,7 @@ function main() {
 		t.color = [255,255,0,255];
 		t.translation = [200, 400];
 		t.wordSpace = 8;
-		t.borderWidth = 2;
+		t.borderWidth = 1;
 		t.borderColor = [255,0,0,255];
 
 		const tt: TextField = g.instance();
@@ -400,7 +400,8 @@ function main() {
 		const mx = evt.pageX;
 		const my = evt.pageY;
 		let d = - evt.wheelDeltaY / 1000;
-		vp.setScaleOrigin(d+vp.scale, mx, my);
+		const v = vp.changeCoordinateFromScreen(mx, my);
+		vp.scaleOrigin(d+vp.scale, v[0], v[1]);
 	}
 
 	function dragStart(evt) {
@@ -441,7 +442,7 @@ function main() {
 	function clickHandler(evt) {
 		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
 		const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
-		console.log(objArr);
+		// console.log(objArr);
 		if(!objArr || objArr.length <= 0) return;
 	}
 
@@ -468,10 +469,12 @@ function main() {
 	}
 	
 	function resetViewport() {
+		const translateX = parseInt((document.getElementById('vp-translate-x') as HTMLInputElement).value);
+		const translateY = parseInt((document.getElementById('vp-translate-y') as HTMLInputElement).value);
 		const scale = parseInt((document.getElementById('vp-scale') as HTMLInputElement).value) / 100;
-		const x = parseInt((document.getElementById('vp-scale-x') as HTMLInputElement).value);
-		const y = parseInt((document.getElementById('vp-scale-y') as HTMLInputElement).value);
-		vp.resetTranslationAndRotation(scale,x,y);
+		const originX = parseInt((document.getElementById('vp-scale-x') as HTMLInputElement).value);
+		const originY = parseInt((document.getElementById('vp-scale-y') as HTMLInputElement).value);
+		vp.resetTranslationAndRotation(translateX, translateY, scale, originX, originY);
 	}
 
 };

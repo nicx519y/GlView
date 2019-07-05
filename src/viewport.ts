@@ -47,8 +47,8 @@ export class Viewport {
 	/**
 	 * 按照中心点缩放
 	 * @param scale 缩放比例 （绝对值)
-	 * @param px 缩放中心x (屏幕坐标)
-	 * @param py 缩放中心y (屏幕坐标)
+	 * @param px 缩放中心x 
+	 * @param py 缩放中心y 
 	 */
 	scaleOrigin(scale: number, px: number, py: number) {
 		const vpmat = this._engine.vpMat4;
@@ -98,7 +98,7 @@ export class Viewport {
 		const width = canvas.width/RATIO/2;
 		const height = canvas.height/RATIO/2;
 		const mat = this._engine.vpMat4;
-		const p: Float32Array = vec3.fromValues((-width/2)/width*2, (-height/2)/height*2, 0);
+		const p: Float32Array = vec3.fromValues(-1, -1, 0);
 		const dp: Float32Array = vec3.fromValues(offsetX/width, offsetY/height, 0);
 		const op: Float32Array = vec3.fromValues(originX/width, originY/height, 0);
 		mat4.fromTranslation(mat, p.map((v,k)=>v+dp[k]*scale+op[k]*(1-scale)));

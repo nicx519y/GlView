@@ -65,6 +65,12 @@ export class Searcher {
 	}
 
 	public insert(obj: SearchObjectInterface) {
+		const bounds = obj.bounds;
+		if(!((bounds.minX - bounds.maxY) * (bounds.minY - bounds.maxY))) {
+			console.log('Searcher: ', 'Can not insert, width or height equals 0.');
+			return;
+		}
+
 		const id = obj.id;
 		const bufferObj = this._buffer.get(id);
 

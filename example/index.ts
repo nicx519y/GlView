@@ -221,7 +221,7 @@ function main() {
 			旋转：<input type="text" name="rotation" value="0" />
 			缩放：<input type="text" name="scale" value="1" />
 			背景色：<input type="color" name="backgroundColor" value="#ffffff"  />
-			边框：<input type="text" name="borderWidth" value="3" />
+			边框：<input type="text" name="borderWidth" value="1" />
 			虚线：<input type="text" name="borderDashed" value="5" />
 			边框颜色：<input type="color" name="borderColor" value="#000000" />
 			<button class="status-btn" >隐藏</button>

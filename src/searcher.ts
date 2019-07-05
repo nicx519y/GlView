@@ -70,7 +70,7 @@ export class Searcher {
 			return;
 		}
 		const bounds = obj.bounds;
-		if(!((bounds.minX - bounds.maxY) * (bounds.minY - bounds.maxY))) {
+		if(!((bounds.minX - bounds.maxX) * (bounds.minY - bounds.maxY))) {
 			console.log('Searcher: ', 'Can not insert, width or height equals 0.');
 			return;
 		}

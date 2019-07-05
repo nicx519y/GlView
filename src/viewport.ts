@@ -93,7 +93,7 @@ export class Viewport {
 		this._offsetY += dy;
 	}
 
-	resetTranslationAndRotation(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
+	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
 		const canvas = this._engine.gl.canvas;
 		const width = canvas.width/RATIO/2;
 		const height = canvas.height/RATIO/2;

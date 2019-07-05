@@ -474,7 +474,7 @@ function main() {
 		const scale = parseInt((document.getElementById('vp-scale') as HTMLInputElement).value) / 100;
 		const originX = parseInt((document.getElementById('vp-scale-x') as HTMLInputElement).value);
 		const originY = parseInt((document.getElementById('vp-scale-y') as HTMLInputElement).value);
-		vp.resetTranslationAndRotation(translateX, translateY, scale, originX, originY);
+		vp.resetTranslationAndScale(translateX, translateY, scale, originX, originY);
 	}
 
 };

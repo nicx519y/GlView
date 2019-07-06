@@ -191,7 +191,7 @@ function main() {
 	// tf.embedFont('打游戏1234567890*_+()');
 	
 	const fontTextureMap = tf.getFontTextures();
-	loadImages(['../assets/ps.png', '../assets/superman.png', '../assets/dvd.png']).then(init);
+	loadImages(['../assets/1.jpg', '../assets/2.jpg', '../assets/3.jpg', '../assets/4.jpg']).then(init);
 
 	tf.updateToGL();
 
@@ -201,11 +201,20 @@ function main() {
 	function init(images) {
 
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
+		tf.updateToGL();
 		engine.render();
-		rectTest(textures[0]);
-		drawText();
-		// drawRects(textures[2]);
-		drawOneWayArrow();
+		// rectTest(textures[0]);
+		// drawText();
+		const w = 20000;
+
+		const count = 3;
+		const countEach = 100;
+		for(let i = 0; i < count; i ++) {
+			for(let j = 0; j < count; j ++) {
+				drawRects(countEach, textures[i], i * w, j * w, w);
+			}
+		}
+		// drawOneWayArrow();
 		// drawTwoWayArrow();
 
 
@@ -328,23 +337,26 @@ function main() {
 		tt.text = '2B星际争霸ABCdeF';
 	}
 
-	function drawRects(texture: ImageTexture) {
+	function drawRects(countEach: number, texture: ImageTexture, offsetX: number, offsetY: number, areaWidth: number) {
 		const rectMesh: RectMesh = new RectMesh();
-		const g: Generator = new Generator(engine, rectMesh);
-		const count = 8;
-		const w = 800/count;
+		const g1: Generator = new Generator(engine, rectMesh);
+		const count = countEach;
+		const w =areaWidth/count;
 		for(let i = 0; i < count; i ++) {
 			for(let j = 0; j < count; j ++) {
 				let c = getRandomColor();
 				c[3] = 200;
-				let obj = g.instance().show();
-				obj.translation = [i*w+w/2, j*w+w/2];
+				let obj = g1.instance();
+				obj.searchable = false;
+				obj.show();
+				obj.translation = [i*w+w/2 + offsetX, j*w+w/2 + offsetY];
 				obj.backgroundColor = c;
 				obj.texture = texture;
 				obj.vertexOffsetValue = [w,w];
 				obj.rotation = Math.PI/6;
 				if(i % 3 == 0) {
-					obj.borderWidth = 3;
+					obj.borderWidth = 1;
+					obj.borderDashed = 2;
 					obj.borderColor = getRandomColor();
 				}
 			}
@@ -399,7 +411,13 @@ function main() {
 		evt.returnValue = false;
 		const mx = evt.pageX;
 		const my = evt.pageY;
-		let d = - evt.wheelDeltaY / 1000;
+		const isMAC = OSnow();
+		let d;
+		if(isMAC) {
+			d = - evt.wheelDeltaY / 1000;
+		} else {
+			d = evt.wheelDeltaY / 3000;
+		}
 		const v = vp.changeCoordinateFromScreen(mx, my);
 		vp.scaleOrigin(d+vp.scale, v[0], v[1]);
 	}
@@ -475,6 +493,12 @@ function main() {
 		const originX = parseInt((document.getElementById('vp-scale-x') as HTMLInputElement).value);
 		const originY = parseInt((document.getElementById('vp-scale-y') as HTMLInputElement).value);
 		vp.resetTranslationAndScale(translateX, translateY, scale, originX, originY);
+	}
+
+	function OSnow(): boolean {
+		var agent = navigator.userAgent.toLowerCase();
+		var isMac = /macintosh|mac os x/i.test(navigator.userAgent);
+		return isMac;
 	}
 
 };

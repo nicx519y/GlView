@@ -204,16 +204,16 @@ function main() {
 		tf.updateToGL();
 		engine.render();
 		// rectTest(textures[0]);
-		// drawText();
-		const w = 20000;
+		drawText();
+		// const w = 2000;
 
-		const count = 3;
-		const countEach = 100;
-		for(let i = 0; i < count; i ++) {
-			for(let j = 0; j < count; j ++) {
-				drawRects(countEach, textures[i], i * w, j * w, w);
-			}
-		}
+		// const count = 3;	// 一共9大块
+		// const countEach = 100;	// 每块100*100个
+		// for(let i = 0; i < count; i ++) {
+		// 	for(let j = 0; j < count; j ++) {
+		// 		drawRects(countEach, textures[i], i * w, j * w, w);
+		// 	}
+		// }
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 
@@ -316,7 +316,7 @@ function main() {
 		const g: TextFieldGenerator = new TextFieldGenerator(engine, tf);
 		const t: TextField = g.instance();
 		t.show();
-		t.text = '2B星际争霸ABCdeF';
+		t.text = '哈哈哈';
 		t.fontSize = 40;
 		t.color = [255,0,0,255];
 		t.translation = [200, 400];
@@ -328,13 +328,13 @@ function main() {
 		tt.show();
 		tt.text = "982";
 		tt.fontSize = 20;
-		tt.color = [255,255,255,255];
+		tt.color = [0,0,0,255];
 		tt.translation = [0, 500];
 		tt.wordSpace = 0;
-		tt.borderWidth = 0;
-		tt.borderColor = [255,255,255,255];
+		// tt.borderWidth = 0;
+		// tt.borderColor = [0,0,0,255];
 
-		tt.text = '2B星际争霸ABCdeF';
+		tt.text = '哈哈哈';
 	}
 
 	function drawRects(countEach: number, texture: ImageTexture, offsetX: number, offsetY: number, areaWidth: number) {
@@ -352,7 +352,7 @@ function main() {
 				obj.translation = [i*w+w/2 + offsetX, j*w+w/2 + offsetY];
 				obj.backgroundColor = c;
 				obj.texture = texture;
-				obj.vertexOffsetValue = [w,w];
+				obj.size = [w,w];
 				obj.rotation = Math.PI/6;
 				if(i % 3 == 0) {
 					obj.borderWidth = 1;

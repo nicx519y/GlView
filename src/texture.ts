@@ -12,13 +12,15 @@ const FontConfig = {
 	fontWeight: 'normal',
 }
 
+// 生成的材质雪碧图 材质间的gap 防止材质采样错误
+const TextureGap = Math.pow(2, 1);
+
 export class TextureFactroy {
 	private packer: GrowingPacker;
 	private rowy;
 	private currx=0;
 	private curry=0;
 	private engine;
-	private ctx2D: CanvasRenderingContext2D;
 	private blocks: PNode[] = [];
 	private fontMaps: Map<string, ImageTexture> = new Map();
 	// 初始化材质
@@ -28,20 +30,20 @@ export class TextureFactroy {
 		const mw = TextureConfig.MAX_WIDTH;
 		const mh = TextureConfig.MAX_HEIGHT;
 		this.packer = new GrowingPacker(mw, mh);
-		this.ctx2D = document.createElement('canvas').getContext('2d');
 		//创建不可变材质空间
 		gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);	//y轴反转
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, mw, mh);
 	}
 
 	public createTexture(source: any, width: number, height: number): ImageTexture {
 		const t = new ImageTexture();
+		// width + 2 和 height + 2 是为了解决材质距离太近被错误采样问题
 		this.blocks.push({
-			w: width,
-			h: height,
+			w: width + TextureGap,
+			h: height + TextureGap,
 			data: {
 				source: source,
 				texture: t,
@@ -84,9 +86,10 @@ export class TextureFactroy {
 			}
 			const s = sdf.draw(char, size);
 			let t = new ImageTexture();
+			// width + 2 和 height + 2 是为了解决材质距离太近被错误采样问题
 			this.blocks.push({
-				w: size,
-				h: size,
+				w: size + TextureGap,
+				h: size + TextureGap,
 				data: {
 					source: s,
 					texture: t,
@@ -104,9 +107,12 @@ export class TextureFactroy {
 		});
 		this.packer.fit(this.blocks);
 		const bs = this.blocks;
-		bs.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x, b.fit.y, b.w, b.h, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
+		const gap = TextureGap;
+		const ind = gap/2;
+		// x+1, y+1, width-2 和 height-2 是为了解决材质距离太近被错误采样问题
+		bs.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x + ind, b.fit.y + ind, b.w - gap, b.h - gap, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
 		gl.generateMipmap(gl.TEXTURE_2D);
-		bs.forEach(b => b.data.texture.update(b.fit.x, b.fit.y, b.w, b.h));
+		bs.forEach(b => b.data.texture.update(b.fit.x + ind, b.fit.y + ind, b.w - gap, b.h - gap));
 	}
 
 	private consoleTexture() {
@@ -121,20 +127,6 @@ export class TextureFactroy {
 				ctx.putImageData(s, b.fit.x, b.fit.y)
 			}
 		});
-	}
-
-	private makeRGBAImageData(alphaChannel): ImageData {
-		const imageData = this.ctx2D.createImageData(alphaChannel.width, alphaChannel.height);
-		const len = alphaChannel.data.length;
-		const alphaChannelData = alphaChannel.data;
-		var data = imageData.data;
-		for (var i = 0; i < len; i++) {
-			data[4 * i + 0] = alphaChannelData[i];
-			data[4 * i + 1] = alphaChannelData[i];
-			data[4 * i + 2] = alphaChannelData[i];
-			data[4 * i + 3] = 255;
-		}
-		return imageData;
 	}
 
 }

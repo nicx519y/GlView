@@ -89,6 +89,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set translation(offset: number[]) {
+		this.engine.isDebug && console.log('RenderObject:: translation: ', offset);
 		if(!this._needReset && arrayEqual(offset, this._attribs['translation'])) return;
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);

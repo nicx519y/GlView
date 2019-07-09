@@ -209,6 +209,7 @@ export class Engine {
 	private _bgColor: number[];
 	private _unitList: PaintUnitInterface[][];
 	private _num: number = 0;
+	public isDebug: boolean = true;
 	constructor(canvas) {
 		const ratio = window.devicePixelRatio;
 		const width = canvas.width;

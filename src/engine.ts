@@ -216,6 +216,7 @@ export class Engine {
 		this._gl = canvas.getContext('webgl2', { 
 			alpha: false,
 			premultiplyAlpha: false,	//关闭al
+			antialias: true,
 		 });
 		this._vpmat4 = mat4.create();
 		this._cvec2 = glMatrix.vec2.fromValues(1/width*2, 1/height*2, 1);

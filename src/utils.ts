@@ -17,6 +17,7 @@ export class Rectangle {
 
 export interface PaintUnitInterface {
 	draw(): void;
+	updateToGL(): boolean;
 }
 
 export function getBounds(vertexes: number[]): Rectangle {

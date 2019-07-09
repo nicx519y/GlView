@@ -129,9 +129,10 @@ export class RenderUnit implements PaintUnitInterface {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 		return this;
 	}
-	public updateToGL() {
+	public updateToGL(): boolean {
 
 		const gl = this._engine.gl;
+		let result = false;
 		gl.bindVertexArray(this.vao);
 
 		RenderAttributeList
@@ -144,8 +145,10 @@ export class RenderUnit implements PaintUnitInterface {
 						RenderAttributeStride.get(attrib)
 					);
 					this.attribIsModifieds.set(attrib, false);
+					result = true;
 				}
 			});
+		return result;
 	}
 
 	public setAttribute(id: string, attrib: RenderAttribute, value: number[], offset: number = 0) {
@@ -232,8 +235,6 @@ export class RenderUnit implements PaintUnitInterface {
 	public draw() {
 		const gl = this._engine.gl;
 		const oc = this._meshConfig;
-		this.updateToGL();
-		
 		gl.bindVertexArray(this.vao);
 		gl.drawElementsInstanced(oc.primitiveMode, oc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
 	}

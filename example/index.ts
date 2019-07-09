@@ -203,7 +203,7 @@ function main() {
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
 		tf.updateToGL();
 		engine.render();
-		// rectTest(textures[0]);
+		rectTest(textures[0]);
 		drawText();
 		// const w = 2000;
 
@@ -334,7 +334,7 @@ function main() {
 		// tt.borderWidth = 0;
 		// tt.borderColor = [0,0,0,255];
 
-		tt.text = '哈哈哈';
+		tt.text = '星际争霸';
 	}
 
 	function drawRects(countEach: number, texture: ImageTexture, offsetX: number, offsetY: number, areaWidth: number) {

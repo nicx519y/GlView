@@ -261,10 +261,14 @@ export class Engine {
 	// 渲染
 	public draw() {
 		const gl = this.gl;
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		this.updateViewportMat();
-		this.updateConversionVec();
-		this._unitList.forEach(units => units.map(unit => unit.draw()));
+		const r1 = !this.updateViewportMat();
+		const r2 = !this.updateConversionVec();
+		let r3 = true;
+		this._unitList.forEach(units => units.forEach(unit => r3 = r3 && (!unit.updateToGL())));
+		if(!(r1 && r2 && r3)) {
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			this._unitList.forEach(units => units.forEach(unit => unit.draw()));
+		}
 	}
 
 	public registVAO(unit: PaintUnitInterface, index: number = 0) {
@@ -307,23 +311,27 @@ export class Engine {
 	}
 
 	// 更新视口矩阵
-	private updateViewportMat() {
+	private updateViewportMat(): boolean {
 		if(this._vpmatIsModified) {
 			const gl = this.gl;
 			const vpmLocal = gl.getUniformLocation(this.prg, 'uViewportMatrix');
 			gl.uniformMatrix4fv(vpmLocal, false, this._vpmat4);
 			this._vpmatIsModified = false;
+			return true;
 		}
+		return false;
 	}
 
 	// 更新坐标变换矢量
-	private updateConversionVec() {
+	private updateConversionVec(): boolean {
 		if(this._conversionIsModified) {
 			const gl = this.gl;
 			const cvLocal = gl.getUniformLocation(this.prg, 'uConversionVec2');
 			gl.uniform2fv(cvLocal, this._cvec2);
 			this._conversionIsModified = false;
+			return true;
 		}
+		return false;
 	}
 
 	private loadShader(gl, type, source) {

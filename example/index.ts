@@ -17,12 +17,16 @@ import {
 	ArrowGenerator,
 	Arrow, ArrowType, GeneratorInterface, ComponentInterface,
 	hexToRgb,
+	Searcher,
 } from '../src';
 import { brotliDecompress } from 'zlib';
 
 
 const vec2 = glMatrix.vec2;
 const vec3 = glMatrix.vec3;
+
+const objs = [];
+let activeObj: RenderObject;
 
 class ObjList {
 	_list = [];
@@ -88,6 +92,8 @@ class ObjPane {
 		content.find('input').each((index, input) => $(input).change());
 		obj.searchable = true;
 		obj.texture = this.txt;
+
+		objs.push(obj);
 	}
 
 	toggle(evt) {
@@ -165,6 +171,7 @@ class ObjPane {
 function main() {
 	const canvas = document.getElementById('glcanvas');
 	let engine = new Engine(canvas);
+	engine.isDebug = false;
 	let scr = engine.searcher;
 	let tf = new TextureFactroy(engine);
 	let vp = new Viewport(engine);
@@ -179,6 +186,7 @@ function main() {
 	canvas.addEventListener('mousedown', dragStart);
 	canvas.addEventListener('mousemove', drag);
 	canvas.addEventListener('click', clickHandler);
+	canvas.addEventListener('mousemove', move2Handler);
 	canvas.addEventListener('mouseup', dragEnd);
 	// canvas.addEventListener('mousemove', hoverHandler);
 	// canvas.addEventListener('mousemove', showCoord);
@@ -216,6 +224,7 @@ function main() {
 		// }
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
+
 
 
 	}
@@ -458,10 +467,21 @@ function main() {
 	}
 
 	function clickHandler(evt) {
+		if(!activeObj) {
+			let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+			const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
+			// console.log(objArr);
+			if(!objArr || objArr.length <= 0) return;
+			activeObj = objs.find(o => o.id == objArr[0].id)
+		} else {
+			activeObj = null;
+		}
+	}
+
+	function move2Handler(evt) {
+		if(!activeObj) return;
 		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
-		// console.log(objArr);
-		if(!objArr || objArr.length <= 0) return;
+		activeObj.translation = Array.from(cs);
 	}
 
 	function testAdd(g: Generator): RenderObject {

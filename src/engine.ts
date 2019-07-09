@@ -263,11 +263,17 @@ export class Engine {
 	// 渲染
 	public draw() {
 		const gl = this.gl;
-		const r1 = !this.updateViewportMat();
-		const r2 = !this.updateConversionVec();
-		let r3 = true;
-		this._unitList.forEach(units => units.forEach(unit => r3 = r3 && (!unit.updateToGL())));
-		if(!(r1 && r2 && r3)) {
+		const r1 = this.updateViewportMat();
+		const r2 = this.updateConversionVec();
+		let r3 = false;
+		this._unitList.forEach(units => {
+			units.forEach(unit => {
+				if(unit.updateToGL()) {
+					r3 = true;
+				}
+			});
+		});
+		if(r1 || r2 || r3) {
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			this._unitList.forEach(units => units.forEach(unit => unit.draw()));
 		}

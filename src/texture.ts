@@ -16,17 +16,17 @@ const FontConfig = {
 const TextureGap = Math.pow(2, 1);
 
 export class TextureFactroy {
+	private gl;
 	private packer: GrowingPacker;
 	private rowy;
 	private currx=0;
 	private curry=0;
-	private engine;
 	private blocks: PNode[] = [];
 	private fontMaps: Map<string, ImageTexture> = new Map();
 	// 初始化材质
-	constructor(engine) {
-		this.engine = engine;
-		const gl = this.engine.gl;
+	constructor(glContext) {
+		this.gl = glContext;
+		const gl = glContext;
 		const mw = TextureConfig.MAX_WIDTH;
 		const mh = TextureConfig.MAX_HEIGHT;
 		this.packer = new GrowingPacker(mw, mh);
@@ -100,7 +100,7 @@ export class TextureFactroy {
 	}
 
 	public updateToGL() {
-		const gl = this.engine.gl;
+		const gl = this.gl;
 		this.blocks = this.blocks.sort((a, b) => { 
 			if (a.w + a.h > b.w + b.h) return -1;
 			return 1;

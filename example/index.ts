@@ -177,8 +177,8 @@ function main() {
 	let engine = new Engine(canvas);
 	engine.isDebug = false;
 	let scr = engine.searcher;
-	let tf = new TextureFactroy(engine);
-	let vp = new Viewport(engine);
+	let tf = engine.textureFactroy;
+	let vp = engine.viewport;
 	let isDragging = false;
 	let dragLastPoint = [];
 	let activeShape: RenderObject;

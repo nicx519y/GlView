@@ -1,11 +1,10 @@
 import { Mesh, PrimitiveMode, MeshConfig } from "./mesh";
 import { Rectangle, getBounds, PaintUnitInterface } from "./utils";
 import { Searcher } from "./searcher";
-import * as glMatrix from "../lib/gl-matrix.js";
+import { TextureFactroy } from "./texture";
+import { Viewport } from "./viewport";
 
-const mat4 = glMatrix.mat4;
-const vec3 = glMatrix.vec3;
-const vec2 = glMatrix.vec2;
+
 glMatrix.glMatrix.setMatrixArrayType(Float32Array);
 
 const vsSource = `#version 300 es
@@ -209,28 +208,20 @@ export class Engine {
 	private _gl;
 	private _prg;
 	private _searcher;
-	private _vpmat4: Float32Array;
-	private _vpmatIsModified: boolean = true;
-	private _cvec2: Float32Array;
-	private _conversionIsModified: boolean = true;
-	private _bgColor: number[];
+	private _tf: TextureFactroy;
+	private _vp: Viewport;
 	private _unitList: PaintUnitInterface[][];
-	private _num: number = 0;
 	public isDebug: boolean = true;
 	constructor(canvas) {
-		const ratio = window.devicePixelRatio;
-		const width = canvas.width;
-		const height = canvas.height;
 		this._gl = canvas.getContext('webgl2', { 
 			alpha: false,
 			premultiplyAlpha: false,	//关闭al
 			antialias: true,
 		 });
-		this._vpmat4 = mat4.create();
-		this._cvec2 = glMatrix.vec2.fromValues(1/width*2, 1/height*2, 1);
-		this._bgColor = [0,0,0,1];
 		this._unitList = [];
 		this._searcher = new Searcher();
+		this._tf = new TextureFactroy(this._gl);
+		this._vp = new Viewport(this._gl);
 		this.initPrg();
 	}
 
@@ -243,28 +234,11 @@ export class Engine {
 	public get searcher(): Searcher {
 		return this._searcher;
 	}
-
-	// 视口矩阵
-	public get vpMat4(): Float32Array {
-		return this._vpmat4;
+	public get textureFactroy(): TextureFactroy {
+		return this._tf;
 	}
-
-	public get cvVec2(): Float32Array {
-		return this._cvec2;
-	}
-
-	public set vpMatIsModified(is: boolean) {
-		this._vpmatIsModified = is;
-	}
-
-	public set cvMatIsModified(is: boolean) {
-		this._conversionIsModified = is;
-	}
-
-	public set bgColor(color: number[]) {
-		const gl = this.gl;
-		this._bgColor = color;
-		gl.clearColor.apply(gl, this._bgColor);
+	public get viewport(): Viewport {
+		return this._vp;
 	}
 	
 	// 渲染
@@ -327,11 +301,11 @@ export class Engine {
 
 	// 更新视口矩阵
 	private updateViewportMat(): boolean {
-		if(this._vpmatIsModified) {
+		if(this._vp.vpMatIsModified) {
 			const gl = this.gl;
 			const vpmLocal = gl.getUniformLocation(this.prg, 'uViewportMatrix');
-			gl.uniformMatrix4fv(vpmLocal, false, this._vpmat4);
-			this._vpmatIsModified = false;
+			gl.uniformMatrix4fv(vpmLocal, false, this._vp.vpmat4);
+			this._vp.vpMatIsModified = false;
 			return true;
 		}
 		return false;
@@ -339,11 +313,11 @@ export class Engine {
 
 	// 更新坐标变换矢量
 	private updateConversionVec(): boolean {
-		if(this._conversionIsModified) {
+		if(this._vp.cvMatIsModified) {
 			const gl = this.gl;
 			const cvLocal = gl.getUniformLocation(this.prg, 'uConversionVec2');
-			gl.uniform2fv(cvLocal, this._cvec2);
-			this._conversionIsModified = false;
+			gl.uniform2fv(cvLocal, this._vp.cvec2);
+			this._vp.cvMatIsModified = false;
 			return true;
 		}
 		return false;

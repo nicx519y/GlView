@@ -1,7 +1,7 @@
 
 import { Mesh, MeshConfig } from './mesh';
 import { Engine } from './engine';
-import { getBounds, PaintUnitInterface, IdCreator, getVertexPosition, getVertexAfterExpand } from './utils';
+import { PaintUnitInterface, IdCreator, getVertexPosition, getVertexAfterExpand } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 
 const MAX_INSTANCE = 100000;
@@ -31,6 +31,7 @@ export const enum RenderAttribute {
 	TRANSLATION_AND_ROTATION = 'translationAndRotation',
 	IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE = 'isTextAndBorderWidthAndDashedAndScale',
 	TEXT_BORDER_COLOR = 'textBorderColor',
+	OPACITY = 'opacity',
 }
 
 export var RenderAttributeStride: Map<RenderAttribute, number> = new Map();
@@ -40,6 +41,7 @@ RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
 RenderAttributeStride.set(RenderAttribute.TRANSLATION_AND_ROTATION, 4);
 RenderAttributeStride.set(RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, 4);
 RenderAttributeStride.set(RenderAttribute.TEXT_BORDER_COLOR, 4);
+RenderAttributeStride.set(RenderAttribute.OPACITY, 1);
 
 export const RenderAttributeList = [
 	RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE,
@@ -48,6 +50,7 @@ export const RenderAttributeList = [
 	RenderAttribute.TRANSLATION_AND_ROTATION,
 	RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE,
 	RenderAttribute.TEXT_BORDER_COLOR,
+	RenderAttribute.OPACITY,
 ];
 
 

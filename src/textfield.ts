@@ -1,7 +1,7 @@
 import { ImageTexture, TextureFactroy } from "./texture";
 import { RenderObject } from "./render-object";
 import { Generator } from './generator';
-import { IdCreator, arrayEqual, isChinese } from "./utils";
+import { IdCreator, arrayEqual, isChinese, numberClamp } from "./utils";
 import { ComponentInterface } from "./interfaces";
 import { SearchableObject } from "./searchable-object";
 
@@ -15,6 +15,7 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	private _wordSpace: number = 10;
 	private _borderWidth: number = 0;
 	private _borderColor: number[] = [0,0,0,0];
+	private _opacity: number = 1;
 	
 	private _tf: TextureFactroy;
 	private _fontObjects: RenderObject[];
@@ -114,6 +115,15 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		this.resetFonts();
 	}
 
+	set opacity(n: number) {
+		this._opacity = numberClamp(0, 1, n);
+		this.resetFonts();
+	}
+
+	get opacity() {
+		return this._opacity;
+	}
+
 	private resetFonts() {
 		const len = this._text.length;
 		const nowLen = this._fontObjects.length;
@@ -144,6 +154,7 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 			v.isText = true;
 			v.backgroundColor = this._color;
+			v.opacity = this._opacity;
 			v.textBorderWidth = this._borderWidth;
 			v.textBorderColor = this._borderColor;
 			let texture = f.getFontTexture(text);

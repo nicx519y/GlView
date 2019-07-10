@@ -8,6 +8,7 @@ export interface GeneratorInterface {
 export interface ComponentInterface {
 	readonly id: string;
 	readonly isShown: boolean;
+	opacity;
 	show(): ComponentInterface;
 	hide(): ComponentInterface;
 }

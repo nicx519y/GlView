@@ -91,7 +91,7 @@ export class Searcher {
 		this._buffer.delete(obj.id);
 	}
 
-	public search(x: number, y: number, width: number = 0, height: number = 0): SearchObjectInterface[] {
+	public search(x: number, y: number, width: number = 0, height: number = 0, ): SearchObjectInterface[] {
 		let result = this._sobj.search({ minX: x, minY: y, maxX: width + x, maxY: height + y })
 			.map(v => this._buffer.get(v.id));
 		if(width == 0 && height == 0) {
@@ -99,9 +99,7 @@ export class Searcher {
 				return rayCasting([x, y], v.vertexes);
 			});
 		}
-
 		return result;
-
 	}
 
 	private objToItem(obj) {

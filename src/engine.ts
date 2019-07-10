@@ -20,6 +20,7 @@ const vsSource = `#version 300 es
 	layout(location=8) in vec4 translationAndRotation;		//形变
 	layout(location=9) in vec4 isTextAndBorderWidthAndDashedAndScale;		//是否渲染文字 以及 文字边框粗细 以及物体边框虚线 缩放
 	layout(location=10) in vec4 textBorderColor;			//文字边框颜色
+	layout(location=11) in float opacity;					//透明度
 
 	out vec2 vTexCoord;				//UV
 	out vec4 vBgColor;
@@ -30,6 +31,7 @@ const vsSource = `#version 300 es
 	out vec4 vPos;
 	out float vNotBorder;
 	out float vBorderDashed;
+	out float vOpacity;
 
 	uniform mat4 uViewportMatrix;	//视口矩阵
 	uniform vec2 uConversionVec2;	//坐标转换
@@ -123,6 +125,7 @@ const vsSource = `#version 300 es
 		vNotBorder = step(vertexAndEdgeOffsetValue.z, 0.0);
 		vPos = rotationMatrix * vec4(cv, 0, 1);
 		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;	
+		vOpacity = opacity;
 	}
 `;
 
@@ -139,6 +142,7 @@ const fsSource = `#version 300 es
 	in vec4 vPos;
 	in float vNotBorder;
 	in float vBorderDashed;
+	in float vOpacity;
 	out vec4 fragColor;
 
 	float inBorderDashed() {
@@ -194,7 +198,10 @@ const fsSource = `#version 300 es
 		// 绘制普通对象
 		vec4 normalColor = drawNormal(tColor);
 
-		fragColor = vIsText * textColor + step(vIsText, 0.5) * normalColor;
+		vec4 color = vIsText * textColor + step(vIsText, 0.5) * normalColor;
+		color.a *= vOpacity;
+
+		fragColor = color;
 	}
 `;
 

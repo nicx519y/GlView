@@ -164,6 +164,9 @@ class ObjPane {
 			case 'scale':
 				obj.scale = value * 1;
 				break;
+			case 'opacity':
+				obj.opacity = value * 1;
+				break;
 		}
 	}
 }
@@ -241,6 +244,7 @@ function main() {
 			背景色：<input type="color" name="backgroundColor" value="#ffffff"  />
 			边框：<input type="text" name="borderWidth" value="1" />
 			虚线：<input type="text" name="borderDashed" value="5" />
+			透明度：<input type="text" name="opacity" value="1" min="0" max="1" />
 			边框颜色：<input type="color" name="borderColor" value="#000000" />
 			<button class="status-btn" >隐藏</button>
 			<button class="delete-btn" >删除</button>

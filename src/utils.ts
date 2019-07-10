@@ -134,3 +134,7 @@ export function isChinese(str: string)
 	const code = str.charCodeAt(0);
 	return code >= 0x4E00 && code <= 0x29FA5;
 }
+
+export function numberClamp(min: number, max: number, x: number) {
+	return Math.min(max, Math.max(min, x));
+}

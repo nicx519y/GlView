@@ -1,7 +1,7 @@
 import { Engine } from './engine';
 import { RenderAttribute, RenderUnit } from './render-unit';
 import { ImageTexture } from './texture';
-import { IdCreator, arrayEqual } from './utils';
+import { IdCreator, arrayEqual, numberClamp } from './utils';
 import { ComponentInterface } from './interfaces';
 import { SearchableObject } from './searchable-object';
 
@@ -30,6 +30,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'borderWidth': 0,
 		'borderColor': [0,0,0,0],
 		'borderDashed': 0,
+		'opacity': 1,
 	};
 
 	private _attriblist = [
@@ -47,6 +48,8 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'isText',
 		'textBorderWidth',
 		'textBorderColor',
+
+		'opacity',
 	];
 
 	constructor(originUnit: RenderUnit, borderUnit: RenderUnit) {
@@ -260,6 +263,16 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		return this._attribs['textBorderColor'];
 	}
 
+	public set opacity(n: number) {
+		let op = numberClamp(0, 1, n);
+		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY, [op]);
+		this._attribs['opacity'] = op;
+	}
+
+	public get opacity(): number {
+		return this._attribs['opacity'];
+	}
+
 	public getVertexPositions(expand: number = 0): number[] {
 		return this._originUnit.getVertexesPositionById(this._originId, expand);
 	}
@@ -294,6 +307,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.scale], 3);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY, [1]);
 		}
 	}
 

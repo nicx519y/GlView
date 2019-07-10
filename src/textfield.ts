@@ -59,6 +59,10 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		this.setFontsTranslation();
 	}
 
+	get text(): string {
+		return this._text;
+	}
+
 	set translation(offset: number[]) {
 		this._translation = offset;
 		this.setFontsTranslation();

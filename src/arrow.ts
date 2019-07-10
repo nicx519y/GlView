@@ -4,7 +4,6 @@ import * as glMatrix from "../lib/gl-matrix.js";
 import { ComponentInterface } from "./interfaces";
 import { SearchableObject } from "./searchable-object";
 
-const mat4 = glMatrix.mat4;
 const vec2 = glMatrix.vec2;
 
 export const enum ArrowType {
@@ -17,7 +16,6 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 	private _id: string;
 	private _height: number;
 	private _indent: number;
-	private _borderWidth: number = 0;
 	private _fromTo: number[] = [0,0,0,0];
 	private _oneObj: RenderObject;
 	private _twoObj: RenderObject;
@@ -79,7 +77,11 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 		this.nobj.hide();
 		if(this._isShown) {
 			this.robj.show();
-			this.borderWidth = this.borderWidth;
+			this.borderWidth = this.nobj.borderWidth;
+			this.borderColor = this.nobj.borderColor;
+			this.borderDashed = this.nobj.borderDashed;
+			this.opacity = this.nobj.opacity;
+			this.backgroundColor = this.nobj.backgroundColor;
 			this.setFromToAndWidth();
 		}
 	}
@@ -89,8 +91,7 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 	}
 
 	set backgroundColor(color: number[]) {
-		this._oneObj.backgroundColor = color;
-		this._twoObj.backgroundColor = color;
+		this.robj.backgroundColor = color;
 	}
 
 	get backgroundColor(): number[] {
@@ -98,18 +99,15 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 	}
 
 	set borderWidth(width: number) {
-		this._borderWidth = width;
 		this.robj.borderWidth = width;
-		this.nobj.borderWidth = 0;
 	}
 
 	get borderWidth(): number {
-		return this._borderWidth;
+		return this.robj.borderWidth;
 	}
 
 	set borderColor(color: number[]) {
-		this._oneObj.borderColor = color;
-		this._twoObj.borderColor = color;
+		this.robj.borderColor = color;
 	}
 
 	get borderColor(): number[] {
@@ -118,7 +116,6 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 
 	set borderDashed(n: number) {
 		this.robj.borderDashed = n;
-		this.nobj.borderDashed = n;
 	}
 
 	get borderDashed(): number {
@@ -126,11 +123,11 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 	}
 
 	set opacity(n: number) {
-		this.nobj.opacity = n;
+		this.robj.opacity = n;
 	}
 
 	get opacity(): number {
-		return this.nobj.opacity;
+		return this.robj.opacity;
 	}
 
 	private setFromToAndWidth() {

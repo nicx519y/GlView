@@ -172,6 +172,7 @@ class ObjPane {
 }
 
 function main() {
+
 	const canvas = document.getElementById('glcanvas');
 	let engine = new Engine(canvas);
 	engine.isDebug = false;
@@ -233,6 +234,7 @@ function main() {
 	}
 	function rectTest(txt: ImageTexture) {
 		const g = new Generator(engine, new RectMesh());
+		window['myGenerator'] = g;
 		const pane = new ObjPane($('#rect-box'), g, 
 		`
 			宽度：<input type="text" name="width" value="100" />
@@ -525,6 +527,11 @@ function main() {
 		return isMac;
 	}
 
+	function now(): number {
+		return new Date().getTime();
+	}
+
 };
 
 window.onload = () => main();
+

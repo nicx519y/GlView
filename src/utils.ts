@@ -18,6 +18,11 @@ export class Rectangle {
 export interface PaintUnitInterface {
 	draw(): void;
 	updateToGL(): boolean;
+	destroy(): void;
+	clear(): void;
+	fill(attrib: string, value: number): void;
+	batchSet(attrib: string, value: Float32Array | Array<number>, offset: number): void;
+	batchAdd(attrib: string, value: Float32Array | Array<number>, offset: number): void;
 }
 
 export function getBounds(vertexes: number[]): Rectangle {

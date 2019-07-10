@@ -101,6 +101,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get translation(): number[] {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, 0, 2);
+		}
 		return this._attribs['translation'];
 	}
 
@@ -114,6 +117,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get rotation(): number {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, 2, 1)[0];
+		}
 		return this._attribs['rotation'];
 	}
 
@@ -127,6 +133,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get scale(): number {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, 3, 1)[0];
+		}
 		return this._attribs['scale'];
 	}
 
@@ -138,6 +147,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get backgroundColor(): number[] {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.BACKGROUND_COLOR, 0, 4).map(c => c * 255);
+		}
 		return this._attribs['backgroundColor'];
 	}
 
@@ -186,6 +198,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get borderWidth(): number {
+		if(this._isBorderAdded) {
+			return this._borderUnit.getAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 2, 1)[0];
+		}
 		return this._attribs['borderWidth'];
 	}
 
@@ -197,6 +212,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get borderColor(): number[] {
+		if(this._isBorderAdded) {
+			return this._borderUnit.getAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, 0, 4).map(c => c * 255);
+		}
 		return this._attribs['borderColor'];
 	}
 
@@ -207,6 +225,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get borderDashed(): number {
+		if(this._isBorderAdded) {
+			return this._borderUnit.getAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, 2, 1)[0];
+		}
 		return this._attribs.borderDashed;
 	}
 
@@ -219,6 +240,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get vertexOffsetValue(): number[] {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 0, 2);
+		}
 		return this._attribs['vertexOffsetValue'];
 	}
 
@@ -239,6 +263,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get isText(): boolean {
+		if(this._isAdded) {
+			return (this._originUnit.getAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, 0, 1)[0] == 1);
+		}
 		return this._attribs['isText'];
 	}
 
@@ -250,6 +277,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get textBorderWidth(): number {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, 1, 1)[0];
+		}
 		return this._attribs['textBorderWidth'];
 	}
 
@@ -270,6 +300,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public get opacity(): number {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.OPACITY, 0, 1)[0];
+		}
 		return this._attribs['opacity'];
 	}
 

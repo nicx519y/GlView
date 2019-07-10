@@ -1,6 +1,6 @@
 import { Engine } from './engine';
 import { Mesh, RectMesh, OneWayArrowMesh, TwoWayArrowMesh } from './mesh';
-import { RenderUnit } from './render-unit';
+import { RenderUnit, RenderAttribute } from './render-unit';
 import { RenderObject } from './render-object';
 import { TextField } from './textfield';
 import { Arrow } from './arrow';
@@ -33,6 +33,16 @@ export class Generator implements GeneratorInterface {
 		this.originUnit.clear();
 		this.borderUnit.clear();
 	}
+
+	set opacity(o: number) {
+		this.originUnit.fill(RenderAttribute.OPACITY, o);
+	}
+
+	set translate(offset: number[]) {
+		this.originUnit.batchAdd(RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
+		this.borderUnit.batchAdd(RenderAttribute.TRANSLATION_AND_ROTATION, offset, 0);
+	}
+
 	public get engine(): Engine {
 		return this._engine;
 	}
@@ -94,6 +104,16 @@ export class ArrowGenerator implements GeneratorInterface {
 	public clear() {
 		this.og.clear();
 		this.tg.clear();
+	}
+
+	public set translate(offset: number[]) {
+		this.og.translate = offset;
+		this.tg.translate = offset;
+	}
+
+	public set opacity(value: number) {
+		this.og.opacity = value;
+		this.tg.opacity = value;
 	}
 
 	public get engine(): Engine {

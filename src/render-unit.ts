@@ -223,6 +223,66 @@ export class RenderUnit implements PaintUnitInterface {
 		this.instanceCount = 0;
 	}
 
+	public fill(attrib: RenderAttribute, value: number) {
+		this.attribBufferDatas.get(attrib).fill(value);
+		this.attribIsModifieds.set(attrib, true);
+	}
+
+	/**
+	 * 批量set
+	 * @param id 
+	 * @param attrib 
+	 * @param value 
+	 * @param offset 
+	 */
+	public batchSet(attrib: RenderAttribute, value: Float32Array | Array<number>, offset: number = 0) {
+		const stride = RenderAttributeStride.get(attrib);
+
+		if(stride <= offset) {
+			return;
+		}
+
+		const buffer = this.attribBufferDatas.get(attrib);
+		const len = this.instanceCount;
+		const v = value.slice(0, stride - offset);
+		let o = offset;
+		for(let i = 0; i < len; i ++) {
+			buffer.set(v, o);
+			o += stride;
+		}
+
+		this.attribIsModifieds.set(attrib, true);
+	}
+
+	/**
+	 * 批量在原来的值上叠加
+	 * @param attrib 
+	 * @param value 
+	 * @param offset 
+	 */
+	public batchAdd(attrib: RenderAttribute, value: Float32Array | Array<number>, offset: number = 0) {
+		const stride = RenderAttributeStride.get(attrib);
+
+		if(stride <= offset) {
+			return;
+		}
+
+		const buffer = this.attribBufferDatas.get(attrib);
+		const len = this.instanceCount;
+		const v = value.slice(0, stride - offset);
+		const vl = v.length;
+		let o = offset;
+
+		for(let i = 0; i < len; i ++) {
+			for(let j = 0; j < vl; j ++) {
+				buffer[o + j] += v[j];
+			}
+			o += stride;
+		}
+
+		this.attribIsModifieds.set(attrib, true);
+	}
+
 	public destroy() {
 		this.attribBuffers.clear();
 		this.attribBufferDatas.clear();

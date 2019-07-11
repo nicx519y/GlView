@@ -14,12 +14,14 @@ export class Screenshot {
     private _texture: ImageTexture;
     private _destWidth: number;
     private _destHeight: number;
-    constructor(engine: Engine, destWidth: number, destHeight: number) {
+    private _useTexture: boolean;
+    constructor(engine: Engine, destWidth: number, destHeight: number, useTexture: boolean = true) {
         const gl = engine.gl;
         this._engine = engine;
         this._destWidth = destWidth * RATIO;
         this._destHeight = destHeight * RATIO;
-        this._texture = this._engine.textureFactroy.createTexture(null, destWidth * RATIO, destHeight * RATIO);
+        this._useTexture = useTexture;
+        useTexture && (this._texture = this._engine.textureFactroy.createTexture(null, destWidth * RATIO, destHeight * RATIO));
         this._fbo = gl.createFramebuffer();
         this._rbo = gl.createRenderbuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
@@ -55,9 +57,10 @@ export class Screenshot {
 
     /**
      * 绘制截图
-     * @param indexlist 制定绘制的generator层级
+     * @param indexlist 需要绘制的generator层级
+     * @param pixels 导出所用的内存空间
      */
-    public draw(indexlist: number[] = null) {
+    public draw(indexlist: number[] = null, pixels: Uint8Array = null) {
         const engine = this._engine;
         const gl = engine.gl;
         const vp = engine.viewport;
@@ -76,7 +79,12 @@ export class Screenshot {
 
         engine.draw(indexlist, true);
         gl.flush();
-        tf.copyToTexture(this._texture, 0, 0);
+
+        // 如果使用材质
+        this._useTexture && tf.copyToTexture(this._texture, 0, 0);
+
+        pixels && gl.reacPixels(0, 0, this._destWidth, this._destHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
         // 恢复状态
         vp.vpmat4.set(cacheVpmat, 0);
         vp.vpMatIsModified = true;

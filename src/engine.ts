@@ -242,20 +242,26 @@ export class Engine {
 		return this._vp;
 	}
 	
-	// 渲染
-	public draw() {
+	/**
+	 * 绘制
+	 * @param indexlist 需要绘制的层级
+	 * @param isForce 是否强制绘制，否则如果数据无变化就不绘制
+	 */
+	public draw(indexlist: number[] = null, isForce: boolean = false) {
 		const gl = this.gl;
 		const r1 = this.updateViewportMat();
 		const r2 = this.updateConversionVec();
 		let r3 = false;
-		this._unitList.forEach(units => {
-			units.forEach(unit => {
-				if(unit.updateToGL()) {
-					r3 = true;
-				}
-			});
+		this._unitList.forEach((units, k) => {
+			if(!indexlist || (indexlist && indexlist.indexOf(k) >= 0)) {
+				units.forEach(unit => {
+					if(unit.updateToGL()) {
+						r3 = true;
+					}
+				});
+			}
 		});
-		if(r1 || r2 || r3) {
+		if(isForce || (r1 || r2 || r3)) {
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			this._unitList.forEach(units => units.forEach(unit => unit.draw()));
 		}

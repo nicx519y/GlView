@@ -2,12 +2,12 @@ import { GrowingPacker, PNode } from './packer';
 import * as TinySDF from 'tiny-sdf';
 
 const TextureConfig = {
-	MAX_WIDTH : Math.pow(2, 12),
-	MAX_HEIGHT : Math.pow(2, 12),
+	MAX_WIDTH : Math.pow(2, 13),
+	MAX_HEIGHT : Math.pow(2, 13),
 }
 
 const FontConfig = {
-	fontSize: Math.pow(2, 6), 		//生成文字材质尺寸，2的幂，越大质量越好
+	fontSize: Math.pow(2, 7), 		//生成文字材质尺寸，2的幂，越大质量越好
 	fontFamily: 'Sans-serif', 
 	fontWeight: 'normal',
 }
@@ -23,6 +23,7 @@ export class TextureFactroy {
 	private curry=0;
 	private blocks: PNode[] = [];
 	private fontMaps: Map<string, ImageTexture> = new Map();
+	private texture: WebGLTexture;
 	// 初始化材质
 	constructor(glContext) {
 		this.gl = glContext;
@@ -30,19 +31,29 @@ export class TextureFactroy {
 		const mw = TextureConfig.MAX_WIDTH;
 		const mh = TextureConfig.MAX_HEIGHT;
 		this.packer = new GrowingPacker(mw, mh);
+		this.texture = gl.createTexture();
 		//创建不可变材质空间
-		gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);	//y轴反转
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-		gl.texParameteri(gl.TEXTURE_2D, gl.GENERATE_MIPMAP, true);
 		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, mw, mh);
 	}
 
+	public getOriginTexture(): WebGLTexture {
+		return this.texture;
+	}
+
 	public createTexture(source: any, width: number, height: number): ImageTexture {
+
+		if(!source) {
+			source = new Uint8Array(width*height*4);
+			source.fill(0);
+		}
 		const t = new ImageTexture();
+		t.index = this.blocks.length;
 		// width + 2 和 height + 2 是为了解决材质距离太近被错误采样问题
 		this.blocks.push({
 			w: width + TextureGap,
@@ -52,6 +63,9 @@ export class TextureFactroy {
 				texture: t,
 			}
 		});
+
+		this.updateToGL();
+
 		return t;
 	}
 
@@ -89,6 +103,7 @@ export class TextureFactroy {
 			}
 			const s = sdf.draw(char, size);
 			let t = new ImageTexture();
+			t.index = this.blocks.length;
 			// width + 2 和 height + 2 是为了解决材质距离太近被错误采样问题
 			this.blocks.push({
 				w: size + TextureGap,
@@ -105,15 +120,20 @@ export class TextureFactroy {
 	public updateToGL() {
 		const gl = this.gl;
 		const bs = this.blocks;
-		this.blocks = bs.sort((a, b) => { 
-			if (a.w + a.h > b.w + b.h) return -1;
-			return 1;
-		});
-		const textures: ImageTexture[] = bs.map((b, k) => {
-			b.data.texture.index = k;
-			return b.data.texture;
-		});
-		this.packer.fit(bs);
+		// 排序能得到最优解，但是却失去了静态区域
+		// this.blocks = bs.sort((a, b) => {
+		// 	if (a.w + a.h > b.w + b.h) return -1;
+		// 	return 1;
+		// });
+		// this.blocks.forEach((b, k) => {
+		// 	b.data.texture.index = k;
+		// });
+		
+		this.packer.fit(this.blocks);
+		
+		const textures: ImageTexture[] = this.blocks
+			.map((b, k) => b.data.texture)
+			.filter(t => t.isReady == false);
 
 		textures.forEach(t => this.updateTextureToGL(t));
 
@@ -129,9 +149,10 @@ export class TextureFactroy {
 		const y = block.fit.y + ind;
 		const w = block.w - gap;
 		const h = block.h - gap;
+		texture.update(x, y, w, h);
 		// x+1, y+1, width-2 和 height-2 是为了解决材质距离太近被错误采样问题
 		gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, block.data.source);
-		texture.update(x, y, w, h);
+		texture.isReady = true;
 	}
 
 	/**
@@ -150,22 +171,10 @@ export class TextureFactroy {
 		const y = block.fit.y + ind;
 		const w = block.w - gap;
 		const h = block.h - gap;
-		gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, offsetX, offsetY, x, y, w, h);
-		texture.update(x, y, w, h);
-	}
-
-	private consoleTexture() {
-		const canvas = document.getElementById('test-canvas') as HTMLCanvasElement;
-		const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-		const bs = this.blocks;
-		bs.forEach(b => {
-			let s = b.data.source;
-			if(s instanceof Image) {
-				ctx.drawImage(s, b.fit.x, b.fit.y);
-			} else if(s instanceof ImageData) {
-				ctx.putImageData(s, b.fit.x, b.fit.y)
-			}
-		});
+		// 写进材质
+		gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x, y, offsetX, offsetY, w, h);
+		// 写进内存 太耗时了
+		// gl.readPixels(offsetX, offsetX, w, h, gl.RGBA, gl.UNSIGNED_BYTE, block.data.source);
 	}
 
 }
@@ -176,6 +185,7 @@ export class ImageTexture {
 	width = 0;
 	height = 0;
 	index = 0;
+	isReady: boolean = false;
 	private handlers: Function[] = [];
 	constructor() {
 		

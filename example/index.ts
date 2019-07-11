@@ -18,8 +18,8 @@ import {
 	Arrow, ArrowType, GeneratorInterface, ComponentInterface,
 	hexToRgb,
 	Searcher,
+	Screenshot,
 } from '../src';
-import { brotliDecompress } from 'zlib';
 
 
 const vec2 = glMatrix.vec2;
@@ -205,18 +205,18 @@ function main() {
 	const fontTextureMap = tf.getFontTextures();
 	loadImages(['../assets/1.jpg', '../assets/2.jpg', '../assets/3.jpg', '../assets/4.jpg']).then(init);
 
-	tf.updateToGL();
+	// tf.updateToGL();
 
 	var obj;
 
-
 	function init(images) {
-
+		
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
-		tf.updateToGL();
+		
 		engine.render();
 		rectTest(textures[0]);
 		drawText();
+		screenshotTest();
 		// const w = 2000;
 
 		// const count = 3;	// 一共9大块
@@ -232,6 +232,25 @@ function main() {
 
 
 	}
+
+	function screenshotTest() {
+		const scale = 0.2;
+		const shot = new Screenshot(engine, 300, 300);
+		shot.setSourceArea(200, 200, 500, 500);
+	
+		window['shot'] = shot;
+
+		const g = new Generator(engine, new RectMesh());
+		const obj = g.instance();
+		obj.show();
+		obj.borderWidth = 1;
+		obj.borderColor = [255,255,255,255];
+		obj.size = [300, 300];
+		obj.backgroundColor = [180, 180, 180, 255];
+		obj.translation = [800, 300];
+		obj.texture = shot.texture;
+	}
+
 	function rectTest(txt: ImageTexture) {
 		const g = new Generator(engine, new RectMesh());
 		window['myGenerator'] = g;

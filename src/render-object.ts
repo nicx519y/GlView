@@ -79,6 +79,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this.updateStatus();
 			this.searchable && this.registToSearcher();
 		}
+		if(!this._isBorderAdded && this.borderWidth > 0) {
+			this.addBorder();
+		}
 		return this;
 	}
 
@@ -332,15 +335,17 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	private addBorder() {
 		if(!this._isBorderAdded) {
 			this._borderId = this._borderUnit.add();
-			this._isBorderAdded = true;
 
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, this.translation, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, [this.borderWidth], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.scale], 3);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY, [1]);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY, [1], 0);
+
+			this._isBorderAdded = true;
 		}
 	}
 

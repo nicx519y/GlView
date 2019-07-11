@@ -9,3 +9,4 @@ export * from './render-object'
 export * from './textfield'
 export * from './arrow'
 export * from './interfaces';
+export * from './screenshot';

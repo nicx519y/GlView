@@ -55,15 +55,13 @@ export class Generator implements GeneratorInterface {
 export class TextFieldGenerator implements GeneratorInterface {
 	private _engine: Engine;
 	private g: Generator;
-	private _tf: TextureFactroy;
-	constructor(engine: Engine, textureFactroy: TextureFactroy, index: number = 0) {
+	constructor(engine: Engine, index: number = 0) {
 		this._engine = engine;
-		this._tf = textureFactroy;
 		this.g = new Generator(engine, new RectMesh(), index);
 	}
 
 	public instance(): TextField {
-		return new TextField(this.g, this._tf);
+		return new TextField(this.g);
 	}
 	
 	public destroy() {

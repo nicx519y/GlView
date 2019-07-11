@@ -31,6 +31,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'borderColor': [0,0,0,0],
 		'borderDashed': 0,
 		'opacity': 1,
+		'notFollowViewport': false,
 	};
 
 	private _attriblist = [
@@ -50,6 +51,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'textBorderColor',
 
 		'opacity',
+		'notFollowViewport',
 	];
 
 	constructor(originUnit: RenderUnit, borderUnit: RenderUnit) {
@@ -90,6 +92,8 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		this._isBorderAdded && this._borderUnit.remove(this._borderId);
 		this._isAdded = false;
 		this._isBorderAdded = false;
+		this._originId = null;
+		this._borderId = null;
 		this.deregistToSearcher();
 		return this;
 	}
@@ -193,7 +197,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		}
 
 		if(this._isBorderAdded) {
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, data, 2);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, data, 2);
 			this.borderColor = this.borderColor;
 		}
 
@@ -202,7 +206,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 	public get borderWidth(): number {
 		if(this._isBorderAdded) {
-			return this._borderUnit.getAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 2, 1)[0];
+			return this._borderUnit.getAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 2, 1)[0];
 		}
 		return this._attribs['borderWidth'];
 	}
@@ -236,15 +240,15 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 	public set vertexOffsetValue(value: number[]) {
 		// if(!this._needReset && arrayEqual(value, this._attribs['vertexOffsetValue'])) return;
-		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, value);
+		this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, value);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, value);
 		this._attribs['vertexOffsetValue'] = value;
 		this.searchable && this.registToSearcher();
 	}
 
 	public get vertexOffsetValue(): number[] {
 		if(this._isAdded) {
-			return this._originUnit.getAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 0, 2);
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 0, 2);
 		}
 		return this._attribs['vertexOffsetValue'];
 	}
@@ -309,6 +313,20 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		return this._attribs['opacity'];
 	}
 
+	public set notFollowViewport(n: boolean) {
+		let not = n ? 1: 0;
+		this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [not], 3);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [not], 3);
+		this._attribs['notFollowViewport'] = n;
+	}
+
+	public get notFollowViewport(): boolean {
+		if(this._isAdded) {
+			return (this._originUnit.getAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 3, 1)[0] == 1? true: false);
+		}
+		return this._attribs['notFollowViewport'];
+	}
+
 	public getVertexPositions(expand: number = 0): number[] {
 		return this._originUnit.getVertexesPositionById(this._originId, expand);
 	}
@@ -338,8 +356,8 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, this.translation, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, this.vertexOffsetValue, 0);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, [this.borderWidth], 2);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, this.vertexOffsetValue, 0);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [this.borderWidth], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.scale], 3);

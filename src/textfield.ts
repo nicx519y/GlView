@@ -16,16 +16,17 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	private _borderWidth: number = 0;
 	private _borderColor: number[] = [0,0,0,0];
 	private _opacity: number = 1;
+	private _notFollowViewport: boolean = false;
 	
 	private _tf: TextureFactroy;
 	private _fontObjects: RenderObject[];
 	private _g: Generator;
 
-	constructor(generator: Generator, textureFactroy: TextureFactroy) {
+	constructor(generator: Generator) {
 		super(generator.engine.searcher);
 		this._id = IdCreator.createId();
 		this._g = generator;
-		this._tf = textureFactroy;
+		this._tf = generator.engine.textureFactroy;
 		this._fontObjects = [];
 	}
 	
@@ -128,6 +129,15 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		return this._opacity;
 	}
 
+	set notFollowViewport(n: boolean) {
+		this._notFollowViewport = n;
+		this.resetFonts();
+	}
+
+	get notFollowViewport(): boolean {
+		return this._notFollowViewport;
+	}
+
 	private resetFonts() {
 		const len = this._text.length;
 		const nowLen = this._fontObjects.length;
@@ -161,6 +171,7 @@ export class TextField extends SearchableObject implements ComponentInterface {
 			v.opacity = this._opacity;
 			v.textBorderWidth = this._borderWidth;
 			v.textBorderColor = this._borderColor;
+			v.notFollowViewport = this._notFollowViewport;
 			let texture = f.getFontTexture(text);
 			if(!texture || !(texture instanceof ImageTexture)) {
 				console.error('Can not found ImageTexture of text: "'+text+'".');

@@ -13,7 +13,7 @@ const vsSource = `#version 300 es
 	layout(location=3) in vec4 nextVertexAndRatio;
 	layout(location=4) in vec4 uvAndEdgeOffsetRatio;		//UV
 	
-	layout(location=5) in vec4 vertexAndEdgeOffsetValue;	//变形值
+	layout(location=5) in vec4 vertexAndEdgeOffsetValueAndNotFollowViewport;	// 顶点形变  边形变值  是否不跟随视口
 	layout(location=6) in vec4 UVRect;						//UVRect
 	layout(location=7) in vec4 backgroundColor;				//背景色
 	layout(location=8) in vec4 translationAndRotation;		//形变
@@ -99,29 +99,32 @@ const vsSource = `#version 300 es
 	}
 
 	void main(void) {
-
-		vec2 pv = getVertex(prevVertexAndRatio.xy, prevVertexAndRatio.zw, vertexAndEdgeOffsetValue.xy);
-		vec2 cv = getVertex(currVertexAndRatio.xy, currVertexAndRatio.zw, vertexAndEdgeOffsetValue.xy);
-		vec2 nv = getVertex(nextVertexAndRatio.xy, nextVertexAndRatio.zw, vertexAndEdgeOffsetValue.xy);
+		float notFollowViewport = vertexAndEdgeOffsetValueAndNotFollowViewport.w;	//是否跟随视口
+		vec2 pv = getVertex(prevVertexAndRatio.xy, prevVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
+		vec2 cv = getVertex(currVertexAndRatio.xy, currVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
+		vec2 nv = getVertex(nextVertexAndRatio.xy, nextVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
 		mat4 rotationMatrix = getRotationMatrix();
 		mat4 scaleMatrix = getScaleMatrix();
 		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * rotationMatrix;
 		// 求相邻两边交点向量
-		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValue.z * uvAndEdgeOffsetRatio.z);
+		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValueAndNotFollowViewport.z * uvAndEdgeOffsetRatio.z);
 		
-		gl_Position = uViewportMatrix * transMat * scaleMatrix * vec4(cv, 0, 1) + transMat * vec4(intersection, 0, 0);
+		vec4 pos1 = transMat * scaleMatrix * vec4(cv, 0, 1);
+		vec4 pos2 = transMat * vec4(intersection, 0, 0);
+
+		gl_Position = uViewportMatrix * pos1 * (1.0 - notFollowViewport) + pos1 * notFollowViewport + pos2;
 
 		// out
 		// 如果材质宽度为0 则标志为无材质 
-		vHasTexture = step(pow(10.0, -9.0), UVRect.z);
+		vHasTexture = step(0.0, UVRect.z);
 		vTexCoord = vec2(uvAndEdgeOffsetRatio.x * UVRect.p + UVRect.s, uvAndEdgeOffsetRatio.y * UVRect.q + UVRect.t);
 		vBgColor = backgroundColor;
 		vIsText = isTextAndBorderWidthAndDashedAndScale.x;
 		vTextBorderWidth = isTextAndBorderWidthAndDashedAndScale.y;
 		vTextBorderColor = textBorderColor;
-		vNotBorder = step(vertexAndEdgeOffsetValue.z, 0.0);
+		vNotBorder = step(vertexAndEdgeOffsetValueAndNotFollowViewport.z, 0.0);
 		vPos = rotationMatrix * vec4(cv, 0, 1);
 		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;	
 		vOpacity = opacity;
@@ -155,7 +158,7 @@ const fsSource = `#version 300 es
 		// 如果k在 0.95 和 1.05 之间
 		float c1 = step(0.95, k) * step(k, 1.05);
 		// 如果 c1 == 0.1 则 c2 = 0.0 否则 c2 = 1.0
-		float c2 = step(c1, 0.5);
+		float c2 = 1.0 - c1;
 		// 如果 c1 条件成立 则 gl_FragCoord.x 否则 ...
 		float d = gl_FragCoord.x * c1 + (step(1.0, k) * gl_FragCoord.y + step(k, 1.0) * gl_FragCoord.x) * c2;
 
@@ -166,7 +169,7 @@ const fsSource = `#version 300 es
 		// 文字边框是否大于0
 		float c1 = step(0.1, vTextBorderWidth);
 		// 文字边框是否小于等于0
-		float c2 = step(c1, 0.5);
+		float c2 = 1.0 - c1;
 
 		// 第一个插值阶梯
 		float start = max(0.0, 0.6 - vTextBorderWidth * 0.1);
@@ -197,7 +200,7 @@ const fsSource = `#version 300 es
 		// 绘制普通对象
 		vec4 normalColor = drawNormal(tColor);
 
-		vec4 color = vIsText * textColor + step(vIsText, 0.5) * normalColor;
+		vec4 color = vIsText * textColor + (1.0 - vIsText) * normalColor;
 		color.a *= vOpacity;
 
 		fragColor = color;

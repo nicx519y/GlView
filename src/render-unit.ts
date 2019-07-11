@@ -25,7 +25,7 @@ VertexAttributeStride.set(VertexAttribute.UV_AND_EDGE_OFFSET_RATIO, 4);
 
 // 实例属性
 export const enum RenderAttribute {
-	VERTEX_AND_EDGE_OFFSET_VALUE = 'vertexAndEdgeOffsetValue',
+	VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT = 'vertexAndEdgeOffsetValueAndNotFollowViewport',
 	BACKGROUND_COLOR = 'backgroundColor',
 	UV_RECT = 'UVRect',
 	TRANSLATION_AND_ROTATION = 'translationAndRotation',
@@ -35,7 +35,7 @@ export const enum RenderAttribute {
 }
 
 export var RenderAttributeStride: Map<RenderAttribute, number> = new Map();
-RenderAttributeStride.set(RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 4);
+RenderAttributeStride.set(RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 4);
 RenderAttributeStride.set(RenderAttribute.BACKGROUND_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
 RenderAttributeStride.set(RenderAttribute.TRANSLATION_AND_ROTATION, 4);
@@ -44,7 +44,7 @@ RenderAttributeStride.set(RenderAttribute.TEXT_BORDER_COLOR, 4);
 RenderAttributeStride.set(RenderAttribute.OPACITY, 1);
 
 export const RenderAttributeList = [
-	RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE,
+	RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT,
 	RenderAttribute.BACKGROUND_COLOR,
 	RenderAttribute.UV_RECT,
 	RenderAttribute.TRANSLATION_AND_ROTATION,
@@ -155,6 +155,7 @@ export class RenderUnit implements PaintUnitInterface {
 	}
 
 	public setAttribute(id: string, attrib: RenderAttribute, value: number[], offset: number = 0) {
+		if(!id || id == '') return;
 		const idx = this.idmap.get(id);
 		const stride: number = RenderAttributeStride.get(attrib);
 		let bufferData: Float32Array;
@@ -317,7 +318,7 @@ export class RenderUnit implements PaintUnitInterface {
 		// 形变系数
 		const co = this._meshConfig.currOffsetRatios;
 		// 形变值
-		const cov = this.getAttribute(id, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE, 0, 2);
+		const cov = this.getAttribute(id, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 0, 2);
 		// 偏移
 		const trans = this.getAttribute(id, RenderAttribute.TRANSLATION_AND_ROTATION, 0, 2);
 		// 旋转

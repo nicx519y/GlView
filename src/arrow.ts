@@ -82,6 +82,7 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 			this.borderDashed = this.nobj.borderDashed;
 			this.opacity = this.nobj.opacity;
 			this.backgroundColor = this.nobj.backgroundColor;
+			this.notFollowViewport = this.nobj.notFollowViewport;
 			this.setFromToAndWidth();
 		}
 	}
@@ -128,6 +129,14 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 
 	get opacity(): number {
 		return this.robj.opacity;
+	}
+
+	set notFollowViewport(n: boolean) {
+		this.robj.notFollowViewport = n;
+	}
+
+	get notFollowViewport(): boolean {
+		return this.robj.notFollowViewport;
 	}
 
 	private setFromToAndWidth() {

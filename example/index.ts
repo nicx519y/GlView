@@ -247,8 +247,9 @@ function main() {
 		obj.borderColor = [255,255,255,255];
 		obj.size = [300, 300];
 		obj.backgroundColor = [180, 180, 180, 255];
-		obj.translation = [800, 300];
+		obj.translation = [0, 0];
 		obj.texture = shot.texture;
+		obj.notFollowViewport = true;
 	}
 
 	function rectTest(txt: ImageTexture) {
@@ -347,7 +348,7 @@ function main() {
 
 	function drawText() {
 		
-		const g: TextFieldGenerator = new TextFieldGenerator(engine, tf);
+		const g: TextFieldGenerator = new TextFieldGenerator(engine);
 		const t: TextField = g.instance();
 		t.show();
 		t.text = '哈哈哈';

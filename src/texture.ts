@@ -33,8 +33,11 @@ export class TextureFactroy {
 		//创建不可变材质空间
 		gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);	//y轴反转
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.GENERATE_MIPMAP, true);
 		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, mw, mh);
 	}
 
@@ -101,18 +104,54 @@ export class TextureFactroy {
 
 	public updateToGL() {
 		const gl = this.gl;
-		this.blocks = this.blocks.sort((a, b) => { 
+		const bs = this.blocks;
+		this.blocks = bs.sort((a, b) => { 
 			if (a.w + a.h > b.w + b.h) return -1;
 			return 1;
 		});
-		this.packer.fit(this.blocks);
-		const bs = this.blocks;
+		const textures: ImageTexture[] = bs.map((b, k) => {
+			b.data.texture.index = k;
+			return b.data.texture;
+		});
+		this.packer.fit(bs);
+
+		textures.forEach(t => this.updateTextureToGL(t));
+
+	}
+
+	public updateTextureToGL(texture: ImageTexture) {
+		const idx = texture.index;
+		const block = this.blocks[idx];
+		const gl = this.gl;
 		const gap = TextureGap;
-		const ind = gap/2;
+		const ind = gap * 0.5;
+		const x = block.fit.x + ind;
+		const y = block.fit.y + ind;
+		const w = block.w - gap;
+		const h = block.h - gap;
 		// x+1, y+1, width-2 和 height-2 是为了解决材质距离太近被错误采样问题
-		bs.forEach(b => gl.texSubImage2D(gl.TEXTURE_2D, 0, b.fit.x + ind, b.fit.y + ind, b.w - gap, b.h - gap, gl.RGBA, gl.UNSIGNED_BYTE, b.data.source));
-		gl.generateMipmap(gl.TEXTURE_2D);
-		bs.forEach(b => b.data.texture.update(b.fit.x + ind, b.fit.y + ind, b.w - gap, b.h - gap));
+		gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, block.data.source);
+		texture.update(x, y, w, h);
+	}
+
+	/**
+	 * 复制屏幕像素到材质
+	 * @param texture 
+	 * @param offsetX 
+	 * @param offsetY 
+	 */
+	public copyToTexture(texture: ImageTexture, offsetX: number = 0, offsetY: number = 0) {
+		const idx = texture.index;
+		const block = this.blocks[idx];
+		const gl = this.gl;
+		const gap = TextureGap;
+		const ind = gap * 0.5;
+		const x = block.fit.x + ind;
+		const y = block.fit.y + ind;
+		const w = block.w - gap;
+		const h = block.h - gap;
+		gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, offsetX, offsetY, x, y, w, h);
+		texture.update(x, y, w, h);
 	}
 
 	private consoleTexture() {
@@ -136,17 +175,21 @@ export class ImageTexture {
 	v = 0;
 	width = 0;
 	height = 0;
+	index = 0;
 	private handlers: Function[] = [];
 	constructor() {
 		
 	}
-	update(u: number, v: number, width: number, height: number) {
+	update(u: number, v: number, width: number, height: number, index: number = -1) {
 		const mw = TextureConfig.MAX_WIDTH;
 		const mh = TextureConfig.MAX_HEIGHT;
 		this.u = u/mw;
 		this.v = v/mh;
 		this.width = width/mw;
 		this.height = height/mh;
+		if(index >= 0) {
+			this.index = index;
+		}
 		this.handlers.forEach(handler => handler(this));
 	}
 	bind(updateHandler: Function) {

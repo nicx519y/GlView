@@ -11,12 +11,13 @@ const MIN_SCALE = 0.1;
 
 export class Viewport {
 	private _gl;
-	private _scale: number = 1;
-	private _offsetX: number = 0;
-	private _offsetY: number = 0;
 	private _cvec2: Float32Array;
 	private _vpmat4: Float32Array;
 	private _bgColor: number[];
+	private _scaling: Float32Array;
+	private _translation: Float32Array;
+	private _vpWidth: number;
+	private _vpHeight: number;
 	public cvMatIsModified: boolean = true;
 	public vpMatIsModified: boolean = true;
 	constructor(gl) {
@@ -27,6 +28,8 @@ export class Viewport {
 		this._bgColor = [0,0,0,1];
 		this._vpmat4 = mat4.create();
 		this._cvec2 = glMatrix.vec2.fromValues(1/width*2, 1/height*2, 1);
+		this._scaling = vec3.fromValues(1, 1, 1);
+		this._translation = vec3.fromValues(0, 0, 0);
 		this.translate(-width/2/RATIO, -height/2/RATIO);
 	}
 
@@ -48,18 +51,34 @@ export class Viewport {
 	 * @param width 宽度
 	 * @param height 高度
 	 */
-	setViewportSize(width: number, height: number) {
+	setViewportSize(width: number, height: number, setCanvas: boolean = true) {
+
+		this._vpWidth = width;
+		this._vpHeight = height;
+
 		const gl = this._gl;
-		const canvas = gl.canvas;
+		const w = width * RATIO;
+		const h = height * RATIO;
+
+		gl.viewport(0, 0, w, h);
+
 		let cvVec2 = this._cvec2;
-		canvas.width = width * RATIO;
-		canvas.height = height * RATIO;
-		canvas.style.width = width + 'px';
-		canvas.style.height = height + 'px';
 		cvVec2.set([1/width*2, 1/height*2], 0);
-		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		this.cvMatIsModified = true;
+
+		if(setCanvas) {
+		const canvas = gl.canvas;
+			canvas.width = w;
+			canvas.height = h;
+			canvas.style.width = width + 'px';
+			canvas.style.height = height + 'px';
+		}
 	}
+
+	getViewportSize(): number[] {
+		return [this._vpWidth, this._vpHeight];
+	}
+
 	/**
 	 * 按照中心点缩放
 	 * @param scale 缩放比例 （绝对值)
@@ -71,20 +90,20 @@ export class Viewport {
 		const canvas = this._gl.canvas;
 		const width = canvas.width/RATIO/2;
 		const height = canvas.height/RATIO/2;
-		const s = numberClamp(MIN_SCALE, MAX_SCALE, scale) / this._scale;
+		const s = numberClamp(MIN_SCALE, MAX_SCALE, scale) / this.scale;
 		px /= width;
 		py /= height;
 		mat4.translate(vpmat, vpmat, vec3.fromValues(px*(1-s), py*(1-s), 0));
 		//缩放
 		mat4.scale(vpmat, vpmat, vec3.fromValues(s,s,1));
 		this.vpMatIsModified = true;
-		this._scale *= s;
 	}
 	/**
 	 * 获取缩放比例
 	 */
 	get scale(): number {
-		return this._scale;
+		mat4.getScaling(this._scaling, this._vpmat4);
+		return this._scaling[0];
 	}
 
 	/**
@@ -102,11 +121,9 @@ export class Viewport {
 		// 转化为归一化坐标
 		vec3.mul(p, p, vec3.fromValues(1/width*2, 1/height*2,1));
 		// 按照坐标系比例缩放
-		vec3.scale(p, p, 1/this._scale);
+		vec3.scale(p, p, 1/this.scale);
 		mat4.translate(vpmat, vpmat, p);
 		this.vpMatIsModified = true;
-		this._offsetX += dx;
-		this._offsetY += dy;
 	}
 
 	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
@@ -119,19 +136,12 @@ export class Viewport {
 		const op: Float32Array = vec3.fromValues(originX/width, originY/height, 0);
 		mat4.fromTranslation(mat, p.map((v,k)=>v+dp[k]*scale+op[k]*(1-scale)));
 		mat4.scale(mat, mat, vec3.fromValues(scale, scale, 1));
-
-		this._offsetX = offsetX;
-		this._offsetY = offsetY;
-		this._scale = scale;
 		this.vpMatIsModified = true;
 	}
 
-	get offsetX(): number {
-		return this._offsetX;
-	}
-
-	get offsetY(): number {
-		return this._offsetY;
+	get translation(): Float32Array {
+		mat4.getTranslation(this._translation, this._vpmat4);
+		return this._translation.subarray(0, 2);
 	}
 
 	/**

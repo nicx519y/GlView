@@ -3,7 +3,7 @@ import { Rectangle, getBounds, PaintUnitInterface } from "./utils";
 import { Searcher } from "./searcher";
 import { TextureFactroy } from "./texture";
 import { Viewport } from "./viewport";
-
+import * as glMatrix from "../lib/gl-matrix.js"
 
 glMatrix.glMatrix.setMatrixArrayType(Float32Array);
 
@@ -212,6 +212,7 @@ export class Engine {
 	private _vp: Viewport;
 	private _unitList: PaintUnitInterface[][];
 	public isDebug: boolean = true;
+	public canRending: boolean = true;
 	constructor(canvas) {
 		this._gl = canvas.getContext('webgl2', { 
 			alpha: false,
@@ -276,6 +277,7 @@ export class Engine {
 	}
 
 	public render() {
+		if(!this.canRending) return;
 		this.draw();
 		window.requestAnimationFrame(() => this.render());
 	}

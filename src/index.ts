@@ -10,3 +10,4 @@ export * from './textfield'
 export * from './arrow'
 export * from './interfaces';
 export * from './screenshot';
+export * from './ui/viewport-ruler-component';

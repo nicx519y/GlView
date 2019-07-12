@@ -71,7 +71,6 @@ export class Screenshot {
         const area = this._area;
         const scale = this._destWidth / area.w;
 
-        engine.canRending = false;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
         // 设置成截图所需要的视口状态
         vp.resetTranslationAndScale(-area.x, -area.y, scale);
@@ -90,7 +89,6 @@ export class Screenshot {
         vp.vpMatIsModified = true;
         vp.setViewportSize(cacheVpSize[0], cacheVpSize[1], false);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        engine.canRending = true;
 
     }
 }

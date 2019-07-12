@@ -94,12 +94,19 @@ const vsSource = `#version 300 es
 		in vec2 offsetRatio,
 		in vec2 offsetValue
 	) {
-		vec2 offset = vec2(offsetRatio.x * offsetValue.x, offsetRatio.y * offsetValue.y);
+		vec2 offset = offsetRatio * offsetValue;
 		return origin + offset;
 	}
 
+	vec2 getFollowViewport() {
+		float outViewportStatus = vertexAndEdgeOffsetValueAndNotFollowViewport.w;	//跟随视口状态
+		vec3 f = vec3(outViewportStatus - 1.0, outViewportStatus - 2.0, outViewportStatus - 3.0);
+		f = step(vec3(0.5, 0.5, 0.5), abs(f));
+		return vec2(f.x * f.z, f.y * f.z);
+	}
+
 	void main(void) {
-		float notFollowViewport = vertexAndEdgeOffsetValueAndNotFollowViewport.w;	//是否跟随视口
+
 		vec2 pv = getVertex(prevVertexAndRatio.xy, prevVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
 		vec2 cv = getVertex(currVertexAndRatio.xy, currVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
 		vec2 nv = getVertex(nextVertexAndRatio.xy, nextVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
@@ -111,15 +118,21 @@ const vsSource = `#version 300 es
 		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValueAndNotFollowViewport.z * uvAndEdgeOffsetRatio.z);
 		
-		vec4 pos1 = transMat * scaleMatrix * vec4(cv, 0, 1);
-		vec4 pos2 = transMat * vec4(intersection, 0, 0);
+		vec4 pos1 = transMat * scaleMatrix * vec4(cv, 0.0, 1.0);
+		vec4 pos2 = uViewportMatrix * pos1;
+		vec4 pos3 = transMat * vec4(intersection, 0.0, 0.0);
 
-		gl_Position = uViewportMatrix * pos1 * (1.0 - notFollowViewport) + pos1 * notFollowViewport + pos2;
+		// 判断是否需要乘视口矩阵
+		vec2 followViewport = getFollowViewport();
+		vec2 notFollowViewport = vec2(1.0, 1.0) - followViewport;
+		vec2 pos = pos2.xy * followViewport + pos1.xy * notFollowViewport;
+
+		gl_Position = vec4(pos, 0.0, 1.0) + pos3;
 
 		// out
 		// 如果材质宽度为0 则标志为无材质 
 		vHasTexture = step(0.0, UVRect.z);
-		vTexCoord = vec2(uvAndEdgeOffsetRatio.x * UVRect.p + UVRect.s, uvAndEdgeOffsetRatio.y * UVRect.q + UVRect.t);
+		vTexCoord = uvAndEdgeOffsetRatio.xy * UVRect.zw + UVRect.xy;
 		vBgColor = backgroundColor;
 		vIsText = isTextAndBorderWidthAndDashedAndScale.x;
 		vTextBorderWidth = isTextAndBorderWidthAndDashedAndScale.y;

@@ -1,4 +1,5 @@
 import { Engine } from "./engine";
+import { EventDispatcher } from './events';
 import * as glMatrix from "../lib/gl-matrix.js"
 import { numberClamp } from "./utils";
 
@@ -8,8 +9,11 @@ const RATIO = window.devicePixelRatio;
 const MAX_SCALE = 2;
 const MIN_SCALE = 0.1;
 
+export enum ViewportEvent {
+	VIEWPORT_CHANGE = 'viewportChange'
+};
 
-export class Viewport {
+export class Viewport extends EventDispatcher {
 	private _gl;
 	private _cvec2: Float32Array;
 	private _vpmat4: Float32Array;
@@ -21,6 +25,7 @@ export class Viewport {
 	public cvMatIsModified: boolean = true;
 	public vpMatIsModified: boolean = true;
 	constructor(gl) {
+		super();
 		this._gl = gl;
 		const canvas = gl.canvas;
 		const width = canvas.width;
@@ -67,7 +72,7 @@ export class Viewport {
 		this.cvMatIsModified = true;
 
 		if(setCanvas) {
-		const canvas = gl.canvas;
+			const canvas = gl.canvas;
 			canvas.width = w;
 			canvas.height = h;
 			canvas.style.width = width + 'px';
@@ -97,6 +102,8 @@ export class Viewport {
 		//缩放
 		mat4.scale(vpmat, vpmat, vec3.fromValues(s,s,1));
 		this.vpMatIsModified = true;
+
+		this.dispatchEvent(ViewportEvent.VIEWPORT_CHANGE);
 	}
 	/**
 	 * 获取缩放比例
@@ -124,6 +131,8 @@ export class Viewport {
 		vec3.scale(p, p, 1/this.scale);
 		mat4.translate(vpmat, vpmat, p);
 		this.vpMatIsModified = true;
+
+		this.dispatchEvent(ViewportEvent.VIEWPORT_CHANGE);
 	}
 
 	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
@@ -137,6 +146,8 @@ export class Viewport {
 		mat4.fromTranslation(mat, p.map((v,k)=>v+dp[k]*scale+op[k]*(1-scale)));
 		mat4.scale(mat, mat, vec3.fromValues(scale, scale, 1));
 		this.vpMatIsModified = true;
+
+		this.dispatchEvent(ViewportEvent.VIEWPORT_CHANGE);
 	}
 
 	get translation(): Float32Array {

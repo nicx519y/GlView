@@ -5,6 +5,13 @@ import { IdCreator, arrayEqual, numberClamp } from './utils';
 import { ComponentInterface } from './interfaces';
 import { SearchableObject } from './searchable-object';
 
+export const enum OutViewportStatus {
+	NONE = 0,
+	X = 1,
+	Y = 2,
+	BOTH = 3,
+}
+
 export class RenderObject extends SearchableObject implements ComponentInterface {
 	private _id: string;
 	private _originUnit: RenderUnit;
@@ -31,7 +38,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'borderColor': [0,0,0,0],
 		'borderDashed': 0,
 		'opacity': 1,
-		'notFollowViewport': false,
+		'outViewportStatus': OutViewportStatus.NONE,
 	};
 
 	private _attriblist = [
@@ -313,18 +320,17 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		return this._attribs['opacity'];
 	}
 
-	public set notFollowViewport(n: boolean) {
-		let not = n ? 1: 0;
-		this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [not], 3);
-		this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [not], 3);
-		this._attribs['notFollowViewport'] = n;
+	public set outViewportStatus(status: OutViewportStatus) {
+		this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [status], 3);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [status], 3);
+		this._attribs['outViewportStatus'] = status;
 	}
 
-	public get notFollowViewport(): boolean {
+	public get outViewportStatus(): OutViewportStatus {
 		if(this._isAdded) {
-			return (this._originUnit.getAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 3, 1)[0] == 1? true: false);
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 3, 1)[0] as OutViewportStatus;
 		}
-		return this._attribs['notFollowViewport'];
+		return this._attribs['outViewportStatus'];
 	}
 
 	public getVertexPositions(expand: number = 0): number[] {

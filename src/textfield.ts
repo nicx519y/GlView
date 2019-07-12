@@ -1,5 +1,5 @@
 import { ImageTexture, TextureFactroy } from "./texture";
-import { RenderObject } from "./render-object";
+import { RenderObject, OutViewportStatus } from "./render-object";
 import { Generator } from './generator';
 import { IdCreator, arrayEqual, isChinese, numberClamp } from "./utils";
 import { ComponentInterface } from "./interfaces";
@@ -16,7 +16,7 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	private _borderWidth: number = 0;
 	private _borderColor: number[] = [0,0,0,0];
 	private _opacity: number = 1;
-	private _notFollowViewport: boolean = false;
+	private _outViewportStatus: OutViewportStatus = OutViewportStatus.NONE;
 	
 	private _tf: TextureFactroy;
 	private _fontObjects: RenderObject[];
@@ -129,13 +129,13 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		return this._opacity;
 	}
 
-	set notFollowViewport(n: boolean) {
-		this._notFollowViewport = n;
+	set outViewportStatus(status: OutViewportStatus) {
+		this._outViewportStatus = status;
 		this.resetFonts();
 	}
 
-	get notFollowViewport(): boolean {
-		return this._notFollowViewport;
+	get outViewportStatus(): OutViewportStatus {
+		return this._outViewportStatus;
 	}
 
 	private resetFonts() {
@@ -171,7 +171,7 @@ export class TextField extends SearchableObject implements ComponentInterface {
 			v.opacity = this._opacity;
 			v.textBorderWidth = this._borderWidth;
 			v.textBorderColor = this._borderColor;
-			v.notFollowViewport = this._notFollowViewport;
+			v.outViewportStatus = this._outViewportStatus;
 			let texture = f.getFontTexture(text);
 			if(!texture || !(texture instanceof ImageTexture)) {
 				console.error('Can not found ImageTexture of text: "'+text+'".');

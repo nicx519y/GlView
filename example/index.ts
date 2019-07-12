@@ -19,6 +19,8 @@ import {
 	hexToRgb,
 	Searcher,
 	Screenshot,
+	OutViewportStatus,
+	ViewportRulerComponent,
 } from '../src';
 
 
@@ -55,119 +57,6 @@ class ObjList {
 
 	get list(): ComponentInterface[] {
 		return this._list;
-	}
-}
-
-class ObjPane {
-	con;
-	addBtn;
-	clearBtn;
-	conBox;
-	temp;
-	txt: ImageTexture;
-	g;
-	objlist: ObjList;
-	constructor(container, generator: GeneratorInterface, temp: string, texture: ImageTexture) {
-		this.con = container;
-		this.addBtn = container.find('.add-btn');
-		this.clearBtn = container.find('.clear-btn');
-		this.conBox = container.find('.con-box');
-		this.objlist = new ObjList(generator);
-		this.temp = temp;
-		this.txt = texture;
-		this.g = generator;
-		this.addBtn.click(evt => this.add());
-		this.clearBtn.click(evt => this.clear());
-	}
-
-	add() {
-		const obj = this.objlist.add() as RenderObject;
-		const content = $('<div class="content" >');
-		content.html(this.temp);
-		content.attr('name', obj.id);
-		this.conBox.append(content);
-		content.find('input').each((index, input) => $(input).change(evt => this.onChange(evt)));
-		content.find('button.status-btn').click(evt => this.toggle(evt));
-		content.find('button.delete-btn').click(evt => this.remove(evt));
-		content.find('input').each((index, input) => $(input).change());
-		obj.searchable = true;
-		obj.texture = this.txt;
-
-		objs.push(obj);
-	}
-
-	toggle(evt) {
-		const p = $(evt.target).parent();
-		const id = p.attr('name');
-		const obj = this.objlist.find(id) as any;
-		if(obj.isShown) {
-			obj.hide();
-			$(evt.target).html('显示');
-		} else {
-			obj.show();
-			$(evt.target).html('隐藏');
-		}
-	}
-
-	remove(evt) {
-		const p = $(evt.target).parent();
-		const id = p.attr('name');
-		const obj = this.objlist.find(id) as any;
-		this.objlist.remove(obj);
-
-		p.remove();
-	}
-
-	clear() {
-		this.g.clear();
-	}
-
-	onChange(evt) {
-		const p = $(evt.target).parent();
-		const id = p.attr('name');
-		const attr = $(evt.target).attr('name');
-		const obj = this.objlist.find(id) as any;
-		let value = $(evt.target).val();
-		switch(attr) {
-			case 'x':
-			case 'y':
-				const x = p.find('[name=x]').val();
-				const y = p.find('[name=y]').val();
-				obj.translation = [parseInt(x), parseInt(y)];
-				break;
-			case 'width':
-			case 'height':
-				const w = p.find('[name=width]').val();
-				const h = p.find('[name=height]').val();
-				obj.size = [parseInt(w), parseInt(h)];
-				break;
-			case 'backgroundColor':
-				value = hexToRgb(value);
-				value.push(255);
-				obj.backgroundColor = value;
-				break;
-			case 'rotation':
-				value = value / 180 * Math.PI;
-				obj.rotation = value;
-				break;
-			case 'borderWidth':
-				obj.borderWidth = parseInt(value);
-				break;
-			case 'borderColor':
-				value = hexToRgb(value);
-				value.push(255);
-				obj.borderColor = value;
-				break;
-			case 'borderDashed':
-				obj.borderDashed = value;
-				break;
-			case 'scale':
-				obj.scale = value * 1;
-				break;
-			case 'opacity':
-				obj.opacity = value * 1;
-				break;
-		}
 	}
 }
 
@@ -217,6 +106,25 @@ function main() {
 		rectTest(textures[0]);
 		drawText();
 		screenshotTest();
+
+		let r = new ViewportRulerComponent(engine);
+
+		// const g = new Generator(engine, new RectMesh());
+		// const obj = g.instance().show();
+		// obj.size = [100, 100];
+		// obj.borderWidth = 0.5;
+		// obj.borderColor = [255,255,255,255];
+		// obj.translation = [200, 200];
+		// obj.outViewportStatus = OutViewportStatus.NONE;
+
+		// for(let i = 0; i < 30000; i ++) {
+		// 	let o = g.instance();
+		// 	o.backgroundColor = [255,255,255,255];
+		// 	o.size = [50, 50];
+		// 	o.translation = [-100,-100];
+		// 	o.show();
+		// }
+
 		// const w = 2000;
 
 		// const count = 3;	// 一共9大块
@@ -240,16 +148,16 @@ function main() {
 	
 		window['shot'] = shot;
 
-		const g = new Generator(engine, new RectMesh());
-		const obj = g.instance();
-		obj.show();
-		obj.borderWidth = 1;
-		obj.borderColor = [255,255,255,255];
-		obj.size = [300, 300];
-		obj.backgroundColor = [180, 180, 180, 255];
-		obj.translation = [0, 0];
-		obj.texture = shot.texture;
-		obj.notFollowViewport = true;
+		// const g = new Generator(engine, new RectMesh());
+		// const obj = g.instance();
+		// obj.show();
+		// obj.borderWidth = 1;
+		// obj.borderColor = [255,255,255,255];
+		// obj.size = [300, 300];
+		// obj.backgroundColor = [180, 180, 180, 255];
+		// obj.translation = [0, 0];
+		// obj.texture = shot.texture;
+		// obj.notFollowViewport = true;
 	}
 
 	function rectTest(txt: ImageTexture) {
@@ -552,6 +460,120 @@ function main() {
 	}
 
 };
+
+
+class ObjPane {
+	con;
+	addBtn;
+	clearBtn;
+	conBox;
+	temp;
+	txt: ImageTexture;
+	g;
+	objlist: ObjList;
+	constructor(container, generator: GeneratorInterface, temp: string, texture: ImageTexture) {
+		this.con = container;
+		this.addBtn = container.find('.add-btn');
+		this.clearBtn = container.find('.clear-btn');
+		this.conBox = container.find('.con-box');
+		this.objlist = new ObjList(generator);
+		this.temp = temp;
+		this.txt = texture;
+		this.g = generator;
+		this.addBtn.click(evt => this.add());
+		this.clearBtn.click(evt => this.clear());
+	}
+
+	add() {
+		const obj = this.objlist.add() as RenderObject;
+		const content = $('<div class="content" >');
+		content.html(this.temp);
+		content.attr('name', obj.id);
+		this.conBox.append(content);
+		content.find('input').each((index, input) => $(input).change(evt => this.onChange(evt)));
+		content.find('button.status-btn').click(evt => this.toggle(evt));
+		content.find('button.delete-btn').click(evt => this.remove(evt));
+		content.find('input').each((index, input) => $(input).change());
+		obj.searchable = true;
+		obj.texture = this.txt;
+
+		objs.push(obj);
+	}
+
+	toggle(evt) {
+		const p = $(evt.target).parent();
+		const id = p.attr('name');
+		const obj = this.objlist.find(id) as any;
+		if(obj.isShown) {
+			obj.hide();
+			$(evt.target).html('显示');
+		} else {
+			obj.show();
+			$(evt.target).html('隐藏');
+		}
+	}
+
+	remove(evt) {
+		const p = $(evt.target).parent();
+		const id = p.attr('name');
+		const obj = this.objlist.find(id) as any;
+		this.objlist.remove(obj);
+
+		p.remove();
+	}
+
+	clear() {
+		this.g.clear();
+	}
+
+	onChange(evt) {
+		const p = $(evt.target).parent();
+		const id = p.attr('name');
+		const attr = $(evt.target).attr('name');
+		const obj = this.objlist.find(id) as any;
+		let value = $(evt.target).val();
+		switch(attr) {
+			case 'x':
+			case 'y':
+				const x = p.find('[name=x]').val();
+				const y = p.find('[name=y]').val();
+				obj.translation = [parseInt(x), parseInt(y)];
+				break;
+			case 'width':
+			case 'height':
+				const w = p.find('[name=width]').val();
+				const h = p.find('[name=height]').val();
+				obj.size = [parseInt(w), parseInt(h)];
+				break;
+			case 'backgroundColor':
+				value = hexToRgb(value);
+				value.push(255);
+				obj.backgroundColor = value;
+				break;
+			case 'rotation':
+				value = value / 180 * Math.PI;
+				obj.rotation = value;
+				break;
+			case 'borderWidth':
+				obj.borderWidth = parseInt(value);
+				break;
+			case 'borderColor':
+				value = hexToRgb(value);
+				value.push(255);
+				obj.borderColor = value;
+				break;
+			case 'borderDashed':
+				obj.borderDashed = value;
+				break;
+			case 'scale':
+				obj.scale = value * 1;
+				break;
+			case 'opacity':
+				obj.opacity = value * 1;
+				break;
+		}
+	}
+}
 
 window.onload = () => main();
 

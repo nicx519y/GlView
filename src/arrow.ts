@@ -1,4 +1,4 @@
-import { RenderObject } from "./render-object";
+import { RenderObject, OutViewportStatus } from "./render-object";
 import { IdCreator } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 import { ComponentInterface } from "./interfaces";
@@ -82,7 +82,7 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 			this.borderDashed = this.nobj.borderDashed;
 			this.opacity = this.nobj.opacity;
 			this.backgroundColor = this.nobj.backgroundColor;
-			this.notFollowViewport = this.nobj.notFollowViewport;
+			this.outViewportStatus = this.nobj.outViewportStatus;
 			this.setFromToAndWidth();
 		}
 	}
@@ -131,12 +131,12 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 		return this.robj.opacity;
 	}
 
-	set notFollowViewport(n: boolean) {
-		this.robj.notFollowViewport = n;
+	set outViewportStatus(status: OutViewportStatus) {
+		this.robj.outViewportStatus = status;
 	}
 
-	get notFollowViewport(): boolean {
-		return this.robj.notFollowViewport;
+	get outViewportStatus(): OutViewportStatus {
+		return this.robj.outViewportStatus;
 	}
 
 	private setFromToAndWidth() {

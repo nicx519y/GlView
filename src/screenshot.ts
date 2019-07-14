@@ -4,6 +4,7 @@ import { ImageTexture } from "./texture";
 import * as glMatrix from "../lib/gl-matrix.js"
 
 const mat4 = glMatrix.mat4;
+const vec2 = glMatrix.vec2;
 const RATIO = window.devicePixelRatio;
 
 export class Screenshot {
@@ -66,7 +67,10 @@ export class Screenshot {
         const vp = engine.viewport;
         const tf = engine.textureFactroy;
         // 缓存当前的视口状态
-        const cacheVpmat = mat4.clone(vp.vpmat4);
+        // const cacheVpmat = mat4.clone(vp.vpmat4);
+        const cacheVpScale = vec2.clone(vp.vpScaleVec2);
+        const cacheVpTranslation = vec2.clone(vp.vpTranslationVec2);
+
         const cacheVpSize = vp.getViewportSize();
         const area = this._area;
         const scale = this._destWidth / area.w;
@@ -85,8 +89,11 @@ export class Screenshot {
         pixels && gl.reacPixels(0, 0, this._destWidth, this._destHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
         // 恢复状态
-        vp.vpmat4.set(cacheVpmat, 0);
-        vp.vpMatIsModified = true;
+        // vp.vpmat4.set(cacheVpmat, 0);
+        vp.vpScaleVec2.set(cacheVpScale);
+        vp.vpTranslationVec2.set(cacheVpTranslation);
+        vp.vpScaleIsModified = true;
+        vp.vpTranslationIsModified = true;
         vp.setViewportSize(cacheVpSize[0], cacheVpSize[1], false);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

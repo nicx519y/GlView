@@ -19,7 +19,7 @@ const vsSource = `#version 300 es
 	layout(location=8) in vec4 translationAndRotation;		//形变
 	layout(location=9) in vec4 isTextAndBorderWidthAndDashedAndScale;		//是否渲染文字 以及 文字边框粗细 以及物体边框虚线 缩放
 	layout(location=10) in vec4 textBorderColor;			//文字边框颜色
-	layout(location=11) in float opacity;					//透明度
+	layout(location=11) in vec4 opacityAndDisplayAndVpScaleAndVpTrans;			//透明度 是否显示 是否跟随视口缩放 是否跟随视口平移 
 
 	out vec2 vTexCoord;				//UV
 	out vec4 vBgColor;
@@ -31,45 +31,39 @@ const vsSource = `#version 300 es
 	out float vNotBorder;
 	out float vBorderDashed;
 	out float vOpacity;
+	out float vDisplay;
 
-	uniform mat4 uViewportMatrix;	//视口矩阵
 	uniform vec2 uConversionVec2;	//坐标转换
+	uniform vec2 uViewportTranslation;	//视口平移
+	uniform vec2 uViewportScale;		//视口缩放
+	// uniform mat4 uViewportMatrix;
 
-	mat4 getScaleMatrix() {
+	mat4 getScaleMatrix(vec2 scale) {
 		return mat4(
-			isTextAndBorderWidthAndDashedAndScale.w, 0.0, 0.0, 0.0,
-			0.0, isTextAndBorderWidthAndDashedAndScale.w, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0
-		);
-	}
-	
-	mat4 getConversionMatrix() {
-		return mat4(
-			uConversionVec2.x, 0.0, 0.0, 0.0,
-			0.0, uConversionVec2.y, 0.0, 0.0,
+			scale.x, 0.0, 0.0, 0.0,
+			0.0, scale.y, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
 			0.0, 0.0, 0.0, 1.0
 		);
 	}
 
-	mat4 getTranslationMatrix() {
-		return mat4(
-			1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			translationAndRotation.x, translationAndRotation.y, 0.0, 1.0
-		);
-	}
-
-	mat4 getRotationMatrix() {
-		float cost = cos(translationAndRotation.z);
-		float sint = sin(translationAndRotation.z);
+	mat4 getRotationMatrix(float radian) {
+		float cost = cos(radian);
+		float sint = sin(radian);
 		return mat4(
 			cost, -sint, 0.0, 0.0,
 			sint, cost, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
 			0.0, 0.0, 0.0, 1.0
+		);
+	}
+
+	mat4 getTranslationMatrix(vec2 translation) {
+		return mat4(
+			1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			translation.x, translation.y, 0.0, 1.0
 		);
 	}
 
@@ -105,6 +99,14 @@ const vsSource = `#version 300 es
 		return vec2(f.x * f.z, f.y * f.z);
 	}
 
+	// 获取缩放矢量
+	vec2 getScaleVec(float scale, vec2 followViewport, vec2 notFollowViewport) {
+		vec2 scaleVec = vec2(scale, scale);
+		vec2 isVpScale = vec2(1.0, 1.0) - opacityAndDisplayAndVpScaleAndVpTrans.zz;
+		vec2 dscaleVec = vec2(1.0, 1.0) / uViewportScale * scaleVec * isVpScale + scaleVec * (1.0-isVpScale);
+		return dscaleVec * followViewport + scaleVec * notFollowViewport;
+	}
+
 	void main(void) {
 
 		vec2 pv = getVertex(prevVertexAndRatio.xy, prevVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
@@ -112,19 +114,24 @@ const vsSource = `#version 300 es
 		vec2 nv = getVertex(nextVertexAndRatio.xy, nextVertexAndRatio.zw, vertexAndEdgeOffsetValueAndNotFollowViewport.xy);
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
-		mat4 rotationMatrix = getRotationMatrix();
-		mat4 scaleMatrix = getScaleMatrix();
-		mat4 transMat = getConversionMatrix() * getTranslationMatrix() * rotationMatrix;
+
 		// 求相邻两边交点向量
 		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValueAndNotFollowViewport.z * uvAndEdgeOffsetRatio.z);
 		
-		vec4 pos1 = transMat * scaleMatrix * vec4(cv, 0.0, 1.0);
-		vec4 pos2 = uViewportMatrix * pos1;
-		vec4 pos3 = transMat * vec4(intersection, 0.0, 0.0);
-
 		// 判断是否需要乘视口矩阵
 		vec2 followViewport = getFollowViewport();
 		vec2 notFollowViewport = vec2(1.0, 1.0) - followViewport;
+
+		// 各种矩阵
+		mat4 rotationMatrix = getRotationMatrix(translationAndRotation.z);
+		mat4 scaleMatrix = getScaleMatrix(getScaleVec(isTextAndBorderWidthAndDashedAndScale.w, followViewport, notFollowViewport));
+		mat4 transMat = getScaleMatrix(uConversionVec2.xy) * getTranslationMatrix(translationAndRotation.xy) * rotationMatrix;
+		mat4 vpScaleMatrix = getScaleMatrix(uViewportScale);
+		mat4 vpTranslationMatrix = getTranslationMatrix(uViewportTranslation);
+		
+		vec4 pos1 = transMat * scaleMatrix * vec4(cv, 0.0, 1.0);
+		vec4 pos2 = vpTranslationMatrix * vpScaleMatrix * pos1;
+		vec4 pos3 = transMat * vec4(intersection, 0.0, 0.0);
 		vec2 pos = pos2.xy * followViewport + pos1.xy * notFollowViewport;
 
 		gl_Position = vec4(pos, 0.0, 1.0) + pos3;
@@ -140,7 +147,8 @@ const vsSource = `#version 300 es
 		vNotBorder = step(vertexAndEdgeOffsetValueAndNotFollowViewport.z, 0.0);
 		vPos = rotationMatrix * vec4(cv, 0, 1);
 		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;	
-		vOpacity = opacity;
+		vOpacity = opacityAndDisplayAndVpScaleAndVpTrans.x;
+		vDisplay = opacityAndDisplayAndVpScaleAndVpTrans.y;
 	}
 `;
 
@@ -158,6 +166,7 @@ const fsSource = `#version 300 es
 	in float vNotBorder;
 	in float vBorderDashed;
 	in float vOpacity;
+	in float vDisplay;
 	out vec4 fragColor;
 
 	float inBorderDashed() {
@@ -187,7 +196,7 @@ const fsSource = `#version 300 es
 		// 第一个插值阶梯
 		float start = max(0.0, 0.6 - vTextBorderWidth * 0.1);
 		// 边框插值系数
-		float r1 = smoothstep(start, start + 0.2, texture.r) * c1;
+	float r1 = smoothstep(start, start + 0.2, texture.r) * c1;
 		// 文字插值系数
 		float r2 = smoothstep(0.6, 0.8, texture.r);
 		
@@ -201,7 +210,8 @@ const fsSource = `#version 300 es
 	}
 
 	void main(void) {
-		if(inBorderDashed() == 0.0) {
+
+		if(vDisplay == 0.0 || vOpacity == 0.0 || inBorderDashed() == 0.0) {
 			discard;
 			return;
 		}
@@ -265,7 +275,7 @@ export class Engine {
 	 */
 	public draw(indexlist: number[] = null, isForce: boolean = false) {
 		const gl = this.gl;
-		const r1 = this.updateViewportMat();
+		const r1 = this.updateViewport();
 		const r2 = this.updateConversionVec();
 		let r3 = false;
 		this._unitList.forEach((units, k) => {
@@ -324,15 +334,35 @@ export class Engine {
 	}
 
 	// 更新视口矩阵
-	private updateViewportMat(): boolean {
-		if(this._vp.vpMatIsModified) {
-			const gl = this.gl;
-			const vpmLocal = gl.getUniformLocation(this.prg, 'uViewportMatrix');
-			gl.uniformMatrix4fv(vpmLocal, false, this._vp.vpmat4);
-			this._vp.vpMatIsModified = false;
-			return true;
+	// private updateViewportMat(): boolean {
+	// 	if(this._vp.vpMatIsModified) {
+	// 		const gl = this.gl;
+	// 		const vpmLocal = gl.getUniformLocation(this.prg, 'uViewportMatrix');
+	// 		gl.uniformMatrix4fv(vpmLocal, false, this._vp.vpmat4);
+	// 		this._vp.vpMatIsModified = false;
+	// 		return true;
+	// 	}
+	// 	return false;
+	// }
+
+	private updateViewport(): boolean {
+		const gl = this.gl;
+		let result = false;
+		if(this._vp.vpScaleIsModified) {
+			const vpScaleLocal = gl.getUniformLocation(this.prg, 'uViewportScale');
+			gl.uniform2fv(vpScaleLocal, this._vp.vpScaleVec2);
+			this._vp.vpScaleIsModified = false;
+			result = true;
 		}
-		return false;
+
+		if(this._vp.vpTranslationIsModified) {
+			const vpTranslationLocal = gl.getUniformLocation(this.prg, 'uViewportTranslation');
+			gl.uniform2fv(vpTranslationLocal, this._vp.vpTranslationVec2);
+			this._vp.vpTranslationIsModified = false;
+			result = true;
+		}
+
+		return result;
 	}
 
 	// 更新坐标变换矢量

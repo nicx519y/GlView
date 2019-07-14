@@ -1,7 +1,7 @@
 import { Engine } from './engine';
 import { Mesh, RectMesh, OneWayArrowMesh, TwoWayArrowMesh } from './mesh';
 import { RenderUnit, RenderAttribute } from './render-unit';
-import { RenderObject } from './render-object';
+import { RenderObject, DisplayStatus } from './render-object';
 import { TextField } from './textfield';
 import { Arrow } from './arrow';
 import { TextureFactroy } from './texture';
@@ -39,7 +39,13 @@ export class Generator implements GeneratorInterface {
 	}
 
 	public set opacity(o: number) {
-		this.originUnit.fill(RenderAttribute.OPACITY, o);
+		this.originUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 0);
+		this.borderUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 0);
+	}
+
+	public set display(n: DisplayStatus) {
+		this.originUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [n], 1);
+		this.borderUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [n], 1);
 	}
 
 	public set translate(offset: number[]) {
@@ -54,23 +60,26 @@ export class Generator implements GeneratorInterface {
 
 export class TextFieldGenerator implements GeneratorInterface {
 	private _engine: Engine;
-	private g: Generator;
-	constructor(engine: Engine, index: number = 0) {
+	private gs: Generator[] = [];
+	constructor(engine: Engine, maxLen: number = 0, textSpace: number = 0, index: number = 0) {
 		this._engine = engine;
-		this.g = new Generator(engine, new RectMesh(), index);
+		// this.g = new Generator(engine, new RectMesh(), index);
+		for(let i = 0; i < maxLen; i ++) {
+			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (textSpace + 8) / 10, 0)));
+		}
 	}
 
 	public instance(): TextField {
-		return new TextField(this.g);
+		return new TextField(this._engine, this.gs);
 	}
 	
 	public destroy() {
-		this.g.destroy();
-		this.g = null;
+		this.gs.forEach(g => g.destroy());
+		this.gs = [];
 	}
 
 	public clear() {
-		this.g.clear();
+		this.gs.forEach(g => g.clear());
 	}
 
 	public get engine(): Engine {

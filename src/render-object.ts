@@ -1,6 +1,6 @@
 import { Engine } from './engine';
 import { RenderAttribute, RenderUnit } from './render-unit';
-import { ImageTexture } from './texture';
+import { ImageTexture, ImageTextureEvent } from './texture';
 import { IdCreator, arrayEqual, numberClamp } from './utils';
 import { ComponentInterface } from './interfaces';
 import { SearchableObject } from './searchable-object';
@@ -12,6 +12,11 @@ export const enum OutViewportStatus {
 	BOTH = 3,
 }
 
+export const enum DisplayStatus {
+	NONE = 0,
+	DISPLAY = 1,
+}
+
 export class RenderObject extends SearchableObject implements ComponentInterface {
 	private _id: string;
 	private _originUnit: RenderUnit;
@@ -21,7 +26,6 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	private _isAdded: boolean;
 	private _isBorderAdded: boolean;
 	private _texture: ImageTexture;
-	private _textureHandler: Function;
 	private _needReset: boolean = false;
 
 	private _attribs = {
@@ -38,7 +42,10 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'borderColor': [0,0,0,0],
 		'borderDashed': 0,
 		'opacity': 1,
+		'display': DisplayStatus.DISPLAY,
 		'outViewportStatus': OutViewportStatus.NONE,
+		'attachViewportScale': true,
+		'attachViewportTranslation': true,
 	};
 
 	private _attriblist = [
@@ -58,7 +65,10 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		'textBorderColor',
 
 		'opacity',
-		'notFollowViewport',
+		'display',
+		'outViewportStatus',
+		'attachViewportScale',
+		'attachViewportTranslation',
 	];
 
 	constructor(originUnit: RenderUnit, borderUnit: RenderUnit) {
@@ -66,7 +76,6 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		this._originUnit = originUnit;
 		this._borderUnit = borderUnit;
 		this._id = IdCreator.createId();
-		this._textureHandler = t => this.changeUV(t);
 	}
 
 	public get id(): string {
@@ -88,9 +97,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this.updateStatus();
 			this.searchable && this.registToSearcher();
 		}
-		if(!this._isBorderAdded && this.borderWidth > 0) {
-			this.addBorder();
-		}
+		this.borderWidth = this.borderWidth;
 		return this;
 	}
 
@@ -170,7 +177,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	public set texture(texture: ImageTexture) {
 		if(!texture || !(texture instanceof ImageTexture)) {
 			if(this._texture && (this._texture instanceof ImageTexture)) {
-				this._texture.unbind(this._textureHandler);
+				this._texture.removeEventListener(ImageTextureEvent.UPDATE, this.changeUV, this);
 				this._texture = null;
 			}
 			this.changeUV(null);
@@ -183,11 +190,11 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			t instanceof ImageTexture && 
 			arrayEqual([t.u,t.v,t.width,t.height], [tt.u,tt.v,tt.width,tt.height])) return;
 
-		(this._texture instanceof ImageTexture) && this._texture.unbind(this._textureHandler);
+		(this._texture instanceof ImageTexture) && this._texture.removeEventListener(ImageTextureEvent.UPDATE, this.changeUV, this);;
 		
 		this._texture = texture;
 		this.changeUV(this._texture);
-		this._texture.bind(this._textureHandler);
+		this._texture.addEventListener(ImageTextureEvent.UPDATE, this.changeUV, this);
 	}
 
 	public set borderWidth(width: number) {
@@ -309,15 +316,29 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 	public set opacity(n: number) {
 		let op = numberClamp(0, 1, n);
-		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY, [op]);
+		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [op], 0);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [op], 0);
 		this._attribs['opacity'] = op;
 	}
 
 	public get opacity(): number {
 		if(this._isAdded) {
-			return this._originUnit.getAttribute(this._originId, RenderAttribute.OPACITY, 0, 1)[0];
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, 0, 1)[0];
 		}
 		return this._attribs['opacity'];
+	}
+
+	public set display(n: DisplayStatus) {
+		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [n], 1);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [n], 1);
+		this._attribs['display'] = n;
+	}
+
+	public get display(): DisplayStatus {
+		if(this._isAdded) {
+			return this._originUnit.getAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, 1)[0] as DisplayStatus;
+		}
+		return this._attribs['display'] as DisplayStatus;
 	}
 
 	public set outViewportStatus(status: OutViewportStatus) {
@@ -330,7 +351,35 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		if(this._isAdded) {
 			return this._originUnit.getAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, 3, 1)[0] as OutViewportStatus;
 		}
-		return this._attribs['outViewportStatus'];
+		return this._attribs['outViewportStatus'] as OutViewportStatus;
+	}
+
+	public set attachViewportScale(n: boolean) {
+		const o = n? 1: 0;
+		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 2);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 2);
+		this._attribs['attachViewportScale'] = n;
+	}
+
+	public get attachViewportScale() {
+		if(this._isAdded) {
+			return (this._originUnit.getAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, 2, 1)[0] == 1)? true: false;
+		}
+		return this._attribs['attachViewportScale'];
+	}
+
+	public set attachViewportTranslation(n: boolean) {
+		const o = n? 1: 0;
+		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 3);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 3);
+		this._attribs['attachViewportTranslation'] = n;
+	}
+
+	public get attachViewportTranslation() {
+		if(this._isAdded) {
+			return (this._originUnit.getAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, 3, 1)[0] == 1)? true: false;
+		}
+		return this._attribs['attachViewportTranslation'];
 	}
 
 	public getVertexPositions(expand: number = 0): number[] {
@@ -367,7 +416,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed], 2);
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.scale], 3);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY, [1], 0);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [1, 1], 0);
 
 			this._isBorderAdded = true;
 		}

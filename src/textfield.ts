@@ -1,9 +1,10 @@
 import { ImageTexture, TextureFactroy } from "./texture";
-import { RenderObject, OutViewportStatus } from "./render-object";
+import { RenderObject, OutViewportStatus, DisplayStatus } from "./render-object";
 import { Generator } from './generator';
 import { IdCreator, arrayEqual, isChinese, numberClamp } from "./utils";
 import { ComponentInterface } from "./interfaces";
 import { SearchableObject } from "./searchable-object";
+import { Engine } from './engine';
 
 export class TextField extends SearchableObject implements ComponentInterface {
 	private _id: string;
@@ -16,18 +17,26 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	private _borderWidth: number = 0;
 	private _borderColor: number[] = [0,0,0,0];
 	private _opacity: number = 1;
+	private _display: DisplayStatus = DisplayStatus.DISPLAY;
 	private _outViewportStatus: OutViewportStatus = OutViewportStatus.NONE;
+	private _attachViewportScale: boolean = true;
+	private _attachViewportTranslation: boolean = true;
 	
 	private _tf: TextureFactroy;
 	private _fontObjects: RenderObject[];
-	private _g: Generator;
+	private _gs: Generator[];
 
-	constructor(generator: Generator) {
-		super(generator.engine.searcher);
+	constructor(engine: Engine, generators: Generator[]) {
+		super(engine.searcher);
 		this._id = IdCreator.createId();
-		this._g = generator;
-		this._tf = generator.engine.textureFactroy;
+		this._gs = generators;
+		this._tf = engine.textureFactroy;
 		this._fontObjects = [];
+		this._gs.forEach(g => {
+			let obj = g.instance();
+			obj.isText = true;
+			this._fontObjects.push(obj);
+		});
 	}
 	
 	get id(): string {
@@ -41,6 +50,7 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	show(): TextField {
 		if(this._isShown) return this;
 		this._isShown = true;
+		this._fontObjects.forEach(v => v.show());
 		this.resetFonts();
 		this.searchable && this.registToSearcher();
 		return this;
@@ -49,7 +59,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	hide(): TextField {
 		if(!this._isShown) return this;
 		this._isShown = false;
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.hide());
 		this.deregistToSearcher();
 		return this;
 	}
@@ -129,6 +140,15 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		return this._opacity;
 	}
 
+	set display(n: DisplayStatus) {
+		this._display = n;
+		this.resetFonts();
+	}
+
+	get display(): DisplayStatus {
+		return this._display;
+	}
+
 	set outViewportStatus(status: OutViewportStatus) {
 		this._outViewportStatus = status;
 		this.resetFonts();
@@ -138,70 +158,61 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		return this._outViewportStatus;
 	}
 
+	set attachViewportScale(n: boolean) {
+		this._attachViewportScale = n;
+		this.resetFonts();
+	}
+
+	get attachViewportScale(): boolean {
+		return this._attachViewportScale;
+	}
+
+	set attachViewportTranslation(n: boolean) {
+		this._attachViewportTranslation = n;
+		this.resetFonts();
+	}
+
+	get attachViewportTranslation(): boolean {
+		return this._attachViewportTranslation;
+	}
+
 	private resetFonts() {
 		const len = this._text.length;
-		const nowLen = this._fontObjects.length;
 		const f = this._tf;
-		const g = this._g;
-		if(len > nowLen) {
-			let l = len - nowLen;
-			while(l > 0) {
-				this._fontObjects.push(g.instance());
-				l --;
-			}
-		} else if(len < nowLen) {
-			let l = nowLen - len;
-			while(l > 0) {
-				this._fontObjects.pop().hide();
-				l --;
-			}
-		}
+		const gs = this._gs;
 
 		this._fontObjects.forEach((v,k) => {
-			let text = this._text[k];
-
-			if(this._isShown) {
-				v.show();
+			if(k < len) {
+				let text = this._text[k];
+				v.backgroundColor = this._color;
+				v.opacity = this._opacity;
+				v.textBorderWidth = this._borderWidth;
+				v.textBorderColor = this._borderColor;
+				v.outViewportStatus = this._outViewportStatus;
+				v.attachViewportScale = this._attachViewportScale;
+				v.attachViewportTranslation = this._attachViewportTranslation;
+				v.display = this._display;
+				let texture = f.getFontTexture(text);
+				// console.log(texture, text)
+				if(!texture || !(texture instanceof ImageTexture)) {
+					console.error('Can not found ImageTexture of text: "'+text+'".');
+					return;
+				} else {
+					v.texture = texture;
+				}
 			} else {
-				v.hide();
+				v.display = DisplayStatus.NONE;
 			}
-
-			v.isText = true;
-			v.backgroundColor = this._color;
-			v.opacity = this._opacity;
-			v.textBorderWidth = this._borderWidth;
-			v.textBorderColor = this._borderColor;
-			v.outViewportStatus = this._outViewportStatus;
-			let texture = f.getFontTexture(text);
-			if(!texture || !(texture instanceof ImageTexture)) {
-				console.error('Can not found ImageTexture of text: "'+text+'".');
-				return;
-			} else {
-				v.texture = texture;
-			}
-			
 		});
 	}
 
 	private setFontsTranslation() {
-		const s = this._fontSize;
 		const offset = this._translation;
-		const space = (this._wordSpace - 25) / 100 * s;
+		const s = this._fontSize;
 		const half = 0.5*s;
-		const intIndent = s * 0.8;
-		let ox = half;
-		this._fontObjects.forEach((obj, k) => {
-			let x = ox;
-			if(k != 0) {
-				x += space;
-			}
-			if(!isChinese(this._text[k])) {
-				ox = x + intIndent;
-			} else {
-				ox = x + s;
-			}
-			obj.translation = [x + offset[0], offset[1]];
-			obj.size = [s, s];
+		this._fontObjects.forEach(v => {
+			v.size = [s, s];
+			v.translation = offset;
 		});
 	}
 

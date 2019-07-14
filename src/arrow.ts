@@ -1,4 +1,4 @@
-import { RenderObject, OutViewportStatus } from "./render-object";
+import { RenderObject, OutViewportStatus, DisplayStatus } from "./render-object";
 import { IdCreator } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 import { ComponentInterface } from "./interfaces";
@@ -81,8 +81,11 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 			this.borderColor = this.nobj.borderColor;
 			this.borderDashed = this.nobj.borderDashed;
 			this.opacity = this.nobj.opacity;
+			this.display = this.nobj.display;
 			this.backgroundColor = this.nobj.backgroundColor;
 			this.outViewportStatus = this.nobj.outViewportStatus;
+			this.attachViewportScale = this.nobj.attachViewportScale;
+			this.attachViewportTranslation = this.nobj.attachViewportTranslation;
 			this.setFromToAndWidth();
 		}
 	}
@@ -131,12 +134,36 @@ export class Arrow extends SearchableObject implements ComponentInterface {
 		return this.robj.opacity;
 	}
 
+	set display(n: DisplayStatus) {
+		this.robj.display = n;
+	}
+
+	get display(): DisplayStatus {
+		return this.robj.display as DisplayStatus;
+	}
+
 	set outViewportStatus(status: OutViewportStatus) {
 		this.robj.outViewportStatus = status;
 	}
 
 	get outViewportStatus(): OutViewportStatus {
 		return this.robj.outViewportStatus;
+	}
+
+	set attachViewportScale(n: boolean) {
+		this.robj.attachViewportScale = n;
+	}
+
+	get attachViewportScale() {
+		return this.robj.attachViewportScale;
+	}
+
+	set attachViewportTranslation(n: boolean) {
+		this.robj.attachViewportTranslation = n;
+	}
+
+	get attachViewportTranslation(): boolean {
+		return this.robj.attachViewportTranslation;
 	}
 
 	private setFromToAndWidth() {

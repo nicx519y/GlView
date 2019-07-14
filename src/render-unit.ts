@@ -31,7 +31,7 @@ export const enum RenderAttribute {
 	TRANSLATION_AND_ROTATION = 'translationAndRotation',
 	IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE = 'isTextAndBorderWidthAndDashedAndScale',
 	TEXT_BORDER_COLOR = 'textBorderColor',
-	OPACITY = 'opacity',
+	OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS = 'opacityAndDisplayAndVpScaleAndVpTrans',
 }
 
 export var RenderAttributeStride: Map<RenderAttribute, number> = new Map();
@@ -41,7 +41,7 @@ RenderAttributeStride.set(RenderAttribute.UV_RECT, 4);
 RenderAttributeStride.set(RenderAttribute.TRANSLATION_AND_ROTATION, 4);
 RenderAttributeStride.set(RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, 4);
 RenderAttributeStride.set(RenderAttribute.TEXT_BORDER_COLOR, 4);
-RenderAttributeStride.set(RenderAttribute.OPACITY, 1);
+RenderAttributeStride.set(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, 4);
 
 export const RenderAttributeList = [
 	RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT,
@@ -50,7 +50,7 @@ export const RenderAttributeList = [
 	RenderAttribute.TRANSLATION_AND_ROTATION,
 	RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE,
 	RenderAttribute.TEXT_BORDER_COLOR,
-	RenderAttribute.OPACITY,
+	RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS,
 ];
 
 

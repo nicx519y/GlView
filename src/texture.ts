@@ -1,5 +1,6 @@
 import { GrowingPacker, PNode } from './packer';
 import * as TinySDF from 'tiny-sdf';
+import { EventDispatcher } from './events';
 
 const TextureConfig = {
 	MAX_WIDTH : Math.pow(2, 13),
@@ -93,11 +94,10 @@ export class TextureFactroy {
 			FontConfig.fontWeight
 		);
 		const size = sdf.size;
-		
 		for(let i = 0; i < chars.length; i ++) {
 			let char = chars[i];
 			const txt = this.fontMaps.get(char);
-			// 步允许重复导入
+			// 不允许重复导入
 			if(txt && txt instanceof ImageTexture) {
 				continue;
 			}
@@ -179,16 +179,19 @@ export class TextureFactroy {
 
 }
 
-export class ImageTexture {
+export const enum ImageTextureEvent {
+	UPDATE = 'update'
+}
+
+export class ImageTexture extends EventDispatcher {
 	u = 0;
 	v = 0;
 	width = 0;
 	height = 0;
 	index = 0;
 	isReady: boolean = false;
-	private handlers: Function[] = [];
 	constructor() {
-		
+		super()
 	}
 	update(u: number, v: number, width: number, height: number, index: number = -1) {
 		const mw = TextureConfig.MAX_WIDTH;
@@ -200,16 +203,6 @@ export class ImageTexture {
 		if(index >= 0) {
 			this.index = index;
 		}
-		this.handlers.forEach(handler => handler(this));
-	}
-	bind(updateHandler: Function) {
-		this.handlers.push(updateHandler);
-	}
-	unbind(updateHandler: Function) {
-		this.handlers.forEach((v, i) => {
-			if(v == updateHandler) {
-				this.handlers.splice(i, 1);
-			}
-		});
+		this.dispatchEvent(ImageTextureEvent.UPDATE, this);
 	}
 }

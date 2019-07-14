@@ -74,6 +74,8 @@ function main() {
 	let uvlist = [];
 	let objlist = [];
 	vp.setBackgroundColor([186, 186, 186, 255]);
+
+	window['vp'] = vp;
 	
 	canvas.addEventListener('mousewheel', wheelHandler);
 	canvas.addEventListener('mousedown', dragStart);
@@ -108,6 +110,7 @@ function main() {
 		screenshotTest();
 
 		let r = new ViewportRulerComponent(engine);
+		r.create();
 
 		// const g = new Generator(engine, new RectMesh());
 		// const obj = g.instance().show();
@@ -256,7 +259,7 @@ function main() {
 
 	function drawText() {
 		
-		const g: TextFieldGenerator = new TextFieldGenerator(engine);
+		const g: TextFieldGenerator = new TextFieldGenerator(engine, 4);
 		const t: TextField = g.instance();
 		t.show();
 		t.text = '哈哈哈';
@@ -269,6 +272,8 @@ function main() {
 
 		const tt: TextField = g.instance();
 		tt.show();
+		// tt.attachViewportScale = false;
+		// tt.outViewportStatus = OutViewportStatus.Y;
 		tt.text = "982";
 		tt.fontSize = 20;
 		tt.color = [0,0,0,255];
@@ -401,15 +406,16 @@ function main() {
 	}
 
 	function clickHandler(evt) {
-		if(!activeObj) {
-			let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-			const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
-			// console.log(objArr);
-			if(!objArr || objArr.length <= 0) return;
-			activeObj = objs.find(o => o.id == objArr[0].id)
-		} else {
-			activeObj = null;
-		}
+		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		// if(!activeObj) {
+		// 	let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+		// 	const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
+		// 	// console.log(objArr);
+		// 	if(!objArr || objArr.length <= 0) return;
+		// 	activeObj = objs.find(o => o.id == objArr[0].id)
+		// } else {
+		// 	activeObj = null;
+		// }
 	}
 
 	function move2Handler(evt) {

@@ -34,6 +34,7 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		this._gs.forEach(g => {
 			let obj = g.instance();
 			obj.isText = true;
+			obj.display = DisplayStatus.NONE;
 			this._fontObjects.push(obj);
 		});
 	}
@@ -66,8 +67,17 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set text(str: string) {
 		this._text = str;
-		this.resetFonts();
-		this.setFontsTranslation();
+		// this.resetFonts();
+		const f = this._tf;
+		const len = str.length;
+		this._fontObjects.forEach((v, k) => {
+			if(k < len) {
+				v.display = DisplayStatus.DISPLAY;
+				v.texture = f.getFontTexture(str[k]);
+			} else {
+				v.display = DisplayStatus.NONE;
+			}
+		});
 	}
 
 	get text(): string {
@@ -76,7 +86,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set translation(offset: number[]) {
 		this._translation = offset;
-		this.setFontsTranslation();
+		// this.setFontsTranslation();
+		this._fontObjects.forEach(v => v.translation = offset);
 		this.searchable && this.registToSearcher();
 	}
 
@@ -86,7 +97,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set fontSize(size: number) {
 		this._fontSize = size;
-		this.setFontsTranslation();
+		// this.setFontsTranslation();
+		this._fontObjects.forEach(v => v.size = [size, size]);
 		this.searchable && this.registToSearcher();
 	}
 
@@ -96,7 +108,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set color(color: number[]) {
 		this._color = color;
-		this.resetFonts();	
+		// this.resetFonts();	
+		this._fontObjects.forEach(v => v.backgroundColor = color);
 	}
 
 	get color(): number[] {
@@ -104,9 +117,10 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	}
 
 	set borderWidth(n: number) {
-		if(this._borderWidth == n) return;
+		// if(this._borderWidth == n) return;
 		this._borderWidth = n;
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.textBorderWidth = n);
 	}
 
 	get borderWidth(): number {
@@ -114,14 +128,16 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	}
 
 	set borderColor(color: number[]) {
-		if(arrayEqual(this._borderColor, color)) return;
+		// if(arrayEqual(this._borderColor, color)) return;
 		this._borderColor = color;
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.textBorderColor = color);
 	}
 
 	set opacity(n: number) {
 		this._opacity = numberClamp(0, 1, n);
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.opacity = this._opacity);
 	}
 
 	get opacity() {
@@ -130,7 +146,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set display(n: DisplayStatus) {
 		this._display = n;
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.display = n);
 	}
 
 	get display(): DisplayStatus {
@@ -139,7 +156,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set outViewportStatus(status: OutViewportStatus) {
 		this._outViewportStatus = status;
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.outViewportStatus = status);
 	}
 
 	get outViewportStatus(): OutViewportStatus {
@@ -148,7 +166,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set attachViewportScale(n: boolean) {
 		this._attachViewportScale = n;
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.attachViewportScale = n);
 	}
 
 	get attachViewportScale(): boolean {
@@ -157,7 +176,8 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	set attachViewportTranslation(n: boolean) {
 		this._attachViewportTranslation = n;
-		this.resetFonts();
+		// this.resetFonts();
+		this._fontObjects.forEach(v => v.attachViewportTranslation = n);
 	}
 
 	get attachViewportTranslation(): boolean {
@@ -170,37 +190,21 @@ export class TextField extends SearchableObject implements ComponentInterface {
 		const gs = this._gs;
 
 		this._fontObjects.forEach((v,k) => {
-			if(k < len) {
-				let text = this._text[k];
-				v.backgroundColor = this._color;
-				v.opacity = this._opacity;
-				v.textBorderWidth = this._borderWidth;
-				v.textBorderColor = this._borderColor;
-				v.outViewportStatus = this._outViewportStatus;
-				v.attachViewportScale = this._attachViewportScale;
-				v.attachViewportTranslation = this._attachViewportTranslation;
-				v.display = this._display;
+			let text = this._text[k];
+			v.size = [this._fontSize, this._fontSize];
+			v.backgroundColor = this._color;
+			v.opacity = this._opacity;
+			v.textBorderWidth = this._borderWidth;
+			v.textBorderColor = this._borderColor;
+			v.outViewportStatus = this._outViewportStatus;
+			v.attachViewportScale = this._attachViewportScale;
+			v.attachViewportTranslation = this._attachViewportTranslation;
+			v.display = this._display;
+			v.translation = this._translation;
+			if(text) {
 				let texture = f.getFontTexture(text);
-				// console.log(texture, text)
-				if(!texture || !(texture instanceof ImageTexture)) {
-					console.error('Can not found ImageTexture of text: "'+text+'".');
-					return;
-				} else {
-					v.texture = texture;
-				}
-			} else {
-				v.display = DisplayStatus.NONE;
+				v.texture = texture;
 			}
-		});
-	}
-
-	private setFontsTranslation() {
-		const offset = this._translation;
-		const s = this._fontSize;
-		const half = 0.5*s;
-		this._fontObjects.forEach(v => {
-			v.size = [s, s];
-			v.translation = offset;
 		});
 	}
 

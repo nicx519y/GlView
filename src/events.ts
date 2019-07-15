@@ -40,16 +40,16 @@ export class EventDispatcher
             arr = [];
             this.eventList[type] = arr;
         }
-        else
-        {
-            arr.forEach(element => 
-            {
-                if(element[0] == listener && element[1] == thisObject)
-                {
-                    return;
-                }
-            });
-        }
+        // else
+        // {
+        //     arr.forEach(element => 
+        //     {
+        //         if(element[0] == listener && element[1] == thisObject)
+        //         {
+        //             return;
+        //         }
+        //     });
+        // }
         arr.push([listener, thisObject]);
     }
 

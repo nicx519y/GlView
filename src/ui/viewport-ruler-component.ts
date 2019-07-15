@@ -174,6 +174,7 @@ export class ViewportRulerComponent {
 			const mids = (mins + maxs) * 0.4;
 			const minu = this.unitMin;
 			const maxu = this.unitMax;
+
 			for(let i = minu; i <= maxu; i ++) {
 				if(i % pt == 0) {
 					ticks[i].display = DisplayStatus.DISPLAY;
@@ -243,6 +244,23 @@ export class ViewportRulerComponent {
 		} else {
 			return this.tickSizeMax - vpsize[0]*0.5;
 		}
+	}
+	
+	/**
+	 * 获取屏幕内的单位
+	 */
+	private getDisplayUnitsRange(): number[] {
+		const vp = this._g.engine.viewport;
+		const vpSize = vp.getViewportSize();
+		const min = vp.changeCoordinateFromScreen(0, vpSize[1]).slice(0, 2);
+		const max = vp.changeCoordinateFromScreen(vpSize[0], 0).slice(0, 2);
+		let range = [];
+		if(this.axis == ViewportRulerAxis.X) {
+			range = [min[0], max[0]];
+		} else {
+			range = [min[1], max[1]];
+		}
+		return range.map(v => Math.floor(v / this.pixelPerUnit));
 	}
 	
 }

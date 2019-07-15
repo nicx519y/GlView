@@ -3,8 +3,8 @@ import * as TinySDF from 'tiny-sdf';
 import { EventDispatcher } from './events';
 
 const TextureConfig = {
-	MAX_WIDTH : Math.pow(2, 13),
-	MAX_HEIGHT : Math.pow(2, 13),
+	MAX_WIDTH : Math.pow(2, 11),
+	MAX_HEIGHT : Math.pow(2, 11),
 }
 
 const FontConfig = {

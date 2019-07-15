@@ -108,8 +108,8 @@ function main() {
 		engine.render();
 		rectTest(textures[0]);
 		drawText();
-		screenshotTest();
-		rulerTest();
+		// screenshotTest();
+		
 
 		// const g = new Generator(engine, new RectMesh());
 		// const obj = g.instance().show();
@@ -136,6 +136,9 @@ function main() {
 		// 		drawRects(countEach, textures[i], i * w, j * w, w);
 		// 	}
 		// }
+
+
+		rulerTest();
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 

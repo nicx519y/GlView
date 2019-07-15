@@ -110,10 +110,10 @@ function main() {
 		drawText();
 		screenshotTest();
 
-		let r1 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.X, unitMin: 0, unitMax: 3000 });
+		let r1 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.X, unitMin: -500, unitMax: 3000 });
 		r1.create();
 
-		let r2 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.Y, unitMin: 0, unitMax: 2000 });
+		let r2 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.Y, unitMin: -500, unitMax: 2000 });
 		r2.create();
 
 		// const g = new Generator(engine, new RectMesh());

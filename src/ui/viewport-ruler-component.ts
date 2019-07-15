@@ -76,7 +76,7 @@ export class ViewportRulerComponent {
 		} else {
 			this._g = new Generator(engine, new RectMesh(0.5, 0), index, index);
 		}
-		this._tg = new TextFieldGenerator(engine, 4, -4, TextFieldVerticalAlign.BOTTOM, index);
+		this._tg = new TextFieldGenerator(engine, this.unitMax.toString().length, -4, TextFieldVerticalAlign.BOTTOM, index);
 
 		this.autoPosition();
 		

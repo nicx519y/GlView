@@ -135,8 +135,10 @@ export class Viewport extends EventDispatcher {
 	}
 
 	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
-		this.scaleOrigin(scale, originX, originY);
+		this.resetTranslation();
+		this._vpScaleVec2.set([1,1]);
 		this.translate(offsetX, offsetY);
+		this.scaleOrigin(scale, originX, originY);
 	}
 
 	get translation(): Float32Array {

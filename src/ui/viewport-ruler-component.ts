@@ -102,6 +102,10 @@ export class ViewportRulerComponent {
 
 	public autoPosition() {
 		this.displayPosition = this.getAutoPosition();
+		if(this.added) {
+			this.createTicks();
+			this.checkTicks(true);
+		}
 	}
 	
 	private createTick(): RenderObject {

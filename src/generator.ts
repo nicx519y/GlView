@@ -61,11 +61,11 @@ export class Generator implements GeneratorInterface {
 export class TextFieldGenerator implements GeneratorInterface {
 	private _engine: Engine;
 	private gs: Generator[] = [];
-	constructor(engine: Engine, maxLen: number = 0, textSpace: number = 0, index: number = 0) {
+	constructor(engine: Engine, maxLen: number = 0, wordSpace: number = 0, index: number = 0) {
 		this._engine = engine;
 		// this.g = new Generator(engine, new RectMesh(), index);
 		for(let i = 0; i < maxLen; i ++) {
-			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (textSpace + 8) / 10, 0)));
+			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (wordSpace + 8) / 10, 0)));
 		}
 	}
 

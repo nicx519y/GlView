@@ -31,12 +31,12 @@ export class ViewportRulerComponent {
 	private _displayMaxGap: number = 20;		//显示的最大刻度间隔 单位 像素
 	private _largeTickStep: number = 10;		//多少刻度显示一个大刻度
 
-	private _tickSizeMin: number = 5;			//长刻度长度
-	private _tickSizeMax: number = 20;				//短刻度长度
+	private _tickSizeMin: number = 3;			//长刻度长度
+	private _tickSizeMax: number = 18;				//短刻度长度
 	private _tickWidth: number = 1;				//刻度的宽度
 	private _tickColor: number[] = [0,0,0,255];		//刻度的颜色
 
-	private _fontSize: number = 16;
+	private _fontSize: number = 14;
 	private _fontColor: number[] = [0,0,0,255];
 	private _fontBorderWidth: number = 0;
 	private _fontBorderColor: number[] = [255,255,255,255];
@@ -88,6 +88,7 @@ export class ViewportRulerComponent {
 		const texts = this._texts;
 		const pu = this._pixelPerUnit;
 		const dp = this._displayPosition;
+		const fd = dp - this._tickSizeMin - this._fontSize * 0.5 - 2;
 		for(let i = this._minUnit; i <= this._maxUnit; i ++) {
 			if(!ticks[i]) {
 				ticks[i] = this.createTick();
@@ -98,7 +99,7 @@ export class ViewportRulerComponent {
 				if(!texts[i]) {
 					texts[i] = this.createText();
 				}
-				texts[i].translation = [pu * i + 2, dp - 15];
+				texts[i].translation = [pu * i + 3, fd];
 				texts[i].text = i.toString();
 			}
 		}
@@ -129,12 +130,12 @@ export class ViewportRulerComponent {
 			for(let i = this._minUnit; i <= this._maxUnit; i ++) {
 				if(i % pt == 0) {
 					ticks[i].display = DisplayStatus.DISPLAY;
-					const d = i/pt;
-					if(d % ts != 0) {
+					const d = i/pt%ts;
+					if(d != 0) {
 						ticks[i].size = [this._tickWidth, mins];
 						texts[i] && (texts[i].display = DisplayStatus.NONE);
 
-						if(d % ts == 5) {
+						if(d == 5) {
 							ticks[i].size = [this._tickWidth, mids];
 						}
 

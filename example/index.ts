@@ -259,28 +259,22 @@ function main() {
 
 	function drawText() {
 		
-		const g: TextFieldGenerator = new TextFieldGenerator(engine, 4);
+		const g: TextFieldGenerator = new TextFieldGenerator(engine, 4, 1);
 		const t: TextField = g.instance();
 		t.show();
 		t.text = '哈哈哈';
 		t.fontSize = 40;
 		t.color = [255,0,0,255];
 		t.translation = [200, 400];
-		t.wordSpace = 8;
 		t.borderWidth = 2;
 		t.borderColor = [255,255,0,255];
 
 		const tt: TextField = g.instance();
 		tt.show();
-		// tt.attachViewportScale = false;
-		// tt.outViewportStatus = OutViewportStatus.Y;
 		tt.text = "982";
 		tt.fontSize = 20;
 		tt.color = [0,0,0,255];
 		tt.translation = [0, 500];
-		tt.wordSpace = 0;
-		// tt.borderWidth = 0;
-		// tt.borderColor = [0,0,0,255];
 
 		tt.text = '星际争霸';
 	}

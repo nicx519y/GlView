@@ -13,7 +13,6 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	private _fontSize: number = 12;
 	private _translation: number[] = [0, 0];
 	private _color: number[] = [255,255,255,255];
-	private _wordSpace: number = 10;
 	private _borderWidth: number = 0;
 	private _borderColor: number[] = [0,0,0,0];
 	private _opacity: number = 1;
@@ -102,17 +101,6 @@ export class TextField extends SearchableObject implements ComponentInterface {
 
 	get color(): number[] {
 		return this._color;
-	}
-
-	set wordSpace(n: number) {
-		if(this._wordSpace == n) return;
-		this._wordSpace = n;
-		this.setFontsTranslation();
-		this.searchable && this.registToSearcher();
-	}
-
-	get wordSpace(): number {
-		return this._wordSpace;
 	}
 
 	set borderWidth(n: number) {

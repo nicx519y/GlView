@@ -24,6 +24,8 @@ export class Viewport extends EventDispatcher {
 	private _bgColor: number[];
 	private _vpWidth: number;
 	private _vpHeight: number;
+	private tempMat4: Float32Array = mat4.create();
+	private tempVec3: Float32Array = vec3.create();
 	public cvMatIsModified: boolean = true;
 	public vpScaleIsModified: boolean = true;
 	public vpTranslationIsModified: boolean = true;
@@ -35,7 +37,7 @@ export class Viewport extends EventDispatcher {
 		const height = canvas.height;
 		this._bgColor = [0,0,0,1];
 		this._vpScaleVec2 = vec2.fromValues(1, 1);
-		this._cvec2 = vec2.fromValues(1/width*2, 1/height*2, 1);
+		this._cvec2 = vec2.fromValues(1/width*2, 1/height*2);
 		this.resetTranslation();
 	}
 
@@ -67,7 +69,6 @@ export class Viewport extends EventDispatcher {
 	 * @param height 高度
 	 */
 	setViewportSize(width: number, height: number, setCanvas: boolean = true) {
-
 		this._vpWidth = width;
 		this._vpHeight = height;
 
@@ -77,10 +78,10 @@ export class Viewport extends EventDispatcher {
 
 		gl.viewport(0, 0, w, h);
 
-		let cvVec2 = this._cvec2;
-		cvVec2.set([1/width*2, 1/height*2], 0);
-		this.cvMatIsModified = true;
+		this._cvec2.set([1/width*2, 1/height*2]);
 
+		this.cvMatIsModified = true;
+		
 		if(setCanvas) {
 			const canvas = gl.canvas;
 			canvas.width = w;
@@ -104,7 +105,9 @@ export class Viewport extends EventDispatcher {
 		scale = numberClamp(MIN_SCALE, MAX_SCALE, scale);
 		const vpScale = this._vpScaleVec2;
 		const s = this.scale - scale;
-		vec2.scale(vpScale, vpScale, scale/this.scale);
+		const ms = scale/this.scale;
+		vpScale[0] *= ms;
+		vpScale[1] *= ms;
 		this.translate(px*s, py*s);
 		this.vpScaleIsModified = true;
 		dispatch && this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
@@ -125,18 +128,13 @@ export class Viewport extends EventDispatcher {
 		const canvas = this._gl.canvas;
 		const width = canvas.width;
 		const height = canvas.height;
-		const vpTranslation = this._vpTranslationVec2;
-		//Y 轴反转
-		const p = vec3.fromValues(dx * RATIO / width * 2, dy * RATIO / height * 2, 0);
-		// 转化为归一化坐标
-		vec2.add(vpTranslation, vpTranslation, p);
+		this._vpTranslationVec2[0] += dx * RATIO / width * 2;
+		this._vpTranslationVec2[1] += dy * RATIO / height * 2;
 		this.vpTranslationIsModified = true;
 		dispatch && this.dispatchEvent(ViewportEvent.TRANSLATION_CHANGE);
 	}
 
 	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
-		this._vpScaleVec2 = vec2.fromValues(1, 1);
-		this._vpTranslationVec2 = vec2.fromValues(0, 0);
 		this.scaleOrigin(scale, originX, originY);
 		this.translate(offsetX, offsetY);
 	}
@@ -151,20 +149,43 @@ export class Viewport extends EventDispatcher {
 	 * @param y 
 	 * @param z 
 	 */
-	changeCoordinateFromScreen(x: number, y: number, z: number = 0) {
-		const scaleVpMat = mat4.fromScaling(mat4.create(), vec3.fromValues(this._vpScaleVec2[0], this._vpScaleVec2[1], 1));
-		const transVpMat = mat4.fromTranslation(mat4.create(), vec3.fromValues(this._vpTranslationVec2[0], this._vpTranslationVec2[1], 0));
-		const vpmat = mat4.mul(mat4.create(), transVpMat, scaleVpMat);
+	changeCoordinateFromScreen(x: number, y: number): Float32Array {
+		const tvec = this.tempVec3;
+		const tmat = this.tempMat4;
+
+		mat4.identity(tmat);
+		tvec.set([this._vpTranslationVec2[0], this._vpTranslationVec2[1], 0]);
+		mat4.translate(tmat, tmat, tvec);
+		tvec.set([this._vpScaleVec2[0], this._vpScaleVec2[1], 1]);
+		mat4.scale(tmat, tmat, tvec);
+
 		const canvas = this._gl.canvas;
 		const w = canvas.width/RATIO/2;
 		const h = canvas.height/RATIO/2;
-		let invertMat = mat4.create();
-		mat4.invert(invertMat, vpmat);
-		let v:Float32Array = vec3.fromValues(x/w - 1, - y/h + 1, z);
-		vec3.transformMat4(v, v, invertMat);
-		vec3.mul(v, v, vec3.fromValues(w, h, 1));
-		return v;
+		mat4.invert(tmat, tmat);
+
+		tvec.set([x/w - 1, - y/h + 1, 0]);
+		vec3.transformMat4(tvec, tvec, tmat);
+		vec3.mul(tvec, tvec, vec3.fromValues(w, h, 1));
+		return tvec.subarray(0, 2);
 	}
+
+	// changeCoordinateFromScreen(x: number, y: number, z: number = 0) {
+	// 	const scaleVpMat = mat4.fromScaling(mat4.create(), vec3.fromValues(this._vpScaleVec2[0], this._vpScaleVec2[1], 1));
+	// 	const transVpMat = mat4.fromTranslation(mat4.create(), vec3.fromValues(this._vpTranslationVec2[0], this._vpTranslationVec2[1], 0));
+	// 	const vpmat = mat4.mul(mat4.create(), transVpMat, scaleVpMat);
+	// 	const canvas = this._gl.canvas;
+	// 	const w = canvas.width/RATIO/2;
+	// 	const h = canvas.height/RATIO/2;
+	// 	let invertMat = mat4.create();
+	// 	mat4.invert(invertMat, vpmat);
+	// 	let v:Float32Array = vec3.fromValues(x/w - 1, - y/h + 1, z);
+
+	// 	// tvec.set([x/w - 1, - y/h + 1, 0]);
+	// 	vec3.transformMat4(v, v, invertMat);
+	// 	vec3.mul(v, v, vec3.fromValues(w, h, 1));
+	// 	return v;
+	// }
 
 	get cvec2(): Float32Array {
 		return this._cvec2;

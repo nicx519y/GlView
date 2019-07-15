@@ -1,7 +1,7 @@
 import { ImageTexture, TextureFactroy } from "./texture";
 import { RenderObject, OutViewportStatus, DisplayStatus } from "./render-object";
 import { Generator } from './generator';
-import { IdCreator, arrayEqual, isChinese, numberClamp } from "./utils";
+import { IdCreator, arrayEqual, isChinese, numberClamp } from './utils';
 import { ComponentInterface } from "./interfaces";
 import { SearchableObject } from "./searchable-object";
 import { Engine } from './engine';

@@ -58,14 +58,21 @@ export class Generator implements GeneratorInterface {
 	}
 }
 
+export const enum TextFieldVerticalAlign {
+	TOP = 0,
+	MIDDLE = 1,
+	BOTTOM = 2,
+}
+
 export class TextFieldGenerator implements GeneratorInterface {
 	private _engine: Engine;
 	private gs: Generator[] = [];
-	constructor(engine: Engine, maxLen: number = 0, wordSpace: number = 0, index: number = 0) {
+	constructor(engine: Engine, maxLen: number = 0, wordSpace: number = 0, verticalAlign: TextFieldVerticalAlign = TextFieldVerticalAlign.MIDDLE, index: number = 0) {
 		this._engine = engine;
+		const align = - verticalAlign * 0.5 + 0.5;
 		// this.g = new Generator(engine, new RectMesh(), index);
 		for(let i = 0; i < maxLen; i ++) {
-			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (wordSpace + 8) / 10, 0)));
+			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (wordSpace + 8) / 10, align)));
 		}
 	}
 

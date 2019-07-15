@@ -200,22 +200,19 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	public set borderWidth(width: number) {
 		if(this._isBorderAdded && width == this._attribs.borderWidth) return;
 		
-		const data = [width];
-		if(width > 0 && (!this._isBorderAdded || this.borderWidth <= 0)) {
-			this.addBorder();
-		}
+		this._attribs['borderWidth'] = width;
 
-		if(this._isBorderAdded && width <= 0 && this.borderWidth > 0) {
-			this.removeBorder();
-			return;
-		}
+		const data = [width];
 
 		if(this._isBorderAdded) {
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, data, 2);
-			this.borderColor = this.borderColor;
+			if(width > 0) {
+				this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, data, 2);
+			} else {
+				this.removeBorder();
+			}
+		} else if(width > 0) {
+			this.addBorder();
 		}
-
-		this._attribs['borderWidth'] = width;
 	}
 
 	public get borderWidth(): number {
@@ -254,9 +251,10 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 	public set vertexOffsetValue(value: number[]) {
 		// if(!this._needReset && arrayEqual(value, this._attribs['vertexOffsetValue'])) return;
-		this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, value);
-		this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, value);
-		this._attribs['vertexOffsetValue'] = value;
+		const v = value.slice(0, 2);
+		this._originUnit.setAttribute(this._originId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, v);
+		this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, v);
+		this._attribs['vertexOffsetValue'] = v;
 		this.searchable && this.registToSearcher();
 	}
 
@@ -409,14 +407,15 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 		if(!this._isBorderAdded) {
 			this._borderId = this._borderUnit.add();
 
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, this.translation, 0);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.rotation], 2);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, this.vertexOffsetValue, 0);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [this.borderWidth], 2);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor, 0);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed], 2);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.scale], 3);
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [1, 1], 0);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, [this.translation[0], this.translation[1], this.rotation], 0);
+
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [this.vertexOffsetValue[0], this.vertexOffsetValue[1], this.borderWidth, this.outViewportStatus], 0);
+
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor.map(v => v/255), 0);
+
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed, this.scale], 2);
+
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [this.opacity, this.display, this.attachViewportScale? 1: 0, this.attachViewportTranslation? 1: 0], 0);
 
 			this._isBorderAdded = true;
 		}

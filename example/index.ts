@@ -21,6 +21,7 @@ import {
 	Screenshot,
 	OutViewportStatus,
 	ViewportRulerComponent,
+	ViewportRulerAxis,
 } from '../src';
 
 
@@ -109,8 +110,11 @@ function main() {
 		drawText();
 		screenshotTest();
 
-		let r = new ViewportRulerComponent(engine);
-		r.create();
+		let r1 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.X, unitMin: 0, unitMax: 3000 });
+		r1.create();
+
+		let r2 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.Y, unitMin: 0, unitMax: 2000 });
+		r2.create();
 
 		// const g = new Generator(engine, new RectMesh());
 		// const obj = g.instance().show();

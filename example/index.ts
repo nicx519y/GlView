@@ -109,12 +109,7 @@ function main() {
 		rectTest(textures[0]);
 		drawText();
 		screenshotTest();
-
-		let r1 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.X, unitMin: -500, unitMax: 3000 });
-		r1.create();
-
-		let r2 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.Y, unitMin: -500, unitMax: 2000 });
-		r2.create();
+		rulerTest();
 
 		// const g = new Generator(engine, new RectMesh());
 		// const obj = g.instance().show();
@@ -165,6 +160,19 @@ function main() {
 		// obj.translation = [0, 0];
 		// obj.texture = shot.texture;
 		// obj.notFollowViewport = true;
+	}
+
+	function rulerTest() {
+		let r1 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.X, unitMin: -500, unitMax: 3000 });
+		r1.create();
+
+		let r2 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.Y, unitMin: -500, unitMax: 2000 });
+		r2.create();
+
+		window.addEventListener('resize', () => {
+			r1.autoPosition();
+			r2.autoPosition();
+		});
 	}
 
 	function rectTest(txt: ImageTexture) {

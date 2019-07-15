@@ -27,7 +27,7 @@ export class ViewportRulerComponent {
 	private _displayPosition: number = 30;		//显示的位置
 	private _unitPerTick: number = 1;			//当前刻度 表示 计量单位的倍数
 	private _unitPerTickStep: number = 2;		//刻度表示的计量单位 每次递增步长
-	private _displayMinGap: number = 5;			//显示的最小刻度间隔 单位 像素
+	private _displayMinGap: number = 8;			//显示的最小刻度间隔 单位 像素
 	private _displayMaxGap: number = 20;		//显示的最大刻度间隔 单位 像素
 	private _largeTickStep: number = 10;		//多少刻度显示一个大刻度
 
@@ -123,15 +123,23 @@ export class ViewportRulerComponent {
 		if(isChange) {
 			const pt = this._unitPerTick;
 			const ts = this._largeTickStep;
-			let n = 0;
+			const mins = this._tickSizeMin;
+			const maxs = this._tickSizeMax;
+			const mids = (mins + maxs) * 0.4;
 			for(let i = this._minUnit; i <= this._maxUnit; i ++) {
 				if(i % pt == 0) {
 					ticks[i].display = DisplayStatus.DISPLAY;
-					if(i / pt % ts != 0) {
-						ticks[i].size = [this._tickWidth, this._tickSizeMin];
+					const d = i/pt;
+					if(d % ts != 0) {
+						ticks[i].size = [this._tickWidth, mins];
 						texts[i] && (texts[i].display = DisplayStatus.NONE);
+
+						if(d % ts == 5) {
+							ticks[i].size = [this._tickWidth, mids];
+						}
+
 					} else {
-						ticks[i].size = [this._tickWidth, this._tickSizeMax];
+						ticks[i].size = [this._tickWidth, maxs];
 						texts[i] && (texts[i].display = DisplayStatus.DISPLAY);
 					}
 				} else {

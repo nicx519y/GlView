@@ -194,11 +194,11 @@ const fsSource = `#version 300 es
 		float c2 = 1.0 - c1;
 
 		// 第一个插值阶梯
-		float start = max(0.0, 0.6 - vTextBorderWidth * 0.1);
+		float start = max(0.0, 0.5 - vTextBorderWidth * 0.1);
 		// 边框插值系数
 	float r1 = smoothstep(start, start + 0.2, texture.r) * c1;
 		// 文字插值系数
-		float r2 = smoothstep(0.6, 0.8, texture.r);
+		float r2 = smoothstep(0.5, 0.85, texture.r);
 		
 		return vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
 	}

@@ -178,7 +178,7 @@ export class ViewportRulerComponent {
 			for(let i = minu; i <= maxu; i ++) {
 				if(i % pt == 0) {
 					ticks[i].display = DisplayStatus.DISPLAY;
-					const d = i/pt%ts;
+					const d = Math.abs(i/pt%ts);
 
 					if(d == 5) {
 						this.setTickSize(ticks[i], mids);

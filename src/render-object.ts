@@ -129,7 +129,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set rotation(radian: number) {
-		if(this.rotation == radian) return;
+		// if(this.rotation == radian) return;
 		const data = [radian];
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.TRANSLATION_AND_ROTATION, data, 2);
@@ -145,7 +145,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set scale(n: number) {
-		if(this.scale == n) return;
+		// if(this.scale == n) return;
 		const data = [n];
 		this._isAdded && this._originUnit.setAttribute(this._originId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, data, 3);
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, data, 3);
@@ -240,7 +240,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set borderDashed(n: number) {
-		if(n == this._attribs.borderDashed) return;
+		// if(n == this._attribs.borderDashed) return;
 		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [n*window.devicePixelRatio], 2);
 		this._attribs.borderDashed = n;
 	}
@@ -361,7 +361,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set attachViewportScale(n: boolean) {
-		if(this._attribs['attachViewportScale'] == n) return;
+		// if(this._attribs['attachViewportScale'] == n) return;
 		const o = n? 1: 0;
 		const data = [o];
 		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, data, 2);
@@ -377,7 +377,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set attachViewportTranslation(n: boolean) {
-		if(this._attribs['attachViewportTranslation'] == n) return;
+		// if(this._attribs['attachViewportTranslation'] == n) return;
 		const o = n? 1: 0;
 		const data = [o];
 		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, data, 3);

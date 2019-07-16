@@ -174,25 +174,50 @@ export class ViewportRulerComponent {
 			const mids = (mins + maxs) * 0.4;
 			const minu = this.unitMin;
 			const maxu = this.unitMax;
+			const axis = this.axis;
+			const tickWidth = this.tickWidth;
 
-			for(let i = minu; i <= maxu; i ++) {
-				if(i % pt == 0) {
-					ticks[i].display = DisplayStatus.DISPLAY;
-					const d = Math.abs(i/pt%ts);
+			if(axis == ViewportRulerAxis.X) {
+				for(let i = minu; i <= maxu; i ++) {
+					if(i % pt == 0) {
+						ticks[i].display = DisplayStatus.DISPLAY;
+						const d = Math.abs(i/pt%ts);
 
-					if(d == 5) {
-						this.setTickSize(ticks[i], mids);
-						texts[i] && (texts[i].display = DisplayStatus.NONE);
-					} else if(d != 0) {
-						this.setTickSize(ticks[i], mins);
-						texts[i] && (texts[i].display = DisplayStatus.NONE);
+						if(d == 5) {
+							ticks[i].size = [tickWidth, mids];
+							if(texts[i] != undefined) {
+								texts[i].display = DisplayStatus.NONE;
+							}
+						} else if(d != 0) {
+							ticks[i].size = [tickWidth, mins];
+						} else {
+							ticks[i].size = [tickWidth, maxs];
+							texts[i].display = DisplayStatus.DISPLAY;
+						}
 					} else {
-						this.setTickSize(ticks[i], maxs);
-						texts[i] && (texts[i].display = DisplayStatus.DISPLAY);
+						ticks[i].display = DisplayStatus.NONE;
 					}
-				} else {
-					ticks[i].display = DisplayStatus.NONE;
-					texts[i] && (texts[i].display = DisplayStatus.NONE);
+				}
+			} else {
+				for(let i = minu; i <= maxu; i ++) {
+					if(i % pt == 0) {
+						ticks[i].display = DisplayStatus.DISPLAY;
+						const d = Math.abs(i/pt%ts);
+
+						if(d == 5) {
+							ticks[i].size = [mids, tickWidth];
+							if(texts[i] != undefined) {
+								texts[i].display = DisplayStatus.NONE;
+							}
+						} else if(d != 0) {
+							ticks[i].size = [mins, tickWidth];
+						} else {
+							ticks[i].size = [maxs, tickWidth];
+							texts[i].display = DisplayStatus.DISPLAY;
+						}
+					} else {
+						ticks[i].display = DisplayStatus.NONE;
+					}
 				}
 			}
 		}

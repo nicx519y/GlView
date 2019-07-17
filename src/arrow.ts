@@ -1,5 +1,5 @@
-import { RenderObject, OutViewportStatus, DisplayStatus } from "./render-object";
-import { IdCreator } from './utils';
+import { RenderObject, OutViewportStatus } from "./render-object";
+import { IdCreator, DisplayStatus } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 import { ComponentInterface } from "./interfaces";
 import { SearchableObject } from "./searchable-object";

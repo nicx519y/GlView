@@ -1,5 +1,4 @@
-import { Mesh, PrimitiveMode, MeshConfig } from "./mesh";
-import { Rectangle, getBounds, PaintUnitInterface } from "./utils";
+import { PaintUnitInterface, DisplayStatus } from "./utils";
 import { Searcher } from "./searcher";
 import { TextureFactroy } from "./texture";
 import { Viewport } from "./viewport";
@@ -36,7 +35,7 @@ const vsSource = `#version 300 es
 	uniform vec2 uConversionVec2;	//坐标转换
 	uniform vec2 uViewportTranslation;	//视口平移
 	uniform vec2 uViewportScale;		//视口缩放
-	// uniform mat4 uViewportMatrix;
+	uniform vec4 uOpacity;				//全局透明度
 
 	mat4 getScaleMatrix(vec2 scale) {
 		return mat4(
@@ -147,7 +146,7 @@ const vsSource = `#version 300 es
 		vNotBorder = step(vertexAndEdgeOffsetValueAndNotFollowViewport.z, 0.0);
 		vPos = rotationMatrix * vec4(cv, 0, 1);
 		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;	
-		vOpacity = opacityAndDisplayAndVpScaleAndVpTrans.x;
+		vOpacity = opacityAndDisplayAndVpScaleAndVpTrans.x * uOpacity.x;
 		vDisplay = opacityAndDisplayAndVpScaleAndVpTrans.y;
 	}
 `;
@@ -237,6 +236,9 @@ export class Engine {
 	private _tf: TextureFactroy;
 	private _vp: Viewport;
 	private _unitList: PaintUnitInterface[][];
+	private _vpScaleLocal;
+	private _vpTranslationLocal;
+	private _vecLocal;
 	public isDebug: boolean = true;
 	public canRending: boolean = true;
 	constructor(canvas) {
@@ -278,18 +280,32 @@ export class Engine {
 		const r1 = this.updateViewport();
 		const r2 = this.updateConversionVec();
 		let r3 = false;
-		this._unitList.forEach((units, k) => {
-			if(!indexlist || (indexlist && indexlist.indexOf(k) >= 0)) {
-				units.forEach(unit => {
-					if(unit.updateToGL()) {
-						r3 = true;
-					}
-				});
-			}
+
+		let ul: PaintUnitInterface[][] = [];
+		const unitlist = this._unitList;
+		if(indexlist && indexlist.length > 0) {
+			ul = indexlist.map(i => unitlist[i]);
+		} else {
+			ul = unitlist;
+		}
+
+		ul.forEach(units => {
+			units.forEach(unit => {
+				if(unit.updateToGL()) {
+					r3 = true;
+				}
+			});
 		});
+
 		if(isForce || (r1 || r2 || r3)) {
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-			this._unitList.forEach(units => units.forEach(unit => unit.draw()));
+			ul.forEach(units => {
+				units.filter(u => u.display == DisplayStatus.DISPLAY)
+					.forEach(u => {
+						u.updateUniform();
+						u.draw();
+					});
+			});
 		}
 	}
 
@@ -331,33 +347,23 @@ export class Engine {
 		gl.enable(gl.BLEND);
 		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_DST_COLOR);
 		// gl.enable(gl.DEPTH_TEST);
-	}
 
-	// 更新视口矩阵
-	// private updateViewportMat(): boolean {
-	// 	if(this._vp.vpMatIsModified) {
-	// 		const gl = this.gl;
-	// 		const vpmLocal = gl.getUniformLocation(this.prg, 'uViewportMatrix');
-	// 		gl.uniformMatrix4fv(vpmLocal, false, this._vp.vpmat4);
-	// 		this._vp.vpMatIsModified = false;
-	// 		return true;
-	// 	}
-	// 	return false;
-	// }
+		this._vpScaleLocal = gl.getUniformLocation(this._prg, 'uViewportScale');
+		this._vpTranslationLocal = gl.getUniformLocation(this._prg, 'uViewportTranslation');
+		this._vecLocal = gl.getUniformLocation(this._prg, 'uConversionVec2');
+	}
 
 	private updateViewport(): boolean {
 		const gl = this.gl;
 		let result = false;
 		if(this._vp.vpScaleIsModified) {
-			const vpScaleLocal = gl.getUniformLocation(this.prg, 'uViewportScale');
-			gl.uniform2fv(vpScaleLocal, this._vp.vpScaleVec2);
+			gl.uniform2fv(this._vpScaleLocal, this._vp.vpScaleVec2);
 			this._vp.vpScaleIsModified = false;
 			result = true;
 		}
 
 		if(this._vp.vpTranslationIsModified) {
-			const vpTranslationLocal = gl.getUniformLocation(this.prg, 'uViewportTranslation');
-			gl.uniform2fv(vpTranslationLocal, this._vp.vpTranslationVec2);
+			gl.uniform2fv(this._vpTranslationLocal, this._vp.vpTranslationVec2);
 			this._vp.vpTranslationIsModified = false;
 			result = true;
 		}
@@ -369,8 +375,7 @@ export class Engine {
 	private updateConversionVec(): boolean {
 		if(this._vp.cvMatIsModified) {
 			const gl = this.gl;
-			const cvLocal = gl.getUniformLocation(this.prg, 'uConversionVec2');
-			gl.uniform2fv(cvLocal, this._vp.cvec2);
+			gl.uniform2fv(this._vecLocal, this._vp.cvec2);
 			this._vp.cvMatIsModified = false;
 			return true;
 		}

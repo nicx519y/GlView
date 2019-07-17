@@ -6,14 +6,13 @@ import { numberClamp } from "./utils";
 const mat4 = glMatrix.mat4;
 const vec2 = glMatrix.vec2;
 const vec3 = glMatrix.vec3;
-const quat2 = glMatrix.quat2;
 const RATIO = window.devicePixelRatio;
-const MAX_SCALE = 2;
-const MIN_SCALE = 0.05;
+
 
 export enum ViewportEvent {
 	TRANSLATION_CHANGE = 'translationChange',
 	SCALE_CHANGE = 'scaleChange',
+	SIZE_CHANGE = 'sizeChange',
 };
 
 export class Viewport extends EventDispatcher {
@@ -26,6 +25,8 @@ export class Viewport extends EventDispatcher {
 	private _vpHeight: number;
 	private tempMat4: Float32Array = mat4.create();
 	private tempVec3: Float32Array = vec3.create();
+	private scaleMin: number = 0.05;
+	private scaleMax: number = 2;
 	public cvMatIsModified: boolean = true;
 	public vpScaleIsModified: boolean = true;
 	public vpTranslationIsModified: boolean = true;
@@ -89,6 +90,8 @@ export class Viewport extends EventDispatcher {
 			canvas.style.width = width + 'px';
 			canvas.style.height = height + 'px';
 		}
+
+		this.dispatchEvent(ViewportEvent.SIZE_CHANGE);
 	}
 
 	getViewportSize(): number[] {
@@ -102,7 +105,7 @@ export class Viewport extends EventDispatcher {
 	 * @param py 缩放中心y 
 	 */
 	scaleOrigin(scale: number, px: number, py: number, dispatch: boolean = true) {
-		scale = numberClamp(MIN_SCALE, MAX_SCALE, scale);
+		scale = numberClamp(this.scaleMin, this.scaleMax, scale);
 		const vpScale = this._vpScaleVec2;
 		const s = this.scale - scale;
 		const ms = scale/this.scale;
@@ -145,6 +148,10 @@ export class Viewport extends EventDispatcher {
 		return this._vpTranslationVec2;
 	}
 
+	get scaleRange(): number[] {
+		return [this.scaleMin, this.scaleMax];
+	}
+
 	/**
 	 * 从屏幕坐标转换程世界坐标
 	 * @param x 
@@ -171,23 +178,6 @@ export class Viewport extends EventDispatcher {
 		vec3.mul(tvec, tvec, vec3.fromValues(w, h, 1));
 		return tvec.subarray(0, 2);
 	}
-
-	// changeCoordinateFromScreen(x: number, y: number, z: number = 0) {
-	// 	const scaleVpMat = mat4.fromScaling(mat4.create(), vec3.fromValues(this._vpScaleVec2[0], this._vpScaleVec2[1], 1));
-	// 	const transVpMat = mat4.fromTranslation(mat4.create(), vec3.fromValues(this._vpTranslationVec2[0], this._vpTranslationVec2[1], 0));
-	// 	const vpmat = mat4.mul(mat4.create(), transVpMat, scaleVpMat);
-	// 	const canvas = this._gl.canvas;
-	// 	const w = canvas.width/RATIO/2;
-	// 	const h = canvas.height/RATIO/2;
-	// 	let invertMat = mat4.create();
-	// 	mat4.invert(invertMat, vpmat);
-	// 	let v:Float32Array = vec3.fromValues(x/w - 1, - y/h + 1, z);
-
-	// 	// tvec.set([x/w - 1, - y/h + 1, 0]);
-	// 	vec3.transformMat4(v, v, invertMat);
-	// 	vec3.mul(v, v, vec3.fromValues(w, h, 1));
-	// 	return v;
-	// }
 
 	get cvec2(): Float32Array {
 		return this._cvec2;

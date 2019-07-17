@@ -1,7 +1,7 @@
 
 import { Mesh, MeshConfig } from './mesh';
 import { Engine } from './engine';
-import { PaintUnitInterface, IdCreator, getVertexPosition, getVertexAfterExpand } from './utils';
+import { PaintUnitInterface, IdCreator, getVertexPosition, getVertexAfterExpand, DisplayStatus, numberClamp } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 
 const MAX_INSTANCE = 100000;
@@ -53,6 +53,13 @@ export const RenderAttributeList = [
 	RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS,
 ];
 
+export const enum RenderUniform {
+	OPACITY = 'uOpacity'
+}
+
+export const RenderUnformList = [
+	RenderUniform.OPACITY
+];
 
 export class RenderUnit implements PaintUnitInterface {
 
@@ -61,18 +68,25 @@ export class RenderUnit implements PaintUnitInterface {
 	private idlist: string[];
 	private _meshConfig: MeshConfig;
 	private vao;
-	private borderVao;
 	private instanceCount: number = 0;
 
 	private attribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
 	private attribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
 	private attribIsModifieds: Map<RenderAttribute, boolean> = new Map();
+	private attribLocals: Map<RenderAttribute, any> = new Map();
 
+	private uniformLocals: Map<RenderUniform, any> = new Map();
+	private uniformDatas: Map<RenderUniform, Float32Array> = new Map();
+
+	private _display: DisplayStatus = DisplayStatus.DISPLAY;
+	private displayIsModified: boolean = false;
+	
 	constructor(engine: Engine, meshConfig: MeshConfig) {
 		this._engine = engine;
 		this._meshConfig = meshConfig;
 
 		const gl = engine.gl;
+		const prg = engine.prg;
 
 		// 初始化
 		RenderAttributeList.forEach(attrib => {
@@ -82,7 +96,16 @@ export class RenderUnit implements PaintUnitInterface {
 			this.attribBuffers.set(attrib, gl.createBuffer());
 			this.attribBufferDatas.set(attrib, data);
 			this.attribIsModifieds.set(attrib, true);
+			this.attribLocals.set(attrib, gl.getAttribLocation(prg, attrib));
 		});
+
+		RenderUnformList.forEach(uniform => {
+			this.uniformLocals.set(uniform, gl.getUniformLocation(prg, uniform));
+			this.uniformDatas.set(uniform, new Float32Array(4));
+		});
+
+		// 默认数据
+		this.uniformDatas.set(RenderUniform.OPACITY, new Float32Array([1,0,0,0]));
 
 		this.idmap = new Map<string, number>();
 		this.idlist = [];
@@ -135,11 +158,11 @@ export class RenderUnit implements PaintUnitInterface {
 	public updateToGL(): boolean {
 
 		const gl = this._engine.gl;
-		let result = false;
+		let result = this.displayIsModified;
 		gl.bindVertexArray(this.vao);
 
 		RenderAttributeList
-			.forEach(attrib => {
+			.forEach((attrib: RenderAttribute) => {
 				if(this.attribIsModifieds.get(attrib) === true) {
 					this.updateBufferToGL(
 						attrib, 
@@ -152,6 +175,13 @@ export class RenderUnit implements PaintUnitInterface {
 				}
 			});
 		return result;
+	}
+
+	public updateUniform() {
+		const gl = this.engine.gl;
+		RenderUnformList.forEach(uniform => {
+			gl.uniform4fv(this.uniformLocals.get(uniform), this.uniformDatas.get(uniform));
+		});
 	}
 
 	public setAttribute(id: string, attrib: RenderAttribute, value: number[], offset: number = 0) {
@@ -181,6 +211,7 @@ export class RenderUnit implements PaintUnitInterface {
 		}
 		return Array.from(bufferData.subarray(start, end));
 	}
+
 
 	public add(): string {
 		const id = this.createId();
@@ -292,7 +323,6 @@ export class RenderUnit implements PaintUnitInterface {
 		this.idlist = [];
 		this.instanceCount = 0;
 		this.vao = null;
-		this.borderVao = null;
 	}
 
 
@@ -301,6 +331,24 @@ export class RenderUnit implements PaintUnitInterface {
 		const oc = this._meshConfig;
 		gl.bindVertexArray(this.vao);
 		gl.drawElementsInstanced(oc.primitiveMode, oc.indeces.length, gl.UNSIGNED_INT, 0, this.instanceCount);
+	}
+
+	public set display(n: DisplayStatus) {
+		this._display = n;
+	}
+
+	public get display(): DisplayStatus {
+		return this._display;
+	}
+
+	public set opacity(n: number) {
+		const o = numberClamp(0, 1, n);
+		const data = this.uniformDatas.get(RenderUniform.OPACITY);
+		data.set([n], 0);
+	}
+
+	public get opacity(): number {
+		return this.uniformDatas.get(RenderUniform.OPACITY)[0];
 	}
 
 	public get engine(): Engine {
@@ -377,11 +425,11 @@ export class RenderUnit implements PaintUnitInterface {
 		gl.enableVertexAttribArray(local);
 	}
 
-	private updateBufferToGL(attrib: string, buffer: WebGLBuffer, bufferData: Float32Array, size: number, offset: number = 0) {
+	private updateBufferToGL(attrib: RenderAttribute, buffer: WebGLBuffer, bufferData: Float32Array, size: number, offset: number = 0) {
 		const gl = this._engine.gl;
 		const prg = this._engine.prg;
 		const FSIZE = bufferData.BYTES_PER_ELEMENT;
-		const local = gl.getAttribLocation(prg, attrib);
+		const local = this.attribLocals.get(attrib);
 		const t = this.instanceCount;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);

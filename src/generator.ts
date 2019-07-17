@@ -1,10 +1,10 @@
 import { Engine } from './engine';
 import { Mesh, RectMesh, OneWayArrowMesh, TwoWayArrowMesh } from './mesh';
 import { RenderUnit, RenderAttribute } from './render-unit';
-import { RenderObject, DisplayStatus } from './render-object';
+import { RenderObject } from './render-object';
 import { TextField } from './textfield';
 import { Arrow } from './arrow';
-import { TextureFactroy } from './texture';
+import { DisplayStatus } from './utils';
 import { GeneratorInterface } from './interfaces';
 
 export class Generator implements GeneratorInterface {
@@ -39,13 +39,15 @@ export class Generator implements GeneratorInterface {
 	}
 
 	public set opacity(o: number) {
-		this.originUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 0);
-		this.borderUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 0);
+		// this.originUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 0);
+		// this.borderUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [o], 0);
+		this.originUnit.opacity = o;
+		this.borderUnit.opacity = o;
 	}
 
 	public set display(n: DisplayStatus) {
-		this.originUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [n], 1);
-		this.borderUnit.batchAdd(RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [n], 1);
+		this.originUnit.display = n;
+		this.borderUnit.display = n;
 	}
 
 	public set translate(offset: number[]) {
@@ -70,9 +72,8 @@ export class TextFieldGenerator implements GeneratorInterface {
 	constructor(engine: Engine, maxLen: number = 0, wordSpace: number = 0, verticalAlign: TextFieldVerticalAlign = TextFieldVerticalAlign.MIDDLE, index: number = 0) {
 		this._engine = engine;
 		const align = - verticalAlign * 0.5 + 0.5;
-		// this.g = new Generator(engine, new RectMesh(), index);
 		for(let i = 0; i < maxLen; i ++) {
-			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (wordSpace + 8) / 10, align)));
+			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (wordSpace + 8) / 10, align), index));
 		}
 	}
 
@@ -87,6 +88,14 @@ export class TextFieldGenerator implements GeneratorInterface {
 
 	public clear() {
 		this.gs.forEach(g => g.clear());
+	}
+
+	public set display(n: DisplayStatus) {
+		this.gs.forEach(g => g.display = n);
+	}
+
+	public set opacity(n: number) {
+		this.gs.forEach(g => g.opacity = n);
 	}
 
 	public get engine(): Engine {
@@ -127,6 +136,11 @@ export class ArrowGenerator implements GeneratorInterface {
 	public set translate(offset: number[]) {
 		this.og.translate = offset;
 		this.tg.translate = offset;
+	}
+
+	public set display(n: DisplayStatus) {
+		this.og.display = n;
+		this.tg.display = n;
 	}
 
 	public set opacity(value: number) {

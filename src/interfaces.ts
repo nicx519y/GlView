@@ -1,8 +1,10 @@
-import { OutViewportStatus, DisplayStatus } from "./render-object";
+import { OutViewportStatus } from "./render-object";
 import { Engine } from "./engine";
+import { DisplayStatus } from './utils';
 
 export interface GeneratorInterface {
 	readonly engine: Engine;
+	display: DisplayStatus;
 	instance(): ComponentInterface;
 	destroy(): void;
 	clear(): void;

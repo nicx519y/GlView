@@ -15,11 +15,18 @@ export class Rectangle {
 	}
 }
 
+export const enum DisplayStatus {
+	NONE = 0,
+	DISPLAY = 1,
+}
+
 export interface PaintUnitInterface {
 	draw(): void;
 	updateToGL(): boolean;
+	updateUniform();
 	destroy(): void;
 	clear(): void;
+	display: DisplayStatus;
 	fill(attrib: string, value: number): void;
 	batchSet(attrib: string, value: Float32Array | Array<number>, offset: number): void;
 	batchAdd(attrib: string, value: Float32Array | Array<number>, offset: number): void;

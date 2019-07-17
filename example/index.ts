@@ -22,6 +22,7 @@ import {
 	OutViewportStatus,
 	ViewportRulerComponent,
 	ViewportRulerAxis,
+	DisplayStatus,
 } from '../src';
 
 
@@ -166,16 +167,12 @@ function main() {
 	}
 
 	function rulerTest() {
-		let r1 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.X, unitMin: -500, unitMax: 3000 });
-		r1.create();
+		let r1 = new ViewportRulerComponent(engine);
+		r1.create({ axis: ViewportRulerAxis.X, unitMin: -500, unitMax: 3000 });
 
-		let r2 = new ViewportRulerComponent(engine, { axis: ViewportRulerAxis.Y, unitMin: -500, unitMax: 2000 });
-		r2.create();
+		let r2 = new ViewportRulerComponent(engine);
+		r2.create({ axis: ViewportRulerAxis.Y, unitMin: -500, unitMax: 2000 });
 
-		window.addEventListener('resize', () => {
-			r1.autoPosition();
-			r2.autoPosition();
-		});
 	}
 
 	function rectTest(txt: ImageTexture) {
@@ -292,6 +289,8 @@ function main() {
 		tt.translation = [0, 500];
 
 		tt.text = '星际争霸';
+
+		g.opacity = 0.5;	
 	}
 
 	function drawRects(countEach: number, texture: ImageTexture, offsetX: number, offsetY: number, areaWidth: number) {

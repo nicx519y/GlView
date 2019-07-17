@@ -1,7 +1,7 @@
 import { Engine } from './engine';
 import { RenderAttribute, RenderUnit } from './render-unit';
 import { ImageTexture, ImageTextureEvent } from './texture';
-import { IdCreator, arrayEqual, numberClamp } from './utils';
+import { IdCreator, numberClamp, DisplayStatus } from './utils';
 import { ComponentInterface } from './interfaces';
 import { SearchableObject } from './searchable-object';
 
@@ -10,11 +10,6 @@ export const enum OutViewportStatus {
 	X = 1,
 	Y = 2,
 	BOTH = 3,
-}
-
-export const enum DisplayStatus {
-	NONE = 0,
-	DISPLAY = 1,
 }
 
 export class RenderObject extends SearchableObject implements ComponentInterface {

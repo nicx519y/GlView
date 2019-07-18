@@ -177,7 +177,6 @@ function main() {
 		});
 		minimap.create();
 		minimap.sourceArea = new Rectangle(0, 0, 2000*10, 1500*10);
-		// minimap.focusArea = new Rectangle(0, 0, 160, 100);
 		minimap.setPosition([10, 30]);
 		minimap.opacity = 0.6;
 		window['minimap'] = minimap;

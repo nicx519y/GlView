@@ -51,8 +51,6 @@ export class MinimapComponent {
 	private _offset: number[] = [0,0];
 	private _isAdded: boolean = false;
 
-	private timer;
-
 	constructor(engine: Engine, config: MinimapConfigInterface = null, index: number = 0) {
 		config && Object.assign(this, config);
 		this.engine = engine;

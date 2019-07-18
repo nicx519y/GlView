@@ -115,12 +115,6 @@ export class Viewport extends EventDispatcher {
 		this.vpScaleIsModified = true;
 		dispatch && this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
 	}
-	/**
-	 * 获取缩放比例
-	 */
-	get scale(): number {
-		return this._vpScaleVec2[0];
-	}
 
 	/**
 	 * 设置视口平移
@@ -144,8 +138,16 @@ export class Viewport extends EventDispatcher {
 		this.scaleOrigin(scale, originX, originY);
 	}
 
-	get translation(): Float32Array {
-		return this._vpTranslationVec2;
+	/**
+	 * 获取缩放比例
+	 */
+	get scale(): number {
+		return this._vpScaleVec2[0];
+	}
+
+	get translation(): number[] {
+		const vec2 = this._vpTranslationVec2;
+		return [(vec2[0] + 1) * this._vpWidth / RATIO, (vec2[1] + 1) * this._vpHeight / RATIO]
 	}
 
 	get scaleRange(): number[] {
@@ -191,8 +193,5 @@ export class Viewport extends EventDispatcher {
 		return this._vpTranslationVec2;
 	}
 
-	// get vpmat4(): Float32Array {
-	// 	return this._vpmat4;
-	// }
 
 }

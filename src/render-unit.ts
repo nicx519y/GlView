@@ -113,7 +113,6 @@ export class RenderUnit implements PaintUnitInterface {
 
 	public regist(): RenderUnit {
 		const gl = this._engine.gl;
-		const prg = this._engine.prg;
 		const config = this._meshConfig;
 
 		const currVs = config.currVertexes;

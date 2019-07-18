@@ -23,6 +23,9 @@ import {
 	ViewportRulerComponent,
 	ViewportRulerAxis,
 	DisplayStatus,
+	MinimapComponent,
+	Rectangle,
+	MinimapAdsorbed,
 } from '../src';
 
 
@@ -143,7 +146,7 @@ function main() {
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 
-
+		minimapTest();
 
 	}
 
@@ -166,12 +169,32 @@ function main() {
 		// obj.notFollowViewport = true;
 	}
 
+	function minimapTest() {
+		const vpsize = vp.getViewportSize();
+		const minimap = new MinimapComponent(engine, {
+			width: 200,
+			height: 200,
+		});
+		minimap.create();
+		minimap.sourceArea = new Rectangle(0, 0, 2000*10, 1500*10);
+		// minimap.focusArea = new Rectangle(0, 0, 160, 100);
+		minimap.setPosition([10, 30]);
+		minimap.opacity = 0.6;
+		window['minimap'] = minimap;
+	}
+
 	function rulerTest() {
 		let r1 = new ViewportRulerComponent(engine);
-		r1.create({ axis: ViewportRulerAxis.X, unitMin: -500, unitMax: 3000 });
+		r1.create({ 
+			axis: ViewportRulerAxis.X, 
+			unitMin: 0, 
+			unitMax: 2000, 
+			tickColor: [0,0,0,255], 
+			fontColor: [0,0,0,255] 
+		});
 
 		let r2 = new ViewportRulerComponent(engine);
-		r2.create({ axis: ViewportRulerAxis.Y, unitMin: -500, unitMax: 2000 });
+		r2.create({ axis: ViewportRulerAxis.Y, unitMin: 0, unitMax: 1500 });
 
 	}
 

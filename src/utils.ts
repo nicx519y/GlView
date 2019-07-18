@@ -7,7 +7,7 @@ export class Rectangle {
 	y: number;
 	w: number;
 	h: number;
-	constructor(x: number, y: number, w: number, h: number) {
+	constructor(x: number=0, y: number=0, w: number=0, h: number=0) {
 		this.x = x;
 		this.y = y;
 		this.w = w;
@@ -149,4 +149,17 @@ export function isChinese(str: string)
 
 export function numberClamp(min: number, max: number, x: number) {
 	return Math.min(max, Math.max(min, x));
+}
+
+export function rectangleIntersection(rect1: Rectangle, rect2: Rectangle): Rectangle {
+	const x1 = Math.max(rect1.x, rect2.x);
+	const y1 = Math.max(rect1.y, rect2.y);
+	const x2 = Math.min(rect1.x + rect1.w, rect2.x + rect2.w);
+	const y2 = Math.min(rect1.y + rect1.h, rect2.y + rect2.h);
+
+	if(x2 <= x1 || y2 <= y1) {
+		return new Rectangle();
+	} else {
+		return new Rectangle(x1, y1, x2 - x1, y2 - y1);
+	}
 }

@@ -140,7 +140,7 @@ export class MinimapComponent {
 		this.g.display = n;
 	}
 
-	public paint(sourceIndexes: number[] = null) {
+	public print(sourceIndexes: number[] = null) {
 		this.screenshot.draw(sourceIndexes);
 	}
 

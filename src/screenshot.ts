@@ -77,7 +77,7 @@ export class Screenshot {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
         // 设置成截图所需要的视口状态
-        vp.resetTranslationAndScale(-area.x, -area.y, scale);
+        vp.resetTranslationAndScale(-area.x, -area.y, scale, 0, 0, false);
         vp.setViewportSize(this._destWidth, this._destHeight, false);
 
         engine.draw(indexlist, true);

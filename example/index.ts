@@ -146,7 +146,7 @@ function main() {
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 
-		// minimapTest();
+		minimapTest();
 
 		engine.isDebug = true;
 

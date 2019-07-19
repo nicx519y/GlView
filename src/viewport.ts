@@ -111,7 +111,7 @@ export class Viewport extends EventDispatcher {
 		const ms = scale/this.scale;
 		vpScale[0] *= ms;
 		vpScale[1] *= ms;
-		this.translate(px*s, py*s);
+		this.translate(px*s, py*s, dispatch);
 		this.vpScaleIsModified = true;
 		dispatch && this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
 	}
@@ -131,11 +131,11 @@ export class Viewport extends EventDispatcher {
 		dispatch && this.dispatchEvent(ViewportEvent.TRANSLATION_CHANGE);
 	}
 
-	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0) {
+	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0, dispatch: boolean = true) {
 		this.resetTranslation();
 		this._vpScaleVec2.set([1,1]);
-		this.translate(offsetX, offsetY);
-		this.scaleOrigin(scale, originX, originY);
+		this.translate(offsetX, offsetY, dispatch);
+		this.scaleOrigin(scale, originX, originY, dispatch);
 	}
 
 	/**

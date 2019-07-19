@@ -118,7 +118,7 @@ export class MinimapComponent {
 	}
 
 	public set sourceArea(r: Rectangle) {
-		this._srcArea = r;
+		this._srcArea.setAttrs(r.x, r.y, r.w, r.h);
 		this.screenshot.setSourceArea(r.x, r.y, r.w, r.h);
 
 		if(this._isAdded) {
@@ -154,11 +154,15 @@ export class MinimapComponent {
 	}
 
 	private set focusArea(r: Rectangle) {
-		this._focusArea = r;
+		this._focusArea.setAttrs(r.x, r.y, r.w, r.h);
 		if(this._isAdded) {
 			this.focusBox.size = this.getFocusSize();
 			this.focusBox.translation = this.getFocusTranslation();
 		}
+	}
+
+	private get focusArea(): Rectangle {
+		return this._focusArea;
 	}
 	
 	private getMapFrameSize(): number[] {
@@ -189,8 +193,7 @@ export class MinimapComponent {
 			return [0, 0];
 		}
 
-		const frameSize = this.frameBox.size;
-		const k = frameSize[0] / src.w;
+		const k = this.frameBox.size[0] / src.w;
 		const w = Math.min(focus.w, src.w);
 		const h = Math.min(focus.h, src.h);
 		return [w * k, h * k];
@@ -234,9 +237,8 @@ export class MinimapComponent {
 		const vpSize = this.vp.getViewportSize().map(v => v / vpScale);
 		const vpTranslation = this.vp.translation.map(v => v / vpScale);
 
-		let focusRect = new Rectangle(-vpTranslation[0], -vpTranslation[1], vpSize[0], vpSize[1]);
-		focusRect = rectangleIntersection(focusRect, this._srcArea);
-		this.focusArea = focusRect;
+		this._focusArea.setAttrs(-vpTranslation[0], -vpTranslation[1], vpSize[0], vpSize[1]);
+		this.focusArea = rectangleIntersection(this.focusArea, this.focusArea, this._srcArea);
 	}
 
 }

@@ -16,7 +16,6 @@ export const enum MinimapAdsorbed {
 export interface MinimapConfigInterface {
 	width?: number;
 	height?: number;
-	backgroundColor?: number[];
 	borderWidth?: number;
 	borderColor?: number[];
 	focusBorderWidth?: number;
@@ -31,15 +30,14 @@ export class MinimapComponent {
 	private g: Generator;
 	private screenshot: Screenshot;
 	private baseBox: RenderObject;
-	private frameBox: RenderObject;
 	private focusBox: RenderObject;
 
 	private adsorbed: MinimapAdsorbed = MinimapAdsorbed.RB;
 	private position: number[] = [0, 0];
+	private frameSize: number[] = [0, 0];
 
 	private width: number = 0;
 	private height: number = 0;
-	private backgroundColor: number[] = [0,0,0,255];
 	private borderWidth: number = 1;
 	private borderColor: number[] = [255,0,255,255];
 	private focusBorderWidth: number = 1;
@@ -55,7 +53,7 @@ export class MinimapComponent {
 		config && Object.assign(this, config);
 		this.engine = engine;
 		this.vp = this.engine.viewport;
-		this.g = new Generator(engine, new RectMesh(), index, 3);
+		this.g = new Generator(engine, new RectMesh(), index, index, 3);
 		this.screenshot = new Screenshot(this.engine, this.width, this.height, true);
 		this.setAdsorbedPosition();
 	}
@@ -65,17 +63,12 @@ export class MinimapComponent {
 
 		const base = this.g.instance().show();
 		base.size = [this.width, this.height];
-		base.backgroundColor = this.backgroundColor;
+		base.backgroundColor = this.vp.getBackgroundColor();
 		base.borderWidth = this.borderWidth;
 		base.borderColor = this.borderColor;
+		base.texture = this.screenshot.texture;
 		base.outViewportStatus = OutViewportStatus.BOTH;
 		base.translation = this._offset;
-
-		const frame = this.g.instance().show();
-		frame.backgroundColor = [255,255,255,255];
-		frame.outViewportStatus = OutViewportStatus.BOTH;
-		frame.texture = this.screenshot.texture;
-		frame.translation = this._offset;
 
 		const focus = this.g.instance().show();
 		focus.borderColor = this.focusBorderColor;
@@ -85,7 +78,6 @@ export class MinimapComponent {
 		focus.translation = this._offset;
 
 		this.baseBox = base;
-		this.frameBox = frame;
 		this.focusBox = focus;
 		this._isAdded = true;
 
@@ -104,7 +96,6 @@ export class MinimapComponent {
 		this.g.clear();
 		this.g.destroy();
 		this.baseBox = null;
-		this.frameBox = null;
 		this.focusBox = null;
 		this._isAdded = false;
 	}
@@ -119,10 +110,33 @@ export class MinimapComponent {
 
 	public set sourceArea(r: Rectangle) {
 		this._srcArea.setAttrs(r.x, r.y, r.w, r.h);
-		this.screenshot.setSourceArea(r.x, r.y, r.w, r.h);
+
+		// 计算截图源尺寸
+		const dw = this.width;
+		const dh = this.height;
+		const sw = r.w;
+		const sh = r.h;
+		const dk = dw/dh;
+		const sk = sw/sh;
+		
+		let x, y, w, h;
+
+		if(sk >= dk) {
+			w = sw;
+			h = sw / dk;
+			x = r.x;
+			y = r.y - (h - sh) / 2;
+		} else {
+			h = sh;
+			w = sh * dk;
+			y = r.y;
+			x = r.x + (w - sw) / 2;
+		}
+
+		this.screenshot.setSourceArea(x, y, w, h);
 
 		if(this._isAdded) {
-			this.frameBox.size = this.getMapFrameSize();
+			this.frameSize = this.getMapFrameSize();
 			this.focusBox.translation = this.getFocusTranslation();
 			this.viewportToFocus();
 		}
@@ -148,7 +162,6 @@ export class MinimapComponent {
 		this._offset = trans;
 		if(this._isAdded) {
 			this.baseBox.translation = trans;
-			this.frameBox.translation = trans;
 			this.focusBox.translation = this.getFocusTranslation();
 		}
 	}
@@ -183,6 +196,7 @@ export class MinimapComponent {
 			rh = this.height - this.borderWidth * 2;
 			rw = rh * sk;
 		}
+
 		return [rw, rh];
 	}
 
@@ -193,7 +207,7 @@ export class MinimapComponent {
 			return [0, 0];
 		}
 
-		const k = this.frameBox.size[0] / src.w;
+		const k = this.frameSize[0] / src.w;
 		const w = Math.min(focus.w, src.w);
 		const h = Math.min(focus.h, src.h);
 		return [w * k, h * k];
@@ -202,7 +216,7 @@ export class MinimapComponent {
 	private getFocusTranslation(): number[] {
 		const src = this._srcArea;
 		const focus = this._focusArea;
-		const fk = this.frameBox.size[0] / src.w;
+		const fk = this.frameSize[0] / src.w;
 
 		const rx = (focus.x + focus.w / 2 - (src.x + src.w / 2)) * fk + this._offset[0];
 		const ry = (focus.y + focus.h / 2 - (src.y + src.h / 2)) * fk + this._offset[1];

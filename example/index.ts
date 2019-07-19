@@ -110,7 +110,7 @@ function main() {
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
 		
 		engine.render();
-		// rectTest(textures[0]);
+		rectTest(textures[0]);
 		// drawText();
 		// screenshotTest();
 		
@@ -140,15 +140,15 @@ function main() {
 		// 		drawRects(countEach, textures[i], i * w, j * w, w);
 		// 	}
 		// }
+		const w = 2000;
+		const h = 1800;
 
-
-		rulerTest();
+		rulerTest(w, h);
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 
-		minimapTest();
+		minimapTest(w, h);
 
-		engine.isDebug = true;
 
 	}
 
@@ -171,36 +171,37 @@ function main() {
 		// obj.notFollowViewport = true;
 	}
 
-	function minimapTest() {
+	function minimapTest(w, h) {
 		const vpsize = vp.getViewportSize();
+		
 		const minimap = new MinimapComponent(engine, {
 			width: 200,
 			height: 200,
-		});
+		}, 5);
 		minimap.create();
-		minimap.sourceArea = new Rectangle(0, 0, 2000*10, 1500*10);
+		minimap.sourceArea = new Rectangle(0, 0, w, h);
 		minimap.setPosition([10, 30]);
 		minimap.opacity = 0.6;
 		window['minimap'] = minimap;
 	}
 
-	function rulerTest() {
+	function rulerTest(w, h) {
 		let r1 = new ViewportRulerComponent(engine, 5);
 		r1.create({ 
 			axis: ViewportRulerAxis.X, 
 			unitMin: 0, 
-			unitMax: 2000, 
+			unitMax: w/10, 
 			tickColor: [0,0,0,255], 
 			fontColor: [0,0,0,255] 
 		});
 
 		let r2 = new ViewportRulerComponent(engine, 5);
-		r2.create({ axis: ViewportRulerAxis.Y, unitMin: 0, unitMax: 1500 });
+		r2.create({ axis: ViewportRulerAxis.Y, unitMin: 0, unitMax: h/10 });
 
 	}
 
 	function rectTest(txt: ImageTexture) {
-		const g = new Generator(engine, new RectMesh());
+		const g = new Generator(engine, new RectMesh(), 3, 3);
 		window['myGenerator'] = g;
 		const pane = new ObjPane($('#rect-box'), g, 
 		`

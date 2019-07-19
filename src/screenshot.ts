@@ -77,7 +77,7 @@ export class Screenshot {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
         // 设置成截图所需要的视口状态
-        vp.resetTranslationAndScale(-area.x, -area.y, scale, 0, 0, false);
+        vp.resetTranslationAndScale(-area.x*scale, -area.y*scale, scale, 0, 0, false);
         vp.setViewportSize(this._destWidth, this._destHeight, false);
 
         engine.draw(indexlist, true);
@@ -86,7 +86,7 @@ export class Screenshot {
         // 如果使用材质
         this._useTexture && tf.copyToTexture(this._texture, 0, 0);
 
-        pixels && gl.reacPixels(0, 0, this._destWidth, this._destHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        pixels && gl.readPixels(0, 0, this._destWidth, this._destHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
         // 恢复状态
         // vp.vpmat4.set(cacheVpmat, 0);

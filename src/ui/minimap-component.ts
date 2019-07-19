@@ -55,7 +55,7 @@ export class MinimapComponent {
 		config && Object.assign(this, config);
 		this.engine = engine;
 		this.vp = this.engine.viewport;
-		this.g = new Generator(engine, new RectMesh(), index);
+		this.g = new Generator(engine, new RectMesh(), index, 3);
 		this.screenshot = new Screenshot(this.engine, this.width, this.height, true);
 		this.setAdsorbedPosition();
 	}

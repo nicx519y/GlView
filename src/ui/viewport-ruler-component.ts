@@ -212,12 +212,12 @@ export class ViewportRulerComponent {
 
 		let g: Generator;
 		if(this.axis == ViewportRulerAxis.X) {
-			g = new Generator(this._engine, new RectMesh(0, 0.5), this._gIndex, this._gIndex);
+			g = new Generator(this._engine, new RectMesh(0, 0.5), this._gIndex, this._gIndex, this.unitMax);
 		} else {
-			g = new Generator(this._engine, new RectMesh(0.5, 0), this._gIndex, this._gIndex);
+			g = new Generator(this._engine, new RectMesh(0.5, 0), this._gIndex, this._gIndex, this.unitMax);
 		}
 
-		let tg: TextFieldGenerator = new TextFieldGenerator(this._engine, max.toString().length, -4, TextFieldVerticalAlign.BOTTOM, this._gIndex);
+		let tg: TextFieldGenerator = new TextFieldGenerator(this._engine, max.toString().length, -4, TextFieldVerticalAlign.BOTTOM, this._gIndex, this.unitMax / this.largeTickStep + 2);
 
 		g.display = DisplayStatus.NONE;
 		tg.display = DisplayStatus.NONE;

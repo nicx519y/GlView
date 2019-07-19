@@ -4,9 +4,8 @@ import { Engine } from './engine';
 import { PaintUnitInterface, IdCreator, getVertexPosition, getVertexAfterExpand, DisplayStatus, numberClamp } from './utils';
 import * as glMatrix from "../lib/gl-matrix.js";
 
-const MAX_INSTANCE = 100000;
+const MAX_INSTANCE = 3000;
 const mat4 = glMatrix.mat4;
-const vec2 = glMatrix.vec2;
 const vec3 = glMatrix.vec3;
 
 // 模型属性
@@ -69,6 +68,8 @@ export class RenderUnit implements PaintUnitInterface {
 	private _meshConfig: MeshConfig;
 	private vao;
 	private instanceCount: number = 0;
+	private instanceCountMax: number = 0;
+	private instanceCountInited: number = 0;
 
 	private attribBuffers: Map<RenderAttribute, WebGLBuffer> = new Map();
 	private attribBufferDatas: Map<RenderAttribute, Float32Array> = new Map();
@@ -81,18 +82,20 @@ export class RenderUnit implements PaintUnitInterface {
 	private _display: DisplayStatus = DisplayStatus.DISPLAY;
 	private displayIsModified: boolean = false;
 	
-	constructor(engine: Engine, meshConfig: MeshConfig) {
+	constructor(engine: Engine, meshConfig: MeshConfig, instanceCountMax: number = 0) {
 		this._engine = engine;
 		this._meshConfig = meshConfig;
 
 		const gl = engine.gl;
 		const prg = engine.prg;
+		const icm = Math.floor(instanceCountMax);
+		this.instanceCountMax = icm > 0 ? icm : MAX_INSTANCE;
+		this.instanceCountInited = this.instanceCountMax; //缓存
 
 		// 初始化
 		RenderAttributeList.forEach(attrib => {
 			// 本体属性
-			const data = new Float32Array(MAX_INSTANCE * RenderAttributeStride.get(attrib));
-			data.fill(0.0);
+			const data = new Float32Array(this.instanceCountMax * RenderAttributeStride.get(attrib));
 			this.attribBuffers.set(attrib, gl.createBuffer());
 			this.attribBufferDatas.set(attrib, data);
 			this.attribIsModifieds.set(attrib, true);
@@ -213,6 +216,11 @@ export class RenderUnit implements PaintUnitInterface {
 
 
 	public add(): string {
+		// 如果超过了最大实例限制，则扩展
+		if(this.instanceCount == this.instanceCountMax) {
+			this.grow();
+		}
+
 		const id = this.createId();
 		const idx = this.instanceCount;
 		this.idmap.set(id, idx);
@@ -223,6 +231,7 @@ export class RenderUnit implements PaintUnitInterface {
 
 		return id;
 	}
+
 	public remove(id: string) {
 		const idx = this.idmap.get(id);	
 		const t = this.instanceCount;
@@ -247,7 +256,17 @@ export class RenderUnit implements PaintUnitInterface {
 	}
 
 	public clear() {
-		this.attribBufferDatas.forEach(v => v.fill(0));
+
+		if(this.instanceCountMax > this.instanceCountInited) {
+			const k = this.instanceCountMax / this.instanceCountInited;
+			RenderAttributeList.forEach(attrib => {
+				const len = this.attribBufferDatas.get(attrib).length;
+				this.attribBufferDatas.set(attrib, new Float32Array(len / k));
+			});
+			this.instanceCountMax = this.instanceCountInited;
+		} else {
+			this.attribBufferDatas.forEach(v => v.fill(0));
+		}
 		this.attribIsModifieds.forEach((v, k) => this.attribIsModifieds.set(k, true));
 		this.idmap.clear();
 		this.idlist = [];
@@ -450,6 +469,17 @@ export class RenderUnit implements PaintUnitInterface {
 		arr.fill(0);
 		bufferData.set(bufferData.slice(n*stride, (n+1)*stride), idx*stride);
 		bufferData.set(arr, n*stride);
+	}
+
+	private grow() {
+		RenderAttributeList.forEach(attrib => {
+			let buffer = this.attribBufferDatas.get(attrib);
+			let newBuffer = new Float32Array(buffer.length * 2);
+			newBuffer.set(buffer);
+			this.attribBufferDatas.set(attrib, newBuffer);
+			buffer = null;
+		});
+		this.instanceCountMax *= 2;
 	}
 
 }

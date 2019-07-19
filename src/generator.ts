@@ -13,12 +13,12 @@ export class Generator implements GeneratorInterface {
 	private borderUnit: RenderUnit;
 	private originIdx: number;
 	private borderIdx: number;
-	constructor(engine: Engine, mesh: Mesh, originIndex: number = 0, borderIndex: number = 1) {
+	constructor(engine: Engine, mesh: Mesh, originIndex: number = 0, borderIndex: number = 1, instanceCountMax: number = 0) {
 		this._engine = engine;
 		this.originIdx = Math.floor(originIndex);
 		this.borderIdx = Math.floor(borderIndex);
-		this.originUnit = new RenderUnit(engine, mesh.originMeshConfig).regist();
-		this.borderUnit = new RenderUnit(engine, mesh.borderMeshConfig).regist();
+		this.originUnit = new RenderUnit(engine, mesh.originMeshConfig, instanceCountMax).regist();
+		this.borderUnit = new RenderUnit(engine, mesh.borderMeshConfig, instanceCountMax).regist();
 		this.engine.registVAO(this.originUnit, this.originIdx);
 		this.engine.registVAO(this.borderUnit, this.borderIdx);
 	}
@@ -69,11 +69,18 @@ export const enum TextFieldVerticalAlign {
 export class TextFieldGenerator implements GeneratorInterface {
 	private _engine: Engine;
 	private gs: Generator[] = [];
-	constructor(engine: Engine, maxLen: number = 0, wordSpace: number = 0, verticalAlign: TextFieldVerticalAlign = TextFieldVerticalAlign.MIDDLE, index: number = 0) {
+	constructor(
+		engine: Engine, 
+		maxLen: number = 0, 
+		wordSpace: number = 0, 
+		verticalAlign: TextFieldVerticalAlign = TextFieldVerticalAlign.MIDDLE, 
+		index: number = 0,
+		instanceCountMax: number = 0,
+		) {
 		this._engine = engine;
 		const align = - verticalAlign * 0.5 + 0.5;
 		for(let i = 0; i < maxLen; i ++) {
-			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (wordSpace + 8) / 10, align), index));
+			this.gs.push(new Generator(engine, new RectMesh(- (i + 1) * (wordSpace + 8) / 10, align), index, index, instanceCountMax));
 		}
 	}
 
@@ -109,10 +116,18 @@ export class ArrowGenerator implements GeneratorInterface {
 	private tg: Generator;
 	private _height: number;
 	private _indent: number;
-	constructor(engine: Engine, width: number, height: number, indent: number = 0, originIndex: number = 0, borderIndex: number = 1) {
+	constructor(
+		engine: Engine, 
+		width: number, 
+		height: number, 
+		indent: number = 0, 
+		originIndex: number = 0, 
+		borderIndex: number = 1,
+		instanceCountMax: number = 0,
+		) {
 		this._engine = engine;
-		this.og = new Generator(engine, new OneWayArrowMesh(width, height), originIndex, borderIndex);
-		this.tg = new Generator(engine, new TwoWayArrowMesh(width, height), originIndex, borderIndex);
+		this.og = new Generator(engine, new OneWayArrowMesh(width, height), originIndex, borderIndex, instanceCountMax);
+		this.tg = new Generator(engine, new TwoWayArrowMesh(width, height), originIndex, borderIndex, instanceCountMax);
 		this._height = height;
 		this._indent = indent;
 	}

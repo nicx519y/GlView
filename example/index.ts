@@ -110,8 +110,8 @@ function main() {
 		const textures = images.map(image => tf.createTexture(image, image.width, image.height));
 		
 		engine.render();
-		rectTest(textures[0]);
-		drawText();
+		// rectTest(textures[0]);
+		// drawText();
 		// screenshotTest();
 		
 
@@ -146,7 +146,9 @@ function main() {
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
 
-		minimapTest();
+		// minimapTest();
+
+		engine.isDebug = true;
 
 	}
 
@@ -183,7 +185,7 @@ function main() {
 	}
 
 	function rulerTest() {
-		let r1 = new ViewportRulerComponent(engine);
+		let r1 = new ViewportRulerComponent(engine, 5);
 		r1.create({ 
 			axis: ViewportRulerAxis.X, 
 			unitMin: 0, 
@@ -192,7 +194,7 @@ function main() {
 			fontColor: [0,0,0,255] 
 		});
 
-		let r2 = new ViewportRulerComponent(engine);
+		let r2 = new ViewportRulerComponent(engine, 5);
 		r2.create({ axis: ViewportRulerAxis.Y, unitMin: 0, unitMax: 1500 });
 
 	}
@@ -313,6 +315,8 @@ function main() {
 		tt.text = '星际争霸';
 
 		g.opacity = 0.5;	
+
+		window['textg'] = g;
 	}
 
 	function drawRects(countEach: number, texture: ImageTexture, offsetX: number, offsetY: number, areaWidth: number) {

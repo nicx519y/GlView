@@ -130,6 +130,7 @@ export class ViewportRulerComponent {
 	}
 
 	private checkTicks() {
+		this._engine.isDebug && console.log('ViewportRulerComponent::checkTicks()');
 		const vpScale = this._engine.viewport.scale;
 		const scales = this.scales;
 		const scaleLen = scales.length;

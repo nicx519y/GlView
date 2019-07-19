@@ -176,6 +176,7 @@ export class RenderUnit implements PaintUnitInterface {
 					result = true;
 				}
 			});
+		this.displayIsModified = false;
 		return result;
 	}
 
@@ -363,6 +364,7 @@ export class RenderUnit implements PaintUnitInterface {
 		const o = numberClamp(0, 1, n);
 		const data = this.uniformDatas.get(RenderUniform.OPACITY);
 		data.set([n], 0);
+		this.displayIsModified = true;
 	}
 
 	public get opacity(): number {

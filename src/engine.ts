@@ -252,6 +252,7 @@ export class Engine {
 		this._tf = new TextureFactroy(this._gl);
 		this._vp = new Viewport(this._gl);
 		this.initPrg();
+		window['unitlist'] = this._unitList;
 	}
 
 	public get gl() {

@@ -249,7 +249,7 @@ export class MinimapComponent {
 	private viewportToFocus() {
 		const vpScale = this.vp.scale;
 		const vpSize = this.vp.getViewportSize().map(v => v / vpScale);
-		const vpTranslation = this.vp.translation.map(v => v / vpScale);
+		const vpTranslation = this.vp.translation;
 
 		this._focusArea.setAttrs(-vpTranslation[0], -vpTranslation[1], vpSize[0], vpSize[1]);
 		this.focusArea = rectangleIntersection(this.focusArea, this.focusArea, this._srcArea);

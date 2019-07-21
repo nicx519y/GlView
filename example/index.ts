@@ -205,10 +205,10 @@ function main() {
 		window['myGenerator'] = g;
 		const pane = new ObjPane($('#rect-box'), g, 
 		`
-			宽度：<input type="text" name="width" value="100" />
-			高度：<input type="text" name="height" value="100" />
-			x：<input type="text" name="x" value="300" />
-			y：<input type="text" name="y" value="300" />
+			宽度：<input type="text" name="width" value="200" />
+			高度：<input type="text" name="height" value="200" />
+			x：<input type="text" name="x" value="0" />
+			y：<input type="text" name="y" value="0" />
 			旋转：<input type="text" name="rotation" value="0" />
 			缩放：<input type="text" name="scale" value="1" />
 			背景色：<input type="color" name="backgroundColor" value="#ffffff"  />

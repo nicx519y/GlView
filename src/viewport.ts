@@ -17,10 +17,10 @@ export enum ViewportEvent {
 
 export class Viewport extends EventDispatcher {
 	private _gl;
-	private _cvec2: Float32Array;
-	private _vpScaleVec2: Float32Array;
-	private _vpTranslationVec2: Float32Array;
-	private _bgColor: number[];
+	private _cvec2: Float32Array = new Float32Array(2);
+	private _vpScaleVec2: Float32Array = new Float32Array(2);
+	private _vpTranslationVec2: Float32Array = new Float32Array(2);
+	private _bgColor: number[] = [0,0,0,1];
 	private _vpWidth: number;
 	private _vpHeight: number;
 	private tempMat4: Float32Array = mat4.create();
@@ -34,21 +34,8 @@ export class Viewport extends EventDispatcher {
 		super();
 		this._gl = gl;
 		const canvas = gl.canvas;
-		const width = canvas.width;
-		const height = canvas.height;
-		this._bgColor = [0,0,0,1];
-		this._vpScaleVec2 = vec2.fromValues(1, 1);
-		this._cvec2 = vec2.fromValues(1/width*2, 1/height*2);
-		this.resetTranslation();
-	}
-
-	private resetTranslation() {
-		const gl = this._gl;
-		const canvas = gl.canvas;
-		const width = canvas.width;
-		const height = canvas.height;
-		this._vpTranslationVec2 = vec2.fromValues(0, 0);
-		this.translate(-width/2/RATIO, -height/2/RATIO);
+		this.setViewportSize(canvas.width, canvas.height);
+		this.reset();
 	}
 
 	/**
@@ -122,18 +109,28 @@ export class Viewport extends EventDispatcher {
 	 * @param dy 增量
 	 */
 	translate(dx: number, dy: number, dispatch: boolean = true) {
-		const canvas = this._gl.canvas;
-		const width = canvas.width;
-		const height = canvas.height;
-		this._vpTranslationVec2[0] += dx * RATIO / width * 2;
-		this._vpTranslationVec2[1] += dy * RATIO / height * 2;
+		const width = this._vpWidth;
+		const height = this._vpHeight;
+		this._vpTranslationVec2[0] += dx / width * 2;
+		this._vpTranslationVec2[1] += dy / height * 2;
 		this.vpTranslationIsModified = true;
 		dispatch && this.dispatchEvent(ViewportEvent.TRANSLATION_CHANGE);
 	}
 
-	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0, dispatch: boolean = true) {
-		this.resetTranslation();
+	reset(dispatch: boolean = true) {
+		const gl = this._gl;
+		const width = this._vpWidth;
+		const height = this._vpHeight;
+		this._vpTranslationVec2.set([0,0]);
+		this.translate(-width/2, -height/2, dispatch);
 		this._vpScaleVec2.set([1,1]);
+		if(dispatch) {
+			this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
+		}
+	}
+
+	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0, dispatch: boolean = true) {
+		this.reset(false);
 		this.translate(offsetX, offsetY, dispatch);
 		this.scaleOrigin(scale, originX, originY, dispatch);
 	}
@@ -147,7 +144,8 @@ export class Viewport extends EventDispatcher {
 
 	get translation(): number[] {
 		const vec2 = this._vpTranslationVec2;
-		return [(vec2[0] + 1) * this._vpWidth / RATIO, (vec2[1] + 1) * this._vpHeight / RATIO]
+		const scale = this.scale;
+		return [(vec2[0] + 1) * this._vpWidth * 0.5 / scale, (vec2[1] + 1) * this._vpHeight * 0.5 / scale]
 	}
 
 	get scaleRange(): number[] {
@@ -170,9 +168,8 @@ export class Viewport extends EventDispatcher {
 		tvec.set([this._vpScaleVec2[0], this._vpScaleVec2[1], 1]);
 		mat4.scale(tmat, tmat, tvec);
 
-		const canvas = this._gl.canvas;
-		const w = canvas.width/RATIO/2;
-		const h = canvas.height/RATIO/2;
+		const w = this._vpWidth/2;
+		const h = this._vpHeight/2;
 		mat4.invert(tmat, tmat);
 
 		tvec.set([x/w - 1, - y/h + 1, 0]);

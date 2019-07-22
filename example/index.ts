@@ -140,8 +140,11 @@ function main() {
 		// 		drawRects(countEach, textures[i], i * w, j * w, w);
 		// 	}
 		// }
-		const w = 300;
-		const h = 2000;
+		// const w = 1557;
+		// const h = 3852;
+
+		const w = 1557;
+		const h = 3100;
 
 		rulerTest(w, h);
 		// drawOneWayArrow();
@@ -175,8 +178,8 @@ function main() {
 		const vpsize = vp.getViewportSize();
 		
 		const minimap = new MinimapComponent(engine, {
-			width: 200,
-			height: 200,
+			width: 150,
+			height: 150,
 		}, 5);
 		minimap.create();
 		minimap.sourceArea = new Rectangle(0, 0, w, h);

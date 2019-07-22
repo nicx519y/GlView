@@ -129,7 +129,7 @@ export class MinimapComponent {
 			h = sh;
 			w = sh * dk;
 			y = r.y;
-			x = r.x + (w - sw) / 2;
+			x = r.x - (w - sw) / 2;
 		}
 		this.screenshot.setSourceArea(x, y, w, h);
 

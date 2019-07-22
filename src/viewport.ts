@@ -121,11 +121,13 @@ export class Viewport extends EventDispatcher {
 		const gl = this._gl;
 		const width = this._vpWidth;
 		const height = this._vpHeight;
-		this._vpTranslationVec2.set([0,0]);
-		this.translate(-width/2, -height/2, dispatch);
+		this._vpTranslationVec2.set([-1,-1]);
 		this._vpScaleVec2.set([1,1]);
+		this.vpTranslationIsModified = true;
+		this.vpScaleIsModified = true;
 		if(dispatch) {
 			this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
+			this.dispatchEvent(ViewportEvent.TRANSLATION_CHANGE);
 		}
 	}
 
@@ -146,6 +148,11 @@ export class Viewport extends EventDispatcher {
 		const vec2 = this._vpTranslationVec2;
 		const scale = this.scale;
 		return [(vec2[0] + 1) * this._vpWidth * 0.5 / scale, (vec2[1] + 1) * this._vpHeight * 0.5 / scale]
+	}
+
+	set scaleRange(range: number[]) {
+		this.scaleMin = range[0];
+		this.scaleMax = range[1];
 	}
 
 	get scaleRange(): number[] {

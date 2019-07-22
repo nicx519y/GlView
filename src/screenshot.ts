@@ -22,12 +22,12 @@ export class Screenshot {
         this._destWidth = destWidth * RATIO;
         this._destHeight = destHeight * RATIO;
         this._useTexture = useTexture;
-        useTexture && (this._texture = this._engine.textureFactroy.createTexture(null, destWidth * RATIO, destHeight * RATIO));
+        useTexture && (this._texture = this._engine.textureFactroy.createTexture(null, this._destWidth, this._destHeight));
         this._fbo = gl.createFramebuffer();
         this._rbo = gl.createRenderbuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
         gl.bindRenderbuffer(gl.RENDERBUFFER, this._rbo);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, destWidth * RATIO , destHeight * RATIO);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, this._destWidth , this._destHeight);
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this._rbo);
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -71,15 +71,16 @@ export class Screenshot {
         const cacheVpScale = vec2.clone(vp.vpScaleVec2);
         const cacheVpTranslation = vec2.clone(vp.vpTranslationVec2);
         const cacheVpSize = vp.getViewportSize();
+        const cacheScaleRange = vp.scaleRange;
 
         // 设置绘制状态
         const scale = this._destWidth / this._area.w;
         const k = scale/RATIO;
-
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
         // 设置成截图所需要的视口状态
+        vp.scaleRange = [0, 100];
         vp.setViewportSize(this._destWidth, this._destHeight, false);
-        vp.resetTranslationAndScale(this._area.x*k, -this._area.y*k, scale, 0, 0, false);
+        vp.resetTranslationAndScale(-this._area.x*k, -this._area.y*k, scale, 0, 0, false);
         engine.draw(indexlist, true);
         gl.flush();
 
@@ -95,6 +96,7 @@ export class Screenshot {
         vp.vpScaleIsModified = true;
         vp.vpTranslationIsModified = true;
         vp.setViewportSize(cacheVpSize[0], cacheVpSize[1], false);
+        vp.scaleRange = cacheScaleRange;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
     }

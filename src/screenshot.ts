@@ -73,14 +73,13 @@ export class Screenshot {
         const cacheVpSize = vp.getViewportSize();
 
         // 设置绘制状态
-        const area = this._area;
-        const scale = this._destWidth / area.w;
+        const scale = this._destWidth / this._area.w;
+        const k = scale/RATIO;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
         // 设置成截图所需要的视口状态
         vp.setViewportSize(this._destWidth, this._destHeight, false);
-        vp.resetTranslationAndScale(-area.x*scale, -area.y*scale, scale, 0, 0, false);
-
+        vp.resetTranslationAndScale(-this._area.x*k, -this._area.y*k, scale, 0, 0, false);
         engine.draw(indexlist, true);
         gl.flush();
 

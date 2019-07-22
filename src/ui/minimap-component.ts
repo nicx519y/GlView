@@ -110,7 +110,7 @@ export class MinimapComponent {
 
 	public set sourceArea(r: Rectangle) {
 		this._srcArea.setAttrs(r.x, r.y, r.w, r.h);
-
+		console.log(this._srcArea)
 		// 计算截图源尺寸
 		const dw = this.width;
 		const dh = this.height;

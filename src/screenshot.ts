@@ -34,17 +34,17 @@ export class Screenshot {
     }
 
     public setSourceArea(srcX: number, srcY: number, srcWidth: number, srcHeight: number) {
-        const dw = this._destWidth;
-        const dh = this._destHeight;
-        const dk = dw / dh;
-        const sk = srcWidth / srcHeight;
+        // const dw = this._destWidth;
+        // const dh = this._destHeight;
+        // const dk = dw / dh;
+        // const sk = srcWidth / srcHeight;
         
-        // 当src长宽比例和dest不同时，裁剪src区域
-        if(sk > dk) {
-            srcWidth = srcHeight * dk;
-        } else if(sk < dk) {
-            srcHeight = srcWidth / dk;
-        }
+        // // 当src长宽比例和dest不同时，裁剪src区域
+        // if(sk > dk) {
+        //     srcWidth = srcHeight * dk;
+        // } else if(sk < dk) {
+        //     srcHeight = srcWidth / dk;
+        // }
         
         this._area.x = srcX * RATIO;
         this._area.y = srcY * RATIO;
@@ -74,7 +74,6 @@ export class Screenshot {
 
         // 设置绘制状态
         const scale = this._destWidth / this._area.w;
-        console.log(scale);
         const k = scale/RATIO;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);

@@ -140,8 +140,8 @@ function main() {
 		// 		drawRects(countEach, textures[i], i * w, j * w, w);
 		// 	}
 		// }
-		const w = 2000;
-		const h = 1800;
+		const w = 300;
+		const h = 2000;
 
 		rulerTest(w, h);
 		// drawOneWayArrow();

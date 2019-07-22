@@ -74,7 +74,7 @@ export class Screenshot {
 
         // 设置绘制状态
         const scale = this._destWidth / this._area.w;
-        console.log(scale)
+        console.log(scale);
         const k = scale/RATIO;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);

@@ -131,7 +131,6 @@ export class MinimapComponent {
 			y = r.y;
 			x = r.x + (w - sw) / 2;
 		}
-		this.engine.isDebug && console.log('setter sourceAre: ', x, ', ',y ,', ', w, ', ', h);
 		this.screenshot.setSourceArea(x, y, w, h);
 
 		if(this._isAdded) {

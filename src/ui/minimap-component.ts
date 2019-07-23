@@ -144,6 +144,21 @@ export class MinimapComponent {
 		return this._srcArea;
 	}
 
+	public setFocusCenter(point: number[]) {
+		const vpScale = this.vp.scale;
+		const vpSize = this.vp.getViewportSize().map(v => v / vpScale);
+		let x, y, w, h;
+		x = point[0] - vpSize[0] / 2;
+		y = point[1] - vpSize[1] / 2;
+		this._focusArea.setAttrs(x, y, vpSize[0], vpSize[1]);
+		this.focusArea = rectangleIntersection(this.focusArea, this.focusArea, this._srcArea);
+	}
+
+	public setFocusCenterUseScreenCoor(x: number, y: number) {
+		const xy = this.getCoorByScreenPoint(x, y);
+		this.setFocusCenter(xy);
+	}
+
 	public set opacity(n: number) {
 		this.g.opacity = n;
 	}
@@ -251,6 +266,39 @@ export class MinimapComponent {
 
 		this._focusArea.setAttrs(-vpTranslation[0], -vpTranslation[1], vpSize[0], vpSize[1]);
 		this.focusArea = rectangleIntersection(this.focusArea, this.focusArea, this._srcArea);
+	}
+
+	/**
+	 * 根据小地图相对坐标获取实际坐标
+	 * @param x 
+	 * @param y 
+	 */
+	private getCoorByScreenPoint(x: number, y: number): number[] {
+		const w = this.width;
+		const h = this.height;
+		const src = this._srcArea;
+		const k = w/h;
+		const sk = src.w/src.h;
+		let sx, sy, sw, sh, scale;
+
+		if(sk >= k) {
+			sw = w;
+			sh = sw / sk;
+			sx = 0;
+			sy = (h - sh) / 2;
+			scale = sw / src.w;
+		} else {
+			sh = h;
+			sw = sh * sk;
+			sx = (w - sw) / 2;
+			sy = 0;
+			scale = sw / src.w;
+		}
+
+		x = (x - sx) / scale + src.x;
+		y = (y - sy) / scale + src.y;
+		
+		return [x, y];
 	}
 
 }

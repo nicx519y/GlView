@@ -135,20 +135,6 @@ export class Viewport extends EventDispatcher {
 		this._vpRotation += radian;
 		this.vpRotationIsModified = true;
 		dispatch && this.dispatchEvent(ViewportEvent.ROTATION_CHANGE);
-
-		// this._cvec2.set([
-		// 	1/width*2 * Math.cos(this._vpRotation) + 1/height*2 * Math.sin(this._vpRotation), 
-		// 	1/height*2 * Math.cos(this._vpRotation) + 1/width*2 * Math.sin(this._vpRotation)
-		// ]);
-
-		// console.log(Math.sin(this._vpRotation), Math.cos(this._vpRotation))
-
-		// this._cvec2.set([
-		// 	1/height*2,
-		// 	1/width*2, 
-		// ]);
-
-		this.cvMatIsModified = true;
 	}
 
 	reset(dispatch: boolean = true) {
@@ -170,8 +156,13 @@ export class Viewport extends EventDispatcher {
 
 	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0, dispatch: boolean = true) {
 		this.reset(false);
-		this.translate(offsetX, offsetY, dispatch);
-		this.scaleOrigin(scale, originX, originY, dispatch);
+		this.translate(offsetX, offsetY, false);
+		this.scaleOrigin(scale, originX, originY, false);
+		if(dispatch) {
+			this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
+			this.dispatchEvent(ViewportEvent.TRANSLATION_CHANGE);
+			this.dispatchEvent(ViewportEvent.ROTATION_CHANGE);
+		}
 	}
 
 	/**

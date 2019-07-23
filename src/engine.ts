@@ -35,6 +35,7 @@ const vsSource = `#version 300 es
 	uniform vec2 uConversionVec2;	//坐标转换
 	uniform vec2 uViewportTranslation;	//视口平移
 	uniform vec2 uViewportScale;		//视口缩放
+	uniform float uViewportRotation;	//视口旋转
 	uniform vec4 uOpacity;				//全局透明度
 
 	mat4 getScaleMatrix(vec2 scale) {
@@ -71,13 +72,13 @@ const vsSource = `#version 300 es
 		in vec2 v2, 
 		in float offset
 	) {
-		vec3 vv1 = vec3(v1, 0);
-		vec3 vv2 = vec3(v2, 0);
+		vec4 vv1 = vec4(v1, 0.0, 1.0);
+		vec4 vv2 = vec4(v2, 0.0, 1.0);
 		// 向量夹角
 		vec2 mid = normalize(normalize(v1) + normalize(v2));
 		float theta = acos(dot(v1, v2) / (length(v1) * length(v2)));
 		// 右手法则，判断夹角正负
-		vec3 c = cross(vv1, vv2);
+		vec3 c = cross(vv1.xyz, vv2.xyz);
 		float l = offset / sin(theta * 0.5);
 		return mid * l * (- sign(c.z));
 	}
@@ -114,26 +115,31 @@ const vsSource = `#version 300 es
 		vec2 pe = pv - cv;
 		vec2 ne = nv - cv;
 
-		// 求相邻两边交点向量
-		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValueAndNotFollowViewport.z * uvAndEdgeOffsetRatio.z);
-		
 		// 判断是否需要乘视口矩阵
 		vec2 followViewport = getFollowViewport();
 		vec2 notFollowViewport = vec2(1.0, 1.0) - followViewport;
 
 		// 各种矩阵
 		mat4 rotationMatrix = getRotationMatrix(translationAndRotation.z);
+		// 缩放矩阵，如果设置了脱离视口，则需要计算一个反向缩放矩阵
 		mat4 scaleMatrix = getScaleMatrix(getScaleVec(isTextAndBorderWidthAndDashedAndScale.w, followViewport, notFollowViewport));
-		mat4 transMat = getScaleMatrix(uConversionVec2.xy) * getTranslationMatrix(translationAndRotation.xy) * rotationMatrix;
+		mat4 transMat = getTranslationMatrix(translationAndRotation.xy);
+		mat4 converMat = getScaleMatrix(uConversionVec2.xy);
+		// 视口矩阵
 		mat4 vpScaleMatrix = getScaleMatrix(uViewportScale);
 		mat4 vpTranslationMatrix = getTranslationMatrix(uViewportTranslation);
-		
-		vec4 pos1 = transMat * scaleMatrix * vec4(cv, 0.0, 1.0);
-		vec4 pos2 = vpTranslationMatrix * vpScaleMatrix * pos1;
-		vec4 pos3 = transMat * vec4(intersection, 0.0, 0.0);
-		vec2 pos = pos2.xy * followViewport + pos1.xy * notFollowViewport;
+		mat4 vpRotationMatrix = getRotationMatrix(uViewportRotation);
+		mat4 vpMat = vpTranslationMatrix * vpScaleMatrix * converMat * vpRotationMatrix;
 
-		gl_Position = vec4(pos, 0.0, 1.0) + pos3;
+		// 求相邻两边交点向量
+		vec2 intersection = getIntersectionVertex(pe, ne, vertexAndEdgeOffsetValueAndNotFollowViewport.z * uvAndEdgeOffsetRatio.z);
+		
+		vec4 posOrigin = transMat * scaleMatrix * rotationMatrix * vec4(cv, 0.0, 1.0);
+		vec4 posBorder = rotationMatrix * vec4(intersection, 0.0, 0.0);
+		posBorder = converMat * vec4(vec2(vpRotationMatrix * posBorder) * followViewport + posBorder.xy * notFollowViewport, 0, 0);
+		posOrigin = vec4(vec2(vpMat * posOrigin) * followViewport + vec2(converMat * posOrigin) * notFollowViewport, 0.0, 1.0);
+
+		gl_Position = posOrigin + posBorder;
 
 		// out
 		// 如果材质宽度为0 则标志为无材质 
@@ -144,7 +150,10 @@ const vsSource = `#version 300 es
 		vTextBorderWidth = isTextAndBorderWidthAndDashedAndScale.y;
 		vTextBorderColor = textBorderColor;
 		vNotBorder = step(vertexAndEdgeOffsetValueAndNotFollowViewport.z, 0.0);
-		vPos = rotationMatrix * vec4(cv, 0, 1);
+
+		vPos = rotationMatrix * vec4(cv, 0.0, 1.0); // 用于边框渲染计算
+		vPos = vec4(vec2(vpRotationMatrix * vPos) * followViewport + vPos.xy * notFollowViewport, 0.0, 1.0);
+
 		vBorderDashed = isTextAndBorderWidthAndDashedAndScale.z;	
 		vOpacity = opacityAndDisplayAndVpScaleAndVpTrans.x * uOpacity.x;
 		vDisplay = opacityAndDisplayAndVpScaleAndVpTrans.y;
@@ -239,6 +248,7 @@ export class Engine {
 	private _vpScaleLocal;
 	private _vpTranslationLocal;
 	private _vecLocal;
+	private _vpRotationLocal;
 	public isDebug: boolean = true;
 	public canRending: boolean = true;
 	constructor(canvas) {
@@ -351,6 +361,7 @@ export class Engine {
 
 		this._vpScaleLocal = gl.getUniformLocation(this._prg, 'uViewportScale');
 		this._vpTranslationLocal = gl.getUniformLocation(this._prg, 'uViewportTranslation');
+		this._vpRotationLocal = gl.getUniformLocation(this._prg, 'uViewportRotation');
 		this._vecLocal = gl.getUniformLocation(this._prg, 'uConversionVec2');
 	}
 
@@ -366,6 +377,12 @@ export class Engine {
 		if(this._vp.vpTranslationIsModified) {
 			gl.uniform2fv(this._vpTranslationLocal, this._vp.vpTranslationVec2);
 			this._vp.vpTranslationIsModified = false;
+			result = true;
+		}
+
+		if(this._vp.vpRotationIsModified) {
+			gl.uniform1f(this._vpRotationLocal, this._vp.vpRotation);
+			this._vp.vpRotationIsModified = false;
 			result = true;
 		}
 

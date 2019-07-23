@@ -27,6 +27,7 @@ import {
 	Rectangle,
 	MinimapAdsorbed,
 } from '../src';
+import { SearchableObject } from '../src/searchable-object';
 
 
 const vec2 = glMatrix.vec2;
@@ -36,31 +37,31 @@ const objs = [];
 let activeObj: RenderObject;
 
 class ObjList {
-	_list = [];
+	_list: RenderObject[] = [];
 	_g: GeneratorInterface;
 	constructor(g: GeneratorInterface) {
 		this._g = g;
 	}
 
-	find(id: string): ComponentInterface {
+	find(id: string): RenderObject {
 		let a = this._list.find(v => v.id == id);
 		return a;
 	}
 
-	add(): ComponentInterface {
-		const obj = this._g.instance().show();
+	add(): RenderObject {
+		const obj = this._g.instance().show() as RenderObject;
 		this._list.push(obj);
 		return obj;
 	}
 
-	remove(obj: ComponentInterface) {
+	remove(obj: RenderObject) {
 		const idx = this._list.indexOf(obj);
 		if(idx < 0) return;
 		obj.hide();
 		this._list.splice(idx, 1);
 	}
 
-	get list(): ComponentInterface[] {
+	get list(): RenderObject[] {
 		return this._list;
 	}
 }
@@ -265,8 +266,8 @@ function main() {
 		}
 
 		function moveHandler(evt) {
-			const pos = vp.changeCoordinateFromScreen(evt.offsetX, evt.offsetY);
 			if(status == 1) {
+				const pos = vp.changeCoordinateFromScreen(evt.offsetX, evt.offsetY);
 				move(pos[0], pos[1]);
 			}
 		}
@@ -445,15 +446,14 @@ function main() {
 
 	function clickHandler(evt) {
 		let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		// if(!activeObj) {
-		// 	let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
-		// 	const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
-		// 	// console.log(objArr);
-		// 	if(!objArr || objArr.length <= 0) return;
-		// 	activeObj = objs.find(o => o.id == objArr[0].id)
-		// } else {
-		// 	activeObj = null;
-		// }
+		if(!activeObj) {
+			let cs = vp.changeCoordinateFromScreen(evt.pageX, evt.pageY);
+			const objArr: SearchObjectInterface[] = scr.search(cs[0], cs[1]);
+			if(!objArr || objArr.length <= 0) return;
+			// activeObj = objs.find(o => o.id == objArr[0].id)
+		} else {
+			activeObj = null;
+		}
 	}
 
 	function move2Handler(evt) {

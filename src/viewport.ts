@@ -13,6 +13,7 @@ export enum ViewportEvent {
 	TRANSLATION_CHANGE = 'translationChange',
 	SCALE_CHANGE = 'scaleChange',
 	SIZE_CHANGE = 'sizeChange',
+	ROTATION_CHANGE = 'rotationChange',
 };
 
 export class Viewport extends EventDispatcher {
@@ -20,6 +21,7 @@ export class Viewport extends EventDispatcher {
 	private _cvec2: Float32Array = new Float32Array(2);
 	private _vpScaleVec2: Float32Array = new Float32Array(2);
 	private _vpTranslationVec2: Float32Array = new Float32Array(2);
+	private _vpRotation: number = 0;
 	private _bgColor: number[] = [0,0,0,1];
 	private _vpWidth: number;
 	private _vpHeight: number;
@@ -30,6 +32,7 @@ export class Viewport extends EventDispatcher {
 	public cvMatIsModified: boolean = true;
 	public vpScaleIsModified: boolean = true;
 	public vpTranslationIsModified: boolean = true;
+	public vpRotationIsModified: boolean = true;
 	constructor(gl) {
 		super();
 		this._gl = gl;
@@ -98,7 +101,14 @@ export class Viewport extends EventDispatcher {
 		const ms = scale/this.scale;
 		vpScale[0] *= ms;
 		vpScale[1] *= ms;
-		this.translate(px*s, py*s, dispatch);
+
+		const cos = Math.cos(this._vpRotation);
+		const sin = Math.sin(this._vpRotation);
+
+		let dx = px * cos + py * sin;
+		let dy = py * cos - px * sin;
+
+		this.translate(dx*s, dy*s, dispatch);
 		this.vpScaleIsModified = true;
 		dispatch && this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
 	}
@@ -117,17 +127,44 @@ export class Viewport extends EventDispatcher {
 		dispatch && this.dispatchEvent(ViewportEvent.TRANSLATION_CHANGE);
 	}
 
+	rotate(radian: number, dispatch: boolean = true) {
+		
+		const width = this._vpWidth;
+		const height = this._vpHeight;
+
+		this._vpRotation += radian;
+		this.vpRotationIsModified = true;
+		dispatch && this.dispatchEvent(ViewportEvent.ROTATION_CHANGE);
+
+		// this._cvec2.set([
+		// 	1/width*2 * Math.cos(this._vpRotation) + 1/height*2 * Math.sin(this._vpRotation), 
+		// 	1/height*2 * Math.cos(this._vpRotation) + 1/width*2 * Math.sin(this._vpRotation)
+		// ]);
+
+		// console.log(Math.sin(this._vpRotation), Math.cos(this._vpRotation))
+
+		// this._cvec2.set([
+		// 	1/height*2,
+		// 	1/width*2, 
+		// ]);
+
+		this.cvMatIsModified = true;
+	}
+
 	reset(dispatch: boolean = true) {
 		const gl = this._gl;
 		const width = this._vpWidth;
 		const height = this._vpHeight;
 		this._vpTranslationVec2.set([-1,-1]);
 		this._vpScaleVec2.set([1,1]);
+		this._vpRotation = 0;
 		this.vpTranslationIsModified = true;
 		this.vpScaleIsModified = true;
+		this.vpRotationIsModified = true;
 		if(dispatch) {
 			this.dispatchEvent(ViewportEvent.SCALE_CHANGE);
 			this.dispatchEvent(ViewportEvent.TRANSLATION_CHANGE);
+			this.dispatchEvent(ViewportEvent.ROTATION_CHANGE);
 		}
 	}
 
@@ -170,18 +207,25 @@ export class Viewport extends EventDispatcher {
 		const tmat = this.tempMat4;
 
 		mat4.identity(tmat);
+
 		tvec.set([this._vpTranslationVec2[0], this._vpTranslationVec2[1], 0]);
 		mat4.translate(tmat, tmat, tvec);
+
 		tvec.set([this._vpScaleVec2[0], this._vpScaleVec2[1], 1]);
 		mat4.scale(tmat, tmat, tvec);
 
+		tvec.set([this._cvec2[0], this._cvec2[1], 1]);
+		mat4.scale(tmat, tmat, tvec);
+
+		mat4.rotateZ(tmat, tmat, - this._vpRotation);
+
+		mat4.invert(tmat, tmat);
+		
 		const w = this._vpWidth/2;
 		const h = this._vpHeight/2;
-		mat4.invert(tmat, tmat);
 
 		tvec.set([x/w - 1, - y/h + 1, 0]);
 		vec3.transformMat4(tvec, tvec, tmat);
-		vec3.mul(tvec, tvec, vec3.fromValues(w, h, 1));
 		return tvec.subarray(0, 2);
 	}
 
@@ -195,6 +239,10 @@ export class Viewport extends EventDispatcher {
 
 	get vpTranslationVec2(): Float32Array {
 		return this._vpTranslationVec2;
+	}
+
+	get vpRotation(): number {
+		return this._vpRotation;
 	}
 
 

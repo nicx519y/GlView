@@ -183,7 +183,7 @@ function main() {
 			height: 150,
 		}, 5);
 		minimap.create();
-		minimap.sourceArea = new Rectangle(0, 0, w, h);
+		minimap.sourceArea = new Rectangle(-0, -0, w, h);
 		minimap.setPosition([10, 30]);
 		minimap.opacity = 0.6;
 		window['minimap'] = minimap;

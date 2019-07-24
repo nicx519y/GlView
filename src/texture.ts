@@ -19,9 +19,6 @@ const TextureGap = Math.pow(2, 1);
 export class TextureFactroy {
 	private gl;
 	private packer: GrowingPacker;
-	private rowy;
-	private currx=0;
-	private curry=0;
 	private blocks: PNode[] = [];
 	private fontMaps: Map<string, ImageTexture> = new Map();
 	private texture: WebGLTexture;
@@ -173,8 +170,6 @@ export class TextureFactroy {
 		const h = block.h - gap;
 		// 写进材质
 		gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x, y, offsetX, offsetY, w, h);
-		// 写进内存 太耗时了
-		// gl.readPixels(offsetX, offsetX, w, h, gl.RGBA, gl.UNSIGNED_BYTE, block.data.source);
 	}
 
 }

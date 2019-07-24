@@ -147,14 +147,22 @@ export class MinimapComponent {
 	public setFocusCenter(point: number[]) {
 		const vpScale = this.vp.scale;
 		const vpSize = this.vp.getViewportSize().map(v => v / vpScale);
-		let x, y, w, h;
-		x = point[0] - vpSize[0] / 2;
-		y = point[1] - vpSize[1] / 2;
-		this._focusArea.setAttrs(x, y, vpSize[0], vpSize[1]);
-		this.focusArea = rectangleIntersection(this.focusArea, this.focusArea, this._srcArea);
+		
+		let x, y, ox, oy, offset;
+
+		offset = this.vp.translation.map(v => v * vpScale);
+
+		ox = offset[0];
+		oy = offset[1];
+
+		x = - (point[0] - vpSize[0] / 2);
+		y = - (point[1] - vpSize[1] / 2);
+		
+		this.vp.resetTranslationAndScale(x*vpScale, y*vpScale, vpScale);
+		
 	}
 
-	public setFocusCenterUseScreenCoor(x: number, y: number) {
+	public setFocusCenterUsePixelCoor(x: number, y: number) {
 		const xy = this.getCoorByScreenPoint(x, y);
 		this.setFocusCenter(xy);
 	}
@@ -279,6 +287,7 @@ export class MinimapComponent {
 		const src = this._srcArea;
 		const k = w/h;
 		const sk = src.w/src.h;
+
 		let sx, sy, sw, sh, scale;
 
 		if(sk >= k) {

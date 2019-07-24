@@ -148,12 +148,7 @@ export class MinimapComponent {
 		const vpScale = this.vp.scale;
 		const vpSize = this.vp.getViewportSize().map(v => v / vpScale);
 		
-		let x, y, ox, oy, offset;
-
-		offset = this.vp.translation.map(v => v * vpScale);
-
-		ox = offset[0];
-		oy = offset[1];
+		let x, y;
 
 		x = - (point[0] - vpSize[0] / 2);
 		y = - (point[1] - vpSize[1] / 2);

@@ -105,6 +105,24 @@ export class ViewportRulerComponent {
 		this.added = false;
 	}
 
+	public set display(n: DisplayStatus) {
+		this._gs.map(g => g.display = n);
+		this._tgs.map(g => g.display = n);
+	}
+
+	public get display(): DisplayStatus {
+		return this._gs[0].display;
+	}
+
+	public set opacity(n: number) {
+		this._gs.map(g => g.opacity = n);
+		this._tgs.map(g => g.opacity = n);
+	}
+
+	public get opacity(): number {
+		return this._gs[0].opacity;
+	}
+
 	private autoPosition() {
 		this.displayPosition = this.getAutoPosition();
 		if(this.added) {

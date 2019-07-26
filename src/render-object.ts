@@ -311,8 +311,9 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 	}
 
 	public set opacity(n: number) {
-		let op = numberClamp(0, 1, n);
+		// let op = numberClamp(0, 1, n);
 		// if(this._attribs['opacity'] == op) return;
+		const op = Math.max(0, n);
 		const data = [op];
 		this._originUnit.setAttribute(this._originId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, data, 0);
 		this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, data, 0);

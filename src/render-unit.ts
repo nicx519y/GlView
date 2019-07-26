@@ -361,9 +361,10 @@ export class RenderUnit implements PaintUnitInterface {
 	}
 
 	public set opacity(n: number) {
-		const o = numberClamp(0, 1, n);
+		// const o = numberClamp(0, 1, n);
+		const o = Math.max(0, n);
 		const data = this.uniformDatas.get(RenderUniform.OPACITY);
-		data.set([n], 0);
+		data.set([o], 0);
 		this.displayIsModified = true;
 	}
 

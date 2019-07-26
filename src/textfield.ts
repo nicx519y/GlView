@@ -135,8 +135,9 @@ export class TextField extends SearchableObject implements ComponentInterface {
 	}
 
 	set opacity(n: number) {
-		this._opacity = numberClamp(0, 1, n);
+		// this._opacity = numberClamp(0, 1, n);
 		// this.resetFonts();
+		this._opacity = n;
 		this._fontObjects.forEach(v => v.opacity = this._opacity);
 	}
 

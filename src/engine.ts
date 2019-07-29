@@ -204,32 +204,36 @@ const fsSource = `#version 300 es
 		// 第一个插值阶梯
 		float start = max(0.0, 0.5 - vTextBorderWidth * 0.1);
 		// 边框插值系数
-	float r1 = smoothstep(start, start + 0.2, texture.r) * c1;
+		float r1 = smoothstep(start, start + 0.2, texture.r) * c1;
 		// 文字插值系数
 		float r2 = smoothstep(0.5, 0.85, texture.r);
 		
 		return vec4(mix(vTextBorderColor.rgb, vBgColor.rgb, r2), r2+(1.0-r2)*r1);
 	}
 
-	vec4 drawNormal(vec4 texture) {
+	vec4 drawNormal(vec4 texture, vec4 bgColor) {
 		float a1 = texture.a * vHasTexture;
-		float a2 = vBgColor.a;
-		return vec4(mix(vBgColor.rgb, texture.rgb, a1), a1+(1.0-a1)*a2);
+		float a2 = bgColor.a;
+		return vec4(mix(bgColor.rgb, texture.rgb, a1), a1+(1.0-a1)*a2);
 	}
 
 	void main(void) {
 
-		if(vDisplay == 0.0 || vOpacity == 0.0 || inBorderDashed() == 0.0) {
+		if(vDisplay == 0.0 || vOpacity == 0.0) {
 			discard;
 			return;
 		}
+
+		float ib = 1.0 - step(inBorderDashed(), 0.0);
+		// vec4 bgColor = vec4(vBgColor.rgb * ib + abs(vBgColor.rgb - vec3(.5, .5, .5)) * (1.0 - ib), vBgColor.a);
+		vec4 bgColor = vec4(vBgColor.rgb * ib + (vec3(1.0, 1.0, 1.0) - vBgColor.rgb) * (1.0 - ib), vBgColor.a);
 
 		// 材质
 		vec4 tColor = texture(uSampler, vTexCoord);
 		// 绘制字体
 		vec4 textColor = drawText(tColor);
 		// 绘制普通对象
-		vec4 normalColor = drawNormal(tColor);
+		vec4 normalColor = drawNormal(tColor, bgColor);
 
 		vec4 color = vIsText * textColor + (1.0 - vIsText) * normalColor;
 		color.a *= vOpacity;

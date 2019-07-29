@@ -62,6 +62,7 @@ export class ViewportRulerComponent {
 
 	private scales: number[];
 	private active: number;
+	private isDisplay: DisplayStatus = DisplayStatus.DISPLAY;
 
 	constructor(engine: Engine, index: number = 0) {
 
@@ -106,12 +107,18 @@ export class ViewportRulerComponent {
 	}
 
 	public set display(n: DisplayStatus) {
-		this._gs.map(g => g.display = n);
-		this._tgs.map(g => g.display = n);
+		this.isDisplay = n;
+		if(n == DisplayStatus.NONE) {
+			this._gs.map(g => g.display = n);
+			this._tgs.map(g => g.display = n);
+		} else {
+			this._gs[this.active].display = n;
+			this._tgs[this.active].display = n;
+		}
 	}
 
 	public get display(): DisplayStatus {
-		return this._gs[0].display;
+		return this.isDisplay;
 	}
 
 	public set opacity(n: number) {
@@ -148,7 +155,9 @@ export class ViewportRulerComponent {
 	}
 
 	private checkTicks() {
-		this._engine.isDebug && console.log('ViewportRulerComponent::checkTicks()');
+
+		if(this.isDisplay == DisplayStatus.NONE) return;
+
 		const vpScale = this._engine.viewport.scale;
 		const scales = this.scales;
 		const scaleLen = scales.length;

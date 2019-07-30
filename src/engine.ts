@@ -224,9 +224,16 @@ const fsSource = `#version 300 es
 			return;
 		}
 
-		float ib = step(inBorderDashed(), 0.0);
+		if(inBorderDashed() == 0.0) {
+			discard;
+			return;
+		}
+
+		// float ib = step(inBorderDashed(), 0.0);
 		// vec4 bgColor = vec4(vBgColor.rgb * ib + abs(vBgColor.rgb - vec3(.5, .5, .5)) * (1.0 - ib), vBgColor.a);
-		vec4 bgColor = vec4(vBgColor.rgb * (1.0 - ib) + (vec3(1.0, 1.0, 1.0) - vBgColor.rgb) * ib, vBgColor.a);
+		// vec4 bgColor = vec4(vBgColor.rgb * (1.0 - ib) + (vec3(1.0, 1.0, 1.0) - vBgColor.rgb) * ib, vBgColor.a);
+
+		vec4 bgColor = vBgColor;
 
 		// 材质
 		vec4 tColor = texture(uSampler, vTexCoord);

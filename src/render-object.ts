@@ -5,6 +5,8 @@ import { IdCreator, numberClamp, DisplayStatus } from './utils';
 import { ComponentInterface } from './interfaces';
 import { SearchableObject } from './searchable-object';
 
+const RATIO = window.devicePixelRatio;
+
 export const enum OutViewportStatus {
 	NONE = 0,
 	X = 1,
@@ -236,7 +238,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 
 	public set borderDashed(n: number) {
 		// if(n == this._attribs.borderDashed) return;
-		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [n*window.devicePixelRatio], 2);
+		this._isBorderAdded && this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [n*RATIO], 2);
 		this._attribs.borderDashed = n;
 	}
 
@@ -430,8 +432,7 @@ export class RenderObject extends SearchableObject implements ComponentInterface
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.VERTEX_AND_EDGE_OFFSET_VALUE_AND_NOT_FOLLOW_VIEWPORT, [this.vertexOffsetValue[0], this.vertexOffsetValue[1], this.borderWidth, this.outViewportStatus], 0);
 
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.BACKGROUND_COLOR, this.borderColor.map(v => v/255), 0);
-
-			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed, this.scale], 2);
+			this._borderUnit.setAttribute(this._borderId, RenderAttribute.IS_TEXT_AND_BORDER_WIDTH_AND_DASHED_AND_SCALE, [this.borderDashed * RATIO, this.scale], 2);
 
 			this._borderUnit.setAttribute(this._borderId, RenderAttribute.OPACITY_AND_DISPLAY_AND_VPSCALE_AND_VPTRANS, [this.opacity, this.display, this.attachViewportScale? 1: 0, this.attachViewportTranslation? 1: 0], 0);
 

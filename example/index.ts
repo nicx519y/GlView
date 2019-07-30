@@ -132,10 +132,13 @@ function main() {
 		// 	o.show();
 		// }
 
-		// const w = 2000;
+		// const w = 500;
 
-		// const count = 3;	// 一共9大块
-		// const countEach = 100;	// 每块100*100个
+		// const count = 1;	// 一共9大块
+		// const countEach = 300;	// 每块100*100个
+
+		// drawRects(countEach, textures[0], 0, 0, 500)
+
 		// for(let i = 0; i < count; i ++) {
 		// 	for(let j = 0; j < count; j ++) {
 		// 		drawRects(countEach, textures[i], i * w, j * w, w);
@@ -148,10 +151,10 @@ function main() {
 		const h = 3100;
 
 		rulerTest(w, h);
+		minimapTest(w, h);
+
 		// drawOneWayArrow();
 		// drawTwoWayArrow();
-
-		minimapTest(w, h);
 
 
 	}
@@ -607,7 +610,7 @@ class ObjPane {
 				obj.borderColor = value;
 				break;
 			case 'borderDashed':
-				obj.borderDashed = value;
+				obj.borderDashed = parseInt(value);
 				break;
 			case 'scale':
 				obj.scale = value * 1;

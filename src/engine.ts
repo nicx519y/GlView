@@ -180,7 +180,7 @@ const fsSource = `#version 300 es
 	float inBorderDashed() {
 
 		// 是否绘制虚线
-		float hasDashed = step(0.0, vBorderDashed);
+		float hasDashed = 1.0 - step(vBorderDashed, 0.0);
 
 		vec2 fw = fwidth(vPos.xy);
 		float k = fw.y * (1.0/fw.x);
@@ -192,7 +192,7 @@ const fsSource = `#version 300 es
 		// 如果 c1 条件成立 则 gl_FragCoord.x 否则 ...
 		float d = gl_FragCoord.x * c1 + (step(1.0, k) * gl_FragCoord.y + step(k, 1.0) * gl_FragCoord.x) * c2;
 
-		return mod(floor( d * (1.0/vBorderDashed) ), 2.0) * (1.0/hasDashed);
+		return step(mod(floor( d * (1.0/vBorderDashed) ), 2.0), 0.0) * hasDashed;
 	}
 
 	vec4 drawText(vec4 texture) {
@@ -224,16 +224,9 @@ const fsSource = `#version 300 es
 			return;
 		}
 
-		if(inBorderDashed() == 0.0) {
-			discard;
-			return;
-		}
-
-		// float ib = step(inBorderDashed(), 0.0);
-		// vec4 bgColor = vec4(vBgColor.rgb * ib + abs(vBgColor.rgb - vec3(.5, .5, .5)) * (1.0 - ib), vBgColor.a);
-		// vec4 bgColor = vec4(vBgColor.rgb * (1.0 - ib) + (vec3(1.0, 1.0, 1.0) - vBgColor.rgb) * ib, vBgColor.a);
-
-		vec4 bgColor = vBgColor;
+		// ib == 0.0 则正常渲染， ib == 1.0 则渲染反色
+		float ib = inBorderDashed();
+		vec4 bgColor = vec4(vBgColor.rgb * (1.0 - ib) + (vec3(1.0, 1.0, 1.0) - vBgColor.rgb) * ib, vBgColor.a);
 
 		// 材质
 		vec4 tColor = texture(uSampler, vTexCoord);

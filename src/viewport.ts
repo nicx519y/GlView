@@ -99,7 +99,8 @@ export class Viewport extends EventDispatcher {
 	scaleOrigin(scale: number, px: number, py: number, dispatch: boolean = true) {
 		scale = numberClamp(this.scaleMin, this.scaleMax, scale);
 		const vpScale = this._vpScaleVec2;
-		const s = this.scale - scale;
+		const sizeRatio = this._engine.sizeRatio;
+		const s = (this.scale - scale) * sizeRatio;
 		const ms = scale/this.scale;
 		vpScale[0] *= ms;
 		vpScale[1] *= ms;
@@ -176,7 +177,8 @@ export class Viewport extends EventDispatcher {
 
 	get translation(): number[] {
 		const vec2 = this._vpTranslationVec2;
-		const scale = this.scale;
+		const sizeRatio = this._engine.sizeRatio;
+		const scale = this.scale * sizeRatio;
 		return [(vec2[0] + 1) * this._vpWidth * 0.5 / scale, (vec2[1] + 1) * this._vpHeight * 0.5 / scale]
 	}
 

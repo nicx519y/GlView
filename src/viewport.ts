@@ -158,8 +158,9 @@ export class Viewport extends EventDispatcher {
 	}
 
 	resetTranslationAndScale(offsetX: number, offsetY: number, scale: number=1, originX: number=0, originY: number=0, dispatch: boolean = true) {
+		const sizeRatio = this._engine.sizeRatio;
 		this.reset(false);
-		this.translate(offsetX, offsetY, false);
+		this.translate(offsetX * sizeRatio, offsetY * sizeRatio, false);
 		this.scaleOrigin(scale, originX, originY, false);
 		if(dispatch) {
 			this.dispatchEvent(ViewportEvent.SCALE_CHANGE);

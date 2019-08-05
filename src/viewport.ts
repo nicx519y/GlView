@@ -17,6 +17,7 @@ export enum ViewportEvent {
 };
 
 export class Viewport extends EventDispatcher {
+	private _engine: Engine;
 	private _gl;
 	private _cvec2: Float32Array = new Float32Array(2);
 	private _vpScaleVec2: Float32Array = new Float32Array(2);
@@ -33,10 +34,11 @@ export class Viewport extends EventDispatcher {
 	public vpScaleIsModified: boolean = true;
 	public vpTranslationIsModified: boolean = true;
 	public vpRotationIsModified: boolean = true;
-	constructor(gl) {
+	constructor(engine: Engine) {
 		super();
-		this._gl = gl;
-		const canvas = gl.canvas;
+		this._gl = engine.gl;
+		this._engine = engine;
+		const canvas = this._gl.canvas;
 		this.setViewportSize(canvas.width, canvas.height);
 		this.reset();
 	}
@@ -196,13 +198,14 @@ export class Viewport extends EventDispatcher {
 	changeCoordinateFromScreen(x: number, y: number): Float32Array {
 		const tvec = this.tempVec3;
 		const tmat = this.tempMat4;
+		const e = this._engine;
 
 		mat4.identity(tmat);
 
 		tvec.set([this._vpTranslationVec2[0], this._vpTranslationVec2[1], 0]);
 		mat4.translate(tmat, tmat, tvec);
 
-		tvec.set([this._vpScaleVec2[0], this._vpScaleVec2[1], 1]);
+		tvec.set([this._vpScaleVec2[0] * e.sizeRatio, this._vpScaleVec2[1] * e.sizeRatio, 1]);
 		mat4.scale(tmat, tmat, tvec);
 
 		tvec.set([this._cvec2[0], this._cvec2[1], 1]);

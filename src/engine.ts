@@ -267,7 +267,7 @@ export class Engine {
 		this._unitList = [];
 		this._searcher = new Searcher();
 		this._tf = new TextureFactroy(this._gl);
-		this._vp = new Viewport(this._gl);
+		this._vp = new Viewport(this);
 		this.initPrg();
 		window['unitlist'] = this._unitList;
 	}

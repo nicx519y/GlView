@@ -71,6 +71,7 @@ function main() {
 	const canvas = document.getElementById('glcanvas');
 	let engine = new Engine(canvas);
 	engine.isDebug = false;
+	engine.sizeRatio = 4;
 	let scr = engine.searcher;
 	let tf = engine.textureFactroy;
 	let vp = engine.viewport;

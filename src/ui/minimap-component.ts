@@ -145,8 +145,9 @@ export class MinimapComponent {
 	}
 
 	public setFocusCenter(point: number[]) {
+		const sizeRatio = this.engine.sizeRatio;
 		const vpScale = this.vp.scale;
-		const vpSize = this.vp.getViewportSize().map(v => v / vpScale);
+		const vpSize = this.vp.getViewportSize().map(v => v / vpScale / sizeRatio);
 		
 		let x, y;
 
@@ -222,7 +223,6 @@ export class MinimapComponent {
 		if(src.w == 0 || src.h == 0) {
 			return [0, 0];
 		}
-
 		const k = this.frameSize[0] / src.w;
 		const w = Math.min(focus.w, src.w);
 		const h = Math.min(focus.h, src.h);
@@ -263,9 +263,10 @@ export class MinimapComponent {
 	}
 
 	private viewportToFocus() {
-		const vpScale = this.vp.scale;
+		const sizeRatio = this.engine.sizeRatio;
+		const vpScale = this.vp.scale * sizeRatio;
 		const vpSize = this.vp.getViewportSize().map(v => v / vpScale);
-		const vpTranslation = this.vp.translation;
+		const vpTranslation = this.vp.translation.map(v => v / sizeRatio);
 
 		this._focusArea.setAttrs(-vpTranslation[0], -vpTranslation[1], vpSize[0], vpSize[1]);
 		this.focusArea = rectangleIntersection(this.focusArea, this.focusArea, this._srcArea);

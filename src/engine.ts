@@ -242,6 +242,8 @@ const fsSource = `#version 300 es
 	}
 `;
 
+const SIZE_RATIO = 1.2;
+
 export class Engine {
 	private _gl;
 	private _prg;
@@ -253,6 +255,7 @@ export class Engine {
 	private _vpTranslationLocal;
 	private _vecLocal;
 	private _vpRotationLocal;
+	private _sizeRatio = 1;
 	public isDebug: boolean = true;
 	public canRending: boolean = true;
 	constructor(canvas) {
@@ -283,6 +286,15 @@ export class Engine {
 	}
 	public get viewport(): Viewport {
 		return this._vp;
+	}
+
+	public set sizeRatio(ratio: number) {
+		this._sizeRatio = ratio;
+		this._vp.vpScaleIsModified = true;
+	}
+
+	public get sizeRatio(): number {
+		return this._sizeRatio;
 	}
 	
 	/**
@@ -373,7 +385,7 @@ export class Engine {
 		const gl = this.gl;
 		let result = false;
 		if(this._vp.vpScaleIsModified) {
-			gl.uniform2fv(this._vpScaleLocal, this._vp.vpScaleVec2);
+			gl.uniform2fv(this._vpScaleLocal, this._vp.vpScaleVec2.map(s => s * this._sizeRatio));
 			this._vp.vpScaleIsModified = false;
 			result = true;
 		}
